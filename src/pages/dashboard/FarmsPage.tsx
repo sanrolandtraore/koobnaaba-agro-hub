@@ -1,0 +1,180 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Plus, MapPin, Trash2, Edit } from "lucide-react";
+
+const FarmsPage = () => {
+  const { user } = useAuth();
+  const [farms, setFarms] = useState<any[]>([]);
+  const [climateZones, setClimateZones] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editingFarm, setEditingFarm] = useState<any>(null);
+  const [form, setForm] = useState({ name: "", location_name: "", latitude: "", longitude: "", total_area_ha: "", climate_zone_id: "" });
+
+  const fetchFarms = async () => {
+    const { data, error } = await supabase.from("farms").select("*, climate_zones(name)").order("created_at", { ascending: false });
+    if (error) toast.error(error.message);
+    else setFarms(data || []);
+    setLoading(false);
+  };
+
+  const fetchZones = async () => {
+    const { data } = await supabase.from("climate_zones").select("*");
+    setClimateZones(data || []);
+  };
+
+  useEffect(() => { fetchFarms(); fetchZones(); }, []);
+
+  const resetForm = () => {
+    setForm({ name: "", location_name: "", latitude: "", longitude: "", total_area_ha: "", climate_zone_id: "" });
+    setEditingFarm(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    const payload = {
+      name: form.name,
+      location_name: form.location_name || null,
+      latitude: form.latitude ? parseFloat(form.latitude) : null,
+      longitude: form.longitude ? parseFloat(form.longitude) : null,
+      total_area_ha: form.total_area_ha ? parseFloat(form.total_area_ha) : null,
+      climate_zone_id: form.climate_zone_id || null,
+      user_id: user.id,
+    };
+
+    if (editingFarm) {
+      const { error } = await supabase.from("farms").update(payload).eq("id", editingFarm.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Exploitation mise à jour !");
+    } else {
+      const { error } = await supabase.from("farms").insert(payload);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Exploitation créée !");
+    }
+    resetForm();
+    setOpen(false);
+    fetchFarms();
+  };
+
+  const handleEdit = (farm: any) => {
+    setEditingFarm(farm);
+    setForm({
+      name: farm.name,
+      location_name: farm.location_name || "",
+      latitude: farm.latitude?.toString() || "",
+      longitude: farm.longitude?.toString() || "",
+      total_area_ha: farm.total_area_ha?.toString() || "",
+      climate_zone_id: farm.climate_zone_id || "",
+    });
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Supprimer cette exploitation et toutes ses parcelles ?")) return;
+    const { error } = await supabase.from("farms").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Exploitation supprimée"); fetchFarms(); }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold">Exploitations</h1>
+          <p className="text-muted-foreground mt-1">Gérez vos exploitations agricoles</p>
+        </div>
+        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button className="gradient-primary text-primary-foreground"><Plus className="h-4 w-4 mr-2" />Nouvelle exploitation</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingFarm ? "Modifier" : "Nouvelle"} exploitation</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Nom *</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Ma ferme" />
+              </div>
+              <div className="space-y-2">
+                <Label>Localité</Label>
+                <Input value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} placeholder="Ouagadougou" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Latitude</Label>
+                  <Input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="12.37" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Longitude</Label>
+                  <Input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="-1.52" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Superficie (ha)</Label>
+                <Input type="number" step="any" value={form.total_area_ha} onChange={(e) => setForm({ ...form, total_area_ha: e.target.value })} placeholder="5" />
+              </div>
+              <div className="space-y-2">
+                <Label>Zone climatique</Label>
+                <Select value={form.climate_zone_id} onValueChange={(v) => setForm({ ...form, climate_zone_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                  <SelectContent>
+                    {climateZones.map((z) => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full gradient-primary text-primary-foreground">
+                {editingFarm ? "Mettre à jour" : "Créer"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map(i => <Card key={i} className="animate-pulse"><CardContent className="h-32" /></Card>)}
+        </div>
+      ) : farms.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground text-center">Aucune exploitation. Créez votre première exploitation pour commencer.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {farms.map((farm) => (
+            <Card key={farm.id} className="shadow-sm hover:shadow-warm transition-shadow">
+              <CardHeader className="flex flex-row items-start justify-between pb-2">
+                <div>
+                  <CardTitle className="text-lg">{farm.name}</CardTitle>
+                  {farm.location_name && <p className="text-sm text-muted-foreground mt-1">{farm.location_name}</p>}
+                </div>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(farm)}><Edit className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(farm.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {farm.total_area_ha && <p className="text-sm"><span className="text-muted-foreground">Superficie:</span> {farm.total_area_ha} ha</p>}
+                {farm.climate_zones && <p className="text-sm"><span className="text-muted-foreground">Zone:</span> {farm.climate_zones.name}</p>}
+                {farm.latitude && <p className="text-sm text-muted-foreground">GPS: {farm.latitude}, {farm.longitude}</p>}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FarmsPage;
