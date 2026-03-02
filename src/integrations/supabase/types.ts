@@ -162,10 +162,55 @@ export type Database = {
           },
         ]
       }
+      crop_cycle_inputs: {
+        Row: {
+          created_at: string
+          crop_cycle_id: string
+          id: string
+          input_name: string
+          quantity_per_ha: number
+          total_cost: number | null
+          total_quantity: number
+          unit: string
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          crop_cycle_id: string
+          id?: string
+          input_name: string
+          quantity_per_ha?: number
+          total_cost?: number | null
+          total_quantity?: number
+          unit?: string
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          crop_cycle_id?: string
+          id?: string
+          input_name?: string
+          quantity_per_ha?: number
+          total_cost?: number | null
+          total_quantity?: number
+          unit?: string
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crop_cycle_inputs_crop_cycle_id_fkey"
+            columns: ["crop_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "crop_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crop_cycles: {
         Row: {
           actual_revenue: number | null
           actual_yield_kg: number | null
+          climate_coefficient: number | null
           created_at: string
           crop_reference_id: string | null
           end_date: string | null
@@ -174,6 +219,7 @@ export type Database = {
           id: string
           notes: string | null
           parcel_id: string
+          plant_count: number | null
           season: string
           start_date: string
           status: string
@@ -182,6 +228,7 @@ export type Database = {
         Insert: {
           actual_revenue?: number | null
           actual_yield_kg?: number | null
+          climate_coefficient?: number | null
           created_at?: string
           crop_reference_id?: string | null
           end_date?: string | null
@@ -190,6 +237,7 @@ export type Database = {
           id?: string
           notes?: string | null
           parcel_id: string
+          plant_count?: number | null
           season: string
           start_date: string
           status?: string
@@ -198,6 +246,7 @@ export type Database = {
         Update: {
           actual_revenue?: number | null
           actual_yield_kg?: number | null
+          climate_coefficient?: number | null
           created_at?: string
           crop_reference_id?: string | null
           end_date?: string | null
@@ -206,6 +255,7 @@ export type Database = {
           id?: string
           notes?: string | null
           parcel_id?: string
+          plant_count?: number | null
           season?: string
           start_date?: string
           status?: string
@@ -317,42 +367,104 @@ export type Database = {
           },
         ]
       }
+      investment_plans: {
+        Row: {
+          break_even_yield_kg: number | null
+          created_at: string
+          crop_cycle_id: string
+          expected_revenue: number
+          expected_roi_percent: number | null
+          id: string
+          total_equipment_cost: number
+          total_input_cost: number
+          total_investment: number
+          total_labor_cost: number
+          total_transport_cost: number
+          updated_at: string
+        }
+        Insert: {
+          break_even_yield_kg?: number | null
+          created_at?: string
+          crop_cycle_id: string
+          expected_revenue?: number
+          expected_roi_percent?: number | null
+          id?: string
+          total_equipment_cost?: number
+          total_input_cost?: number
+          total_investment?: number
+          total_labor_cost?: number
+          total_transport_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          break_even_yield_kg?: number | null
+          created_at?: string
+          crop_cycle_id?: string
+          expected_revenue?: number
+          expected_roi_percent?: number | null
+          id?: string
+          total_equipment_cost?: number
+          total_input_cost?: number
+          total_investment?: number
+          total_labor_cost?: number
+          total_transport_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_plans_crop_cycle_id_fkey"
+            columns: ["crop_cycle_id"]
+            isOneToOne: true
+            referencedRelation: "crop_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parcels: {
         Row: {
           area_ha: number
+          calculated_area_ha: number | null
           created_at: string
           farm_id: string
+          geometry: Json | null
           id: string
           irrigation_type: string | null
           latitude: number | null
           longitude: number | null
           name: string
+          perimeter_m: number | null
           soil_type: string | null
           status: string
           updated_at: string
         }
         Insert: {
           area_ha?: number
+          calculated_area_ha?: number | null
           created_at?: string
           farm_id: string
+          geometry?: Json | null
           id?: string
           irrigation_type?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
+          perimeter_m?: number | null
           soil_type?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           area_ha?: number
+          calculated_area_ha?: number | null
           created_at?: string
           farm_id?: string
+          geometry?: Json | null
           id?: string
           irrigation_type?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
+          perimeter_m?: number | null
           soil_type?: string | null
           status?: string
           updated_at?: string
