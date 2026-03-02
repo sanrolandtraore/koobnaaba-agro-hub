@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User,
+  Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +13,7 @@ const navItems = [
   { to: "/dashboard/cycles", label: "Cycles culturaux", icon: Wheat },
   { to: "/dashboard/activities", label: "Activités", icon: Activity },
   { to: "/dashboard/costs", label: "Coûts", icon: DollarSign },
+  { to: "/dashboard/investment", label: "Plan investissement", icon: Calculator },
 ];
 
 export const AppSidebar = () => {

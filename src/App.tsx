@@ -14,6 +14,7 @@ import ParcelsPage from "./pages/dashboard/ParcelsPage";
 import CropCyclesPage from "./pages/dashboard/CropCyclesPage";
 import ActivitiesPage from "./pages/dashboard/ActivitiesPage";
 import CostsPage from "./pages/dashboard/CostsPage";
+import InvestmentPlanPage from "./pages/dashboard/InvestmentPlanPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="cycles" element={<CropCyclesPage />} />
               <Route path="activities" element={<ActivitiesPage />} />
               <Route path="costs" element={<CostsPage />} />
+              <Route path="investment" element={<InvestmentPlanPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

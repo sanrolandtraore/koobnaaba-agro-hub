@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Wheat } from "lucide-react";
+import { Plus, Trash2, Wheat, Calculator } from "lucide-react";
 
 const CropCyclesPage = () => {
   const [cycles, setCycles] = useState<any[]>([]);
@@ -67,6 +67,19 @@ const CropCyclesPage = () => {
     const { error } = await supabase.from("crop_cycles").delete().eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Cycle supprimé"); fetchCycles(); }
+  };
+
+  const handleCalculate = async (id: string) => {
+    try {
+      const { error } = await supabase.functions.invoke("calculate-crop-cycle", {
+        body: { crop_cycle_id: id },
+      });
+      if (error) throw error;
+      toast.success("Calculs exécutés !");
+      fetchCycles();
+    } catch (err: any) {
+      toast.error(err.message || "Erreur de calcul");
+    }
   };
 
   const statusLabels: Record<string, string> = { planning: "Planification", active: "En cours", completed: "Terminé", cancelled: "Annulé" };
@@ -144,6 +157,7 @@ const CropCyclesPage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[c.status] || ""}`}>{statusLabels[c.status] || c.status}</span>
+                  <Button variant="ghost" size="icon" onClick={() => handleCalculate(c.id)} title="Recalculer"><Calculator className="h-4 w-4 text-primary" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               </CardHeader>
@@ -153,6 +167,8 @@ const CropCyclesPage = () => {
                   {c.end_date && <div><span className="text-muted-foreground">Fin:</span> {new Date(c.end_date).toLocaleDateString("fr-FR")}</div>}
                   {c.expected_yield_kg && <div><span className="text-muted-foreground">Rendement estimé:</span> {Math.round(c.expected_yield_kg).toLocaleString()} kg</div>}
                   {c.expected_revenue && <div><span className="text-muted-foreground">Revenu estimé:</span> {Math.round(c.expected_revenue).toLocaleString()} FCFA</div>}
+                  {c.plant_count && <div><span className="text-muted-foreground">Plants:</span> {c.plant_count.toLocaleString()}</div>}
+                  {c.climate_coefficient && c.climate_coefficient !== 1 && <div><span className="text-muted-foreground">Coeff. climat:</span> {c.climate_coefficient}</div>}
                 </div>
               </CardContent>
             </Card>

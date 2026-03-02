@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit, Map } from "lucide-react";
+import { Plus, Trash2, Edit, Map, Navigation } from "lucide-react";
+import { GPSPolygonCapture, coordsToGeoJSON } from "@/components/GPSPolygonCapture";
 
 const ParcelsPage = () => {
   const [parcels, setParcels] = useState<any[]>([]);
@@ -16,6 +17,7 @@ const ParcelsPage = () => {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", latitude: "", longitude: "" });
+  const [gpsPoints, setGpsPoints] = useState<{ lat: number; lng: number }[]>([]);
 
   const fetchParcels = async () => {
     const { data, error } = await supabase.from("parcels").select("*, farms(name)").order("created_at", { ascending: false });
@@ -31,11 +33,12 @@ const ParcelsPage = () => {
 
   useEffect(() => { fetchParcels(); fetchFarms(); }, []);
 
-  const resetForm = () => { setForm({ name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", latitude: "", longitude: "" }); setEditing(null); };
+  const resetForm = () => { setForm({ name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", latitude: "", longitude: "" }); setEditing(null); setGpsPoints([]); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
+    const geometry = coordsToGeoJSON(gpsPoints);
+    const payload: any = {
       name: form.name,
       farm_id: form.farm_id,
       area_ha: parseFloat(form.area_ha) || 0,
@@ -44,21 +47,47 @@ const ParcelsPage = () => {
       latitude: form.latitude ? parseFloat(form.latitude) : null,
       longitude: form.longitude ? parseFloat(form.longitude) : null,
     };
+
+    if (geometry) {
+      payload.geometry = geometry;
+    }
+
+    let parcelId: string | null = null;
+
     if (editing) {
       const { error } = await supabase.from("parcels").update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
+      parcelId = editing.id;
       toast.success("Parcelle mise à jour !");
     } else {
-      const { error } = await supabase.from("parcels").insert(payload);
+      const { data, error } = await supabase.from("parcels").insert(payload).select("id").single();
       if (error) { toast.error(error.message); return; }
+      parcelId = data.id;
       toast.success("Parcelle créée !");
     }
+
+    // If GPS polygon, trigger backend calculation for area
+    if (geometry && parcelId) {
+      try {
+        await supabase.functions.invoke("calculate-crop-cycle", {
+          body: { parcel_id: parcelId, geometry },
+        });
+      } catch (_) { /* silent */ }
+    }
+
     resetForm(); setOpen(false); fetchParcels();
   };
 
   const handleEdit = (p: any) => {
     setEditing(p);
     setForm({ name: p.name, farm_id: p.farm_id, area_ha: p.area_ha?.toString() || "", soil_type: p.soil_type || "", irrigation_type: p.irrigation_type || "", latitude: p.latitude?.toString() || "", longitude: p.longitude?.toString() || "" });
+    // Restore GPS points from geometry
+    if (p.geometry?.coordinates?.[0]) {
+      const coords = p.geometry.coordinates[0].slice(0, -1); // remove closing point
+      setGpsPoints(coords.map((c: number[]) => ({ lat: c[1], lng: c[0] })));
+    } else {
+      setGpsPoints([]);
+    }
     setOpen(true);
   };
 
@@ -74,7 +103,7 @@ const ParcelsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Parcelles</h1>
-          <p className="text-muted-foreground mt-1">Gérez vos parcelles de culture</p>
+          <p className="text-muted-foreground mt-1">Gérez vos parcelles avec mesure GPS</p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
@@ -82,7 +111,7 @@ const ParcelsPage = () => {
               <Plus className="h-4 w-4 mr-2" />Nouvelle parcelle
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? "Modifier" : "Nouvelle"} parcelle</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -97,9 +126,20 @@ const ParcelsPage = () => {
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Parcelle A" />
               </div>
               <div className="space-y-2">
-                <Label>Superficie (ha) *</Label>
-                <Input type="number" step="any" value={form.area_ha} onChange={(e) => setForm({ ...form, area_ha: e.target.value })} required placeholder="2.5" />
+                <Label>Superficie manuelle (ha)</Label>
+                <Input type="number" step="any" value={form.area_ha} onChange={(e) => setForm({ ...form, area_ha: e.target.value })} placeholder="2.5" />
+                <p className="text-xs text-muted-foreground">Sera remplacée par le calcul GPS si polygone capturé</p>
               </div>
+
+              {/* GPS Polygon Capture */}
+              <div className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Navigation className="h-4 w-4 text-primary" />
+                  Mesure GPS du contour
+                </div>
+                <GPSPolygonCapture value={gpsPoints} onChange={setGpsPoints} />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Type de sol</Label>
@@ -143,9 +183,14 @@ const ParcelsPage = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-1">
-                <p className="text-sm"><span className="text-muted-foreground">Superficie:</span> {p.area_ha} ha</p>
+                <p className="text-sm"><span className="text-muted-foreground">Superficie:</span> {p.calculated_area_ha || p.area_ha} ha</p>
+                {p.calculated_area_ha && <p className="text-xs text-success flex items-center gap-1"><Navigation className="h-3 w-3" /> Mesuré par GPS</p>}
+                {p.perimeter_m && <p className="text-sm"><span className="text-muted-foreground">Périmètre:</span> {Math.round(p.perimeter_m)} m</p>}
                 {p.soil_type && <p className="text-sm"><span className="text-muted-foreground">Sol:</span> {p.soil_type}</p>}
                 {p.irrigation_type && <p className="text-sm"><span className="text-muted-foreground">Irrigation:</span> {p.irrigation_type}</p>}
+                {p.geometry && (
+                  <p className="text-xs text-muted-foreground">{p.geometry.coordinates?.[0]?.length - 1} points GPS enregistrés</p>
+                )}
               </CardContent>
             </Card>
           ))}
