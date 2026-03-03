@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
+  Users, Wrench, Package, CalendarDays, BarChart3, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -12,8 +13,14 @@ const navItems = [
   { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin },
   { to: "/dashboard/cycles", label: "Cycles culturaux", icon: Wheat },
   { to: "/dashboard/activities", label: "Activités", icon: Activity },
+  { to: "/dashboard/harvests", label: "Récoltes & Lots", icon: Package },
+  { to: "/dashboard/calendar", label: "Calendrier", icon: CalendarDays },
+  { to: "/dashboard/workers", label: "Main d'œuvre", icon: Users },
+  { to: "/dashboard/equipment", label: "Équipements", icon: Wrench },
   { to: "/dashboard/costs", label: "Coûts", icon: DollarSign },
-  { to: "/dashboard/investment", label: "Plan investissement", icon: Calculator },
+  { to: "/dashboard/investment", label: "Investissement", icon: Calculator },
+  { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
+  { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
 export const AppSidebar = () => {

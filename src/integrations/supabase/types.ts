@@ -162,6 +162,50 @@ export type Database = {
           },
         ]
       }
+      crop_calendar_events: {
+        Row: {
+          completed: boolean
+          completed_date: string | null
+          created_at: string
+          crop_cycle_id: string
+          event_type: string
+          id: string
+          notes: string | null
+          planned_date: string
+          title: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_date?: string | null
+          created_at?: string
+          crop_cycle_id: string
+          event_type?: string
+          id?: string
+          notes?: string | null
+          planned_date: string
+          title: string
+        }
+        Update: {
+          completed?: boolean
+          completed_date?: string | null
+          created_at?: string
+          crop_cycle_id?: string
+          event_type?: string
+          id?: string
+          notes?: string | null
+          planned_date?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crop_calendar_events_crop_cycle_id_fkey"
+            columns: ["crop_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "crop_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crop_cycle_inputs: {
         Row: {
           created_at: string
@@ -320,6 +364,50 @@ export type Database = {
         }
         Relationships: []
       }
+      equipment: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          name: string
+          notes: string | null
+          purchase_cost: number | null
+          purchase_date: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          status?: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farms: {
         Row: {
           climate_zone_id: string | null
@@ -363,6 +451,56 @@ export type Database = {
             columns: ["climate_zone_id"]
             isOneToOne: false
             referencedRelation: "climate_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      harvests: {
+        Row: {
+          buyer: string | null
+          created_at: string
+          crop_cycle_id: string
+          date: string
+          id: string
+          lot_number: string
+          notes: string | null
+          quality_grade: string | null
+          quantity_kg: number
+          sold: boolean
+          unit_price_kg: number | null
+        }
+        Insert: {
+          buyer?: string | null
+          created_at?: string
+          crop_cycle_id: string
+          date?: string
+          id?: string
+          lot_number: string
+          notes?: string | null
+          quality_grade?: string | null
+          quantity_kg?: number
+          sold?: boolean
+          unit_price_kg?: number | null
+        }
+        Update: {
+          buyer?: string | null
+          created_at?: string
+          crop_cycle_id?: string
+          date?: string
+          id?: string
+          lot_number?: string
+          notes?: string | null
+          quality_grade?: string | null
+          quantity_kg?: number
+          sold?: boolean
+          unit_price_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "harvests_crop_cycle_id_fkey"
+            columns: ["crop_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "crop_cycles"
             referencedColumns: ["id"]
           },
         ]
@@ -529,6 +667,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      workers: {
+        Row: {
+          created_at: string
+          daily_rate: number | null
+          farm_id: string
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          role: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          daily_rate?: number | null
+          farm_id: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          daily_rate?: number | null
+          farm_id?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workers_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
