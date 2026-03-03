@@ -15,6 +15,12 @@ import CropCyclesPage from "./pages/dashboard/CropCyclesPage";
 import ActivitiesPage from "./pages/dashboard/ActivitiesPage";
 import CostsPage from "./pages/dashboard/CostsPage";
 import InvestmentPlanPage from "./pages/dashboard/InvestmentPlanPage";
+import WorkersPage from "./pages/dashboard/WorkersPage";
+import EquipmentPage from "./pages/dashboard/EquipmentPage";
+import HarvestsPage from "./pages/dashboard/HarvestsPage";
+import CalendarPage from "./pages/dashboard/CalendarPage";
+import AnalyticsPage from "./pages/dashboard/AnalyticsPage";
+import ExportPage from "./pages/dashboard/ExportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +43,12 @@ const App = () => (
               <Route path="activities" element={<ActivitiesPage />} />
               <Route path="costs" element={<CostsPage />} />
               <Route path="investment" element={<InvestmentPlanPage />} />
+              <Route path="workers" element={<WorkersPage />} />
+              <Route path="equipment" element={<EquipmentPage />} />
+              <Route path="harvests" element={<HarvestsPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="export" element={<ExportPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
