@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download,
+  Bug, Heart, Baby, Utensils, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -23,6 +24,15 @@ const navItems = [
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
+const livestockItems = [
+  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Bug },
+  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Bug },
+  { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
+  { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
+  { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
+  { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
+];
+
 export const AppSidebar = () => {
   const { profile, signOut } = useAuth();
   const location = useLocation();
@@ -37,6 +47,22 @@ export const AppSidebar = () => {
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {navItems.map(({ to, label, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              location.pathname === to
+                ? "bg-sidebar-accent text-sidebar-primary"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </Link>
+        ))}
+        <div className="pt-3 pb-1 px-3"><span className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">Élevage</span></div>
+        {livestockItems.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}

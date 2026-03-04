@@ -61,6 +61,252 @@ export type Database = {
           },
         ]
       }
+      animal_feedings: {
+        Row: {
+          animal_id: string | null
+          cost: number | null
+          created_at: string
+          farm_id: string
+          feed_type: string
+          feeding_date: string
+          id: string
+          notes: string | null
+          quantity_kg: number
+        }
+        Insert: {
+          animal_id?: string | null
+          cost?: number | null
+          created_at?: string
+          farm_id: string
+          feed_type: string
+          feeding_date?: string
+          id?: string
+          notes?: string | null
+          quantity_kg?: number
+        }
+        Update: {
+          animal_id?: string | null
+          cost?: number | null
+          created_at?: string
+          farm_id?: string
+          feed_type?: string
+          feeding_date?: string
+          id?: string
+          notes?: string | null
+          quantity_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animal_feedings_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "animal_feedings_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      animal_health_events: {
+        Row: {
+          animal_id: string
+          cost: number | null
+          created_at: string
+          description: string | null
+          dosage: string | null
+          event_date: string
+          event_type: string
+          id: string
+          medication: string | null
+          next_date: string | null
+          notes: string | null
+          vet_name: string | null
+        }
+        Insert: {
+          animal_id: string
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          dosage?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          medication?: string | null
+          next_date?: string | null
+          notes?: string | null
+          vet_name?: string | null
+        }
+        Update: {
+          animal_id?: string
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          dosage?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          medication?: string | null
+          next_date?: string | null
+          notes?: string | null
+          vet_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animal_health_events_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      animal_reproductions: {
+        Row: {
+          actual_birth_date: string | null
+          animal_id: string
+          cost: number | null
+          created_at: string
+          event_date: string
+          event_type: string
+          expected_birth_date: string | null
+          id: string
+          notes: string | null
+          offspring_alive: number | null
+          offspring_count: number | null
+          partner_id: string | null
+        }
+        Insert: {
+          actual_birth_date?: string | null
+          animal_id: string
+          cost?: number | null
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          expected_birth_date?: string | null
+          id?: string
+          notes?: string | null
+          offspring_alive?: number | null
+          offspring_count?: number | null
+          partner_id?: string | null
+        }
+        Update: {
+          actual_birth_date?: string | null
+          animal_id?: string
+          cost?: number | null
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          expected_birth_date?: string | null
+          id?: string
+          notes?: string | null
+          offspring_alive?: number | null
+          offspring_count?: number | null
+          partner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animal_reproductions_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "animal_reproductions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      animals: {
+        Row: {
+          acquisition_cost: number | null
+          acquisition_date: string | null
+          birth_date: string | null
+          breed: string | null
+          created_at: string
+          farm_id: string
+          father_id: string | null
+          id: string
+          identification_number: string | null
+          mother_id: string | null
+          name: string | null
+          notes: string | null
+          sex: Database["public"]["Enums"]["animal_sex"]
+          species: Database["public"]["Enums"]["animal_species"]
+          status: string
+          updated_at: string
+          weight_kg: number | null
+        }
+        Insert: {
+          acquisition_cost?: number | null
+          acquisition_date?: string | null
+          birth_date?: string | null
+          breed?: string | null
+          created_at?: string
+          farm_id: string
+          father_id?: string | null
+          id?: string
+          identification_number?: string | null
+          mother_id?: string | null
+          name?: string | null
+          notes?: string | null
+          sex?: Database["public"]["Enums"]["animal_sex"]
+          species: Database["public"]["Enums"]["animal_species"]
+          status?: string
+          updated_at?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          acquisition_cost?: number | null
+          acquisition_date?: string | null
+          birth_date?: string | null
+          breed?: string | null
+          created_at?: string
+          farm_id?: string
+          father_id?: string | null
+          id?: string
+          identification_number?: string | null
+          mother_id?: string | null
+          name?: string | null
+          notes?: string | null
+          sex?: Database["public"]["Enums"]["animal_sex"]
+          species?: Database["public"]["Enums"]["animal_species"]
+          status?: string
+          updated_at?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animals_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "animals_father_id_fkey"
+            columns: ["father_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "animals_mother_id_fkey"
+            columns: ["mother_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -455,6 +701,53 @@ export type Database = {
           },
         ]
       }
+      feed_stocks: {
+        Row: {
+          created_at: string
+          farm_id: string
+          feed_name: string
+          id: string
+          last_purchase_date: string | null
+          notes: string | null
+          quantity_kg: number
+          supplier: string | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          feed_name: string
+          id?: string
+          last_purchase_date?: string | null
+          notes?: string | null
+          quantity_kg?: number
+          supplier?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          feed_name?: string
+          id?: string
+          last_purchase_date?: string | null
+          notes?: string | null
+          quantity_kg?: number
+          supplier?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_stocks_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       harvests: {
         Row: {
           buyer: string | null
@@ -554,6 +847,117 @@ export type Database = {
             columns: ["crop_cycle_id"]
             isOneToOne: true
             referencedRelation: "crop_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livestock_expenses: {
+        Row: {
+          amount: number
+          animal_id: string | null
+          category: string
+          created_at: string
+          description: string
+          expense_date: string
+          farm_id: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          amount?: number
+          animal_id?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          amount?: number
+          animal_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livestock_expenses_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "livestock_expenses_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livestock_sales: {
+        Row: {
+          animal_id: string | null
+          buyer: string | null
+          created_at: string
+          description: string
+          farm_id: string
+          id: string
+          notes: string | null
+          quantity: number
+          sale_date: string
+          sale_type: string
+          total_amount: number
+          unit_price: number
+        }
+        Insert: {
+          animal_id?: string | null
+          buyer?: string | null
+          created_at?: string
+          description: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          sale_date?: string
+          sale_type?: string
+          total_amount?: number
+          unit_price?: number
+        }
+        Update: {
+          animal_id?: string | null
+          buyer?: string | null
+          created_at?: string
+          description?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          sale_date?: string
+          sale_type?: string
+          total_amount?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livestock_sales_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "livestock_sales_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
             referencedColumns: ["id"]
           },
         ]
@@ -717,6 +1121,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_farm_owner_from_animal: {
+        Args: { _animal_id: string }
+        Returns: string
+      }
       get_farm_owner_from_cycle: {
         Args: { _cycle_id: string }
         Returns: string
@@ -742,6 +1150,13 @@ export type Database = {
         | "traitement"
         | "recolte"
         | "autre"
+      animal_sex: "male" | "femelle" | "inconnu"
+      animal_species:
+        | "bovin"
+        | "caprin"
+        | "porcin"
+        | "volaille"
+        | "pisciculture"
       app_role: "admin" | "manager" | "farmer" | "viewer"
       cost_category:
         | "intrant"
@@ -885,6 +1300,8 @@ export const Constants = {
         "recolte",
         "autre",
       ],
+      animal_sex: ["male", "femelle", "inconnu"],
+      animal_species: ["bovin", "caprin", "porcin", "volaille", "pisciculture"],
       app_role: ["admin", "manager", "farmer", "viewer"],
       cost_category: [
         "intrant",
