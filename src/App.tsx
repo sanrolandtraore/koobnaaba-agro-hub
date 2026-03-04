@@ -21,6 +21,12 @@ import HarvestsPage from "./pages/dashboard/HarvestsPage";
 import CalendarPage from "./pages/dashboard/CalendarPage";
 import AnalyticsPage from "./pages/dashboard/AnalyticsPage";
 import ExportPage from "./pages/dashboard/ExportPage";
+import LivestockDashboardPage from "./pages/livestock/LivestockDashboardPage";
+import AnimalsPage from "./pages/livestock/AnimalsPage";
+import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
+import AnimalReproductionPage from "./pages/livestock/AnimalReproductionPage";
+import AnimalFeedingPage from "./pages/livestock/AnimalFeedingPage";
+import LivestockFinancePage from "./pages/livestock/LivestockFinancePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +55,12 @@ const App = () => (
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="export" element={<ExportPage />} />
+              <Route path="livestock" element={<LivestockDashboardPage />} />
+              <Route path="livestock/animals" element={<AnimalsPage />} />
+              <Route path="livestock/health" element={<AnimalHealthPage />} />
+              <Route path="livestock/reproduction" element={<AnimalReproductionPage />} />
+              <Route path="livestock/feeding" element={<AnimalFeedingPage />} />
+              <Route path="livestock/finance" element={<LivestockFinancePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
