@@ -9,16 +9,24 @@ import { Download, FileText, FileSpreadsheet } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-type ExportType = "cycles" | "costs" | "activities" | "harvests" | "investment" | "workers" | "equipment";
+type ExportType = "cycles" | "costs" | "activities" | "harvests" | "investment" | "workers" | "equipment"
+  | "animals" | "health" | "reproductions" | "feedings" | "feed_stocks" | "livestock_expenses" | "livestock_sales";
 
-const exportOptions: { value: ExportType; label: string }[] = [
-  { value: "cycles", label: "Cycles culturaux" },
-  { value: "costs", label: "Coûts" },
-  { value: "activities", label: "Activités" },
-  { value: "harvests", label: "Récoltes & Lots" },
-  { value: "investment", label: "Plans d'investissement" },
-  { value: "workers", label: "Main d'œuvre" },
-  { value: "equipment", label: "Équipements" },
+const exportOptions: { value: ExportType; label: string; group: string }[] = [
+  { value: "cycles", label: "Cycles culturaux", group: "🌱 Cultures" },
+  { value: "costs", label: "Coûts cultures", group: "🌱 Cultures" },
+  { value: "activities", label: "Activités", group: "🌱 Cultures" },
+  { value: "harvests", label: "Récoltes & Lots", group: "🌱 Cultures" },
+  { value: "investment", label: "Plans d'investissement", group: "🌱 Cultures" },
+  { value: "workers", label: "Main d'œuvre", group: "🔧 Ressources" },
+  { value: "equipment", label: "Équipements", group: "🔧 Ressources" },
+  { value: "animals", label: "Registre animaux", group: "🐄 Élevage" },
+  { value: "health", label: "Santé animale", group: "🐄 Élevage" },
+  { value: "reproductions", label: "Reproduction", group: "🐄 Élevage" },
+  { value: "feedings", label: "Alimentation", group: "🐄 Élevage" },
+  { value: "feed_stocks", label: "Stocks aliments", group: "🐄 Élevage" },
+  { value: "livestock_expenses", label: "Dépenses élevage", group: "🐄 Élevage" },
+  { value: "livestock_sales", label: "Ventes élevage", group: "🐄 Élevage" },
 ];
 
 const ExportPage = () => {
@@ -34,6 +42,13 @@ const ExportPage = () => {
       case "investment": return supabase.from("investment_plans").select("total_input_cost, total_labor_cost, total_equipment_cost, total_transport_cost, total_investment, expected_revenue, expected_roi_percent, break_even_yield_kg, crop_cycles(season, parcels(name), crop_references(name))").order("created_at", { ascending: false });
       case "workers": return supabase.from("workers").select("full_name, role, phone, daily_rate, status, farms(name)").order("full_name");
       case "equipment": return supabase.from("equipment").select("name, type, status, purchase_date, purchase_cost, farms(name)").order("name");
+      case "animals": return supabase.from("animals").select("name, identification_number, species, breed, sex, status, birth_date, acquisition_date, acquisition_cost, weight_kg, farms(name)").order("created_at", { ascending: false });
+      case "health": return supabase.from("animal_health_events").select("event_date, event_type, description, medication, dosage, cost, vet_name, next_date, animals(name, species)").order("event_date", { ascending: false });
+      case "reproductions": return supabase.from("animal_reproductions").select("event_date, event_type, expected_birth_date, actual_birth_date, offspring_count, offspring_alive, cost, animals!animal_reproductions_animal_id_fkey(name, species)").order("event_date", { ascending: false });
+      case "feedings": return supabase.from("animal_feedings").select("feeding_date, feed_type, quantity_kg, cost, animals(name), farms(name)").order("feeding_date", { ascending: false });
+      case "feed_stocks": return supabase.from("feed_stocks").select("feed_name, quantity_kg, unit_price, supplier, last_purchase_date, farms(name)").order("feed_name");
+      case "livestock_expenses": return supabase.from("livestock_expenses").select("expense_date, category, description, amount, farms(name), animals(name)").order("expense_date", { ascending: false });
+      case "livestock_sales": return supabase.from("livestock_sales").select("sale_date, sale_type, description, quantity, unit_price, total_amount, buyer, farms(name), animals(name)").order("sale_date", { ascending: false });
     }
   };
 
@@ -56,7 +71,7 @@ const ExportPage = () => {
     try {
       const { data, error } = await fetchData(selected);
       if (error) throw error;
-      if (!data || data.length === 0) { toast.error("Aucune donnée à exporter"); return; }
+      if (!data || data.length === 0) { toast.error("Aucune donnée à exporter"); setLoading(false); return; }
       const rows = data.map(flattenRow);
       const headers = Object.keys(rows[0]);
       const csv = [headers.join(";"), ...rows.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(";"))].join("\n");
@@ -75,7 +90,7 @@ const ExportPage = () => {
     try {
       const { data, error } = await fetchData(selected);
       if (error) throw error;
-      if (!data || data.length === 0) { toast.error("Aucune donnée à exporter"); return; }
+      if (!data || data.length === 0) { toast.error("Aucune donnée à exporter"); setLoading(false); return; }
       const rows = data.map(flattenRow);
       const headers = Object.keys(rows[0]);
 
@@ -101,11 +116,14 @@ const ExportPage = () => {
     setLoading(false);
   };
 
+  // Group options for display
+  const groups = [...new Set(exportOptions.map(o => o.group))];
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold">Export de données</h1>
-        <p className="text-muted-foreground mt-1">Téléchargez vos rapports en PDF ou CSV</p>
+        <p className="text-muted-foreground mt-1">Téléchargez vos rapports cultures et élevage en PDF ou CSV</p>
       </div>
 
       <Card>
@@ -115,7 +133,16 @@ const ExportPage = () => {
             <Label>Type de données</Label>
             <Select value={selected} onValueChange={(v) => setSelected(v as ExportType)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{exportOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                {groups.map(group => (
+                  <div key={group}>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{group}</div>
+                    {exportOptions.filter(o => o.group === group).map(o => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </div>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -154,7 +181,7 @@ const ExportPage = () => {
                 let y = 45;
                 doc.setFontSize(14);
                 doc.text("1. Exploitations & Cycles culturaux", 14, y);
-                const cycleRows = (cyclesRes.data || []).map(c => [
+                const cycleRows = (cyclesRes.data || []).map((c: any) => [
                   c.parcels?.farms?.name || "", c.parcels?.name || "", c.crop_references?.name || "",
                   c.season, String(c.parcels?.area_ha || ""), String(Math.round(c.expected_yield_kg || 0)),
                   String(Math.round(c.expected_revenue || 0)),
@@ -164,7 +191,7 @@ const ExportPage = () => {
                 y = (doc as any).lastAutoTable.finalY + 10;
                 doc.setFontSize(14);
                 doc.text("2. Plans d'investissement", 14, y);
-                const planRows = (plansRes.data || []).map(p => [
+                const planRows = (plansRes.data || []).map((p: any) => [
                   `${p.crop_cycles?.crop_references?.name} · ${p.crop_cycles?.season}`,
                   String(Math.round(p.total_investment)), String(Math.round(p.expected_revenue)),
                   `${p.expected_roi_percent}%`, String(Math.round(p.break_even_yield_kg || 0)),

@@ -1,15 +1,40 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Trash2, Wheat, Package } from "lucide-react";
+
+const feedTypes = [
+  { value: "Fourrage vert", label: "🌿 Fourrage vert" },
+  { value: "Foin", label: "🌾 Foin" },
+  { value: "Paille", label: "🥬 Paille" },
+  { value: "Son de blé", label: "🌾 Son de blé" },
+  { value: "Son de maïs", label: "🌽 Son de maïs" },
+  { value: "Tourteau de coton", label: "🧶 Tourteau de coton" },
+  { value: "Tourteau d'arachide", label: "🥜 Tourteau d'arachide" },
+  { value: "Tourteau de soja", label: "🫘 Tourteau de soja" },
+  { value: "Provende pondeuse", label: "🐔 Provende pondeuse" },
+  { value: "Provende chair", label: "🐓 Provende chair" },
+  { value: "Provende porcin", label: "🐷 Provende porcin" },
+  { value: "Aliment poisson", label: "🐟 Aliment poisson" },
+  { value: "Pierre à lécher", label: "🧂 Pierre à lécher" },
+  { value: "CMV (Complément)", label: "💊 CMV (Complément)" },
+  { value: "Céréales (maïs, mil)", label: "🌽 Céréales (maïs, mil)" },
+  { value: "Drêche de brasserie", label: "🍺 Drêche de brasserie" },
+  { value: "Autre", label: "📝 Autre" },
+];
+
+const suppliers = [
+  "Marché local", "Coopérative", "Provenderie", "Grossiste", "Production propre", "Autre",
+];
 
 const AnimalFeedingPage = () => {
   const { user } = useAuth();
@@ -58,7 +83,7 @@ const AnimalFeedingPage = () => {
       notes: feedForm.notes || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Alimentation enregistrée");
+    toast.success("Alimentation enregistrée ✓");
     setOpenFeeding(false);
     setFeedForm({ animal_id: "", farm_id: "", feed_type: "", quantity_kg: "", cost: "", feeding_date: new Date().toISOString().split("T")[0], notes: "" });
     fetchAll();
@@ -76,19 +101,21 @@ const AnimalFeedingPage = () => {
       notes: stockForm.notes || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Stock ajouté");
+    toast.success("Stock ajouté ✓");
     setOpenStock(false);
     setStockForm({ farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "" });
     fetchAll();
   };
 
   const handleDeleteFeeding = async (id: string) => {
+    if (!confirm("Supprimer ?")) return;
     await supabase.from("animal_feedings").delete().eq("id", id);
     toast.success("Supprimé");
     fetchAll();
   };
 
   const handleDeleteStock = async (id: string) => {
+    if (!confirm("Supprimer ?")) return;
     await supabase.from("feed_stocks").delete().eq("id", id);
     toast.success("Supprimé");
     fetchAll();
@@ -113,21 +140,33 @@ const AnimalFeedingPage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Alimentation</DialogTitle></DialogHeader>
                 <form onSubmit={handleFeedingSubmit} className="space-y-4">
-                  <Select value={feedForm.farm_id} onValueChange={(v) => setFeedForm({ ...feedForm, farm_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Exploitation *" /></SelectTrigger>
-                    <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Select value={feedForm.animal_id} onValueChange={(v) => setFeedForm({ ...feedForm, animal_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Animal (optionnel)" /></SelectTrigger>
-                    <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Input placeholder="Type d'aliment *" value={feedForm.feed_type} onChange={(e) => setFeedForm({ ...feedForm, feed_type: e.target.value })} required />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input type="number" placeholder="Quantité (kg) *" value={feedForm.quantity_kg} onChange={(e) => setFeedForm({ ...feedForm, quantity_kg: e.target.value })} required />
-                    <Input type="number" placeholder="Coût (FCFA)" value={feedForm.cost} onChange={(e) => setFeedForm({ ...feedForm, cost: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label>Exploitation *</Label>
+                    <Select value={feedForm.farm_id} onValueChange={(v) => setFeedForm({ ...feedForm, farm_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
-                  <Input type="date" value={feedForm.feeding_date} onChange={(e) => setFeedForm({ ...feedForm, feeding_date: e.target.value })} />
-                  <Input placeholder="Notes" value={feedForm.notes} onChange={(e) => setFeedForm({ ...feedForm, notes: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label>Animal (optionnel)</Label>
+                    <Select value={feedForm.animal_id} onValueChange={(v) => setFeedForm({ ...feedForm, animal_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Groupe / individuel" /></SelectTrigger>
+                      <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Type d'aliment *</Label>
+                    <Select value={feedForm.feed_type} onValueChange={(v) => setFeedForm({ ...feedForm, feed_type: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir l'aliment..." /></SelectTrigger>
+                      <SelectContent>{feedTypes.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label>Quantité (kg) *</Label><Input type="number" placeholder="0" value={feedForm.quantity_kg} onChange={(e) => setFeedForm({ ...feedForm, quantity_kg: e.target.value })} required /></div>
+                    <div className="space-y-1"><Label>Coût (FCFA)</Label><Input type="number" placeholder="0" value={feedForm.cost} onChange={(e) => setFeedForm({ ...feedForm, cost: e.target.value })} /></div>
+                  </div>
+                  <div className="space-y-1"><Label>Date</Label><Input type="date" value={feedForm.feeding_date} onChange={(e) => setFeedForm({ ...feedForm, feeding_date: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={feedForm.notes} onChange={(e) => setFeedForm({ ...feedForm, notes: e.target.value })} /></div>
                   <Button type="submit" className="w-full" disabled={!feedForm.farm_id || !feedForm.feed_type}>Enregistrer</Button>
                 </form>
               </DialogContent>
@@ -166,17 +205,32 @@ const AnimalFeedingPage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Nouveau stock aliment</DialogTitle></DialogHeader>
                 <form onSubmit={handleStockSubmit} className="space-y-4">
-                  <Select value={stockForm.farm_id} onValueChange={(v) => setStockForm({ ...stockForm, farm_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Exploitation *" /></SelectTrigger>
-                    <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Input placeholder="Nom aliment *" value={stockForm.feed_name} onChange={(e) => setStockForm({ ...stockForm, feed_name: e.target.value })} required />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input type="number" placeholder="Quantité (kg) *" value={stockForm.quantity_kg} onChange={(e) => setStockForm({ ...stockForm, quantity_kg: e.target.value })} required />
-                    <Input type="number" placeholder="Prix/kg (FCFA)" value={stockForm.unit_price} onChange={(e) => setStockForm({ ...stockForm, unit_price: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label>Exploitation *</Label>
+                    <Select value={stockForm.farm_id} onValueChange={(v) => setStockForm({ ...stockForm, farm_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
-                  <Input placeholder="Fournisseur" value={stockForm.supplier} onChange={(e) => setStockForm({ ...stockForm, supplier: e.target.value })} />
-                  <Input placeholder="Notes" value={stockForm.notes} onChange={(e) => setStockForm({ ...stockForm, notes: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label>Aliment *</Label>
+                    <Select value={stockForm.feed_name} onValueChange={(v) => setStockForm({ ...stockForm, feed_name: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir l'aliment..." /></SelectTrigger>
+                      <SelectContent>{feedTypes.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label>Quantité (kg) *</Label><Input type="number" placeholder="0" value={stockForm.quantity_kg} onChange={(e) => setStockForm({ ...stockForm, quantity_kg: e.target.value })} required /></div>
+                    <div className="space-y-1"><Label>Prix/kg (FCFA)</Label><Input type="number" placeholder="0" value={stockForm.unit_price} onChange={(e) => setStockForm({ ...stockForm, unit_price: e.target.value })} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Fournisseur</Label>
+                    <Select value={stockForm.supplier} onValueChange={(v) => setStockForm({ ...stockForm, supplier: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{suppliers.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={stockForm.notes} onChange={(e) => setStockForm({ ...stockForm, notes: e.target.value })} /></div>
                   <Button type="submit" className="w-full" disabled={!stockForm.farm_id || !stockForm.feed_name}>Enregistrer</Button>
                 </form>
               </DialogContent>

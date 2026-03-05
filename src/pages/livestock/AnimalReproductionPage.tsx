@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,13 +13,15 @@ import { toast } from "sonner";
 import { Plus, Trash2, Baby } from "lucide-react";
 
 const reproTypes = [
-  { value: "saillie", label: "Saillie naturelle" },
-  { value: "insemination", label: "Insémination artificielle" },
-  { value: "gestation", label: "Gestation confirmée" },
-  { value: "mise_bas", label: "Mise bas" },
-  { value: "avortement", label: "Avortement" },
-  { value: "sevrage", label: "Sevrage" },
+  { value: "saillie", label: "🐂 Saillie naturelle" },
+  { value: "insemination", label: "💉 Insémination artificielle" },
+  { value: "gestation", label: "🤰 Gestation confirmée" },
+  { value: "mise_bas", label: "👶 Mise bas" },
+  { value: "avortement", label: "⚠️ Avortement" },
+  { value: "sevrage", label: "🍼 Sevrage" },
 ];
+
+const offspringOptions = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "20"];
 
 const AnimalReproductionPage = () => {
   const { user } = useAuth();
@@ -60,20 +63,24 @@ const AnimalReproductionPage = () => {
       notes: form.notes || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Événement reproduction ajouté");
+    toast.success("Événement reproduction ajouté ✓");
     setOpen(false);
     setForm({ animal_id: "", event_type: "saillie", event_date: new Date().toISOString().split("T")[0], partner_id: "", expected_birth_date: "", actual_birth_date: "", offspring_count: "", offspring_alive: "", cost: "", notes: "" });
     fetchAll();
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("Supprimer ?")) return;
     const { error } = await supabase.from("animal_reproductions").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Événement supprimé");
+    toast.success("Supprimé");
     fetchAll();
   };
 
   const gestationsEnCours = events.filter((e) => e.expected_birth_date && !e.actual_birth_date && new Date(e.expected_birth_date) > new Date());
+  const females = animals.filter((a) => a.sex === "femelle");
+  const males = animals.filter((a) => a.sex === "male");
+  const showOffspring = ["mise_bas", "avortement"].includes(form.event_type);
 
   return (
     <div className="space-y-6">
@@ -84,29 +91,54 @@ const AnimalReproductionPage = () => {
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Événement reproduction</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Select value={form.animal_id} onValueChange={(v) => setForm({ ...form, animal_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Animal (mère) *" /></SelectTrigger>
-                <SelectContent>{animals.filter((a) => a.sex === "femelle").map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{reproTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
-              <Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
-              <Select value={form.partner_id} onValueChange={(v) => setForm({ ...form, partner_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Père (optionnel)" /></SelectTrigger>
-                <SelectContent>{animals.filter((a) => a.sex === "male").map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
-              </Select>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs text-muted-foreground">Date prévue mise bas</label><Input type="date" value={form.expected_birth_date} onChange={(e) => setForm({ ...form, expected_birth_date: e.target.value })} /></div>
-                <div><label className="text-xs text-muted-foreground">Date réelle mise bas</label><Input type="date" value={form.actual_birth_date} onChange={(e) => setForm({ ...form, actual_birth_date: e.target.value })} /></div>
+              <div className="space-y-1">
+                <Label>Animal (mère) *</Label>
+                <Select value={form.animal_id} onValueChange={(v) => setForm({ ...form, animal_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Choisir la femelle..." /></SelectTrigger>
+                  <SelectContent>{females.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input type="number" placeholder="Nb petits nés" value={form.offspring_count} onChange={(e) => setForm({ ...form, offspring_count: e.target.value })} />
-                <Input type="number" placeholder="Nb petits vivants" value={form.offspring_alive} onChange={(e) => setForm({ ...form, offspring_alive: e.target.value })} />
+                <div className="space-y-1">
+                  <Label>Type *</Label>
+                  <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{reproTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1"><Label>Date</Label><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></div>
               </div>
-              <Input type="number" placeholder="Coût (FCFA)" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
-              <Input placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <div className="space-y-1">
+                <Label>Père (optionnel)</Label>
+                <Select value={form.partner_id} onValueChange={(v) => setForm({ ...form, partner_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Choisir le mâle..." /></SelectTrigger>
+                  <SelectContent>{males.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Date prévue mise bas</Label><Input type="date" value={form.expected_birth_date} onChange={(e) => setForm({ ...form, expected_birth_date: e.target.value })} /></div>
+                <div className="space-y-1"><Label>Date réelle mise bas</Label><Input type="date" value={form.actual_birth_date} onChange={(e) => setForm({ ...form, actual_birth_date: e.target.value })} /></div>
+              </div>
+              {showOffspring && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Nb petits nés</Label>
+                    <Select value={form.offspring_count} onValueChange={(v) => setForm({ ...form, offspring_count: v })}>
+                      <SelectTrigger><SelectValue placeholder="0" /></SelectTrigger>
+                      <SelectContent>{offspringOptions.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Nb petits vivants</Label>
+                    <Select value={form.offspring_alive} onValueChange={(v) => setForm({ ...form, offspring_alive: v })}>
+                      <SelectTrigger><SelectValue placeholder="0" /></SelectTrigger>
+                      <SelectContent>{offspringOptions.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              <div className="space-y-1"><Label>Coût (FCFA)</Label><Input type="number" placeholder="0" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
               <Button type="submit" className="w-full" disabled={!form.animal_id}>Enregistrer</Button>
             </form>
           </DialogContent>
@@ -136,7 +168,7 @@ const AnimalReproductionPage = () => {
             <Card key={e.id}>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{(e as any).animals?.name || "Animal"} — <Badge variant="outline">{reproTypes.find((t) => t.value === e.event_type)?.label}</Badge></p>
+                  <p className="font-medium">{(e as any).animals?.name || "Animal"} — <Badge variant="outline">{reproTypes.find((t) => t.value === e.event_type)?.label || e.event_type}</Badge></p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(e.event_date).toLocaleDateString("fr-FR")}
                     {e.offspring_count > 0 && ` • ${e.offspring_alive}/${e.offspring_count} petits vivants`}
