@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,22 +13,48 @@ import { toast } from "sonner";
 import { Plus, Trash2, TrendingDown, TrendingUp, DollarSign } from "lucide-react";
 
 const expenseCategories = [
-  { value: "alimentation", label: "Alimentation" },
-  { value: "sante", label: "Santé / Véto" },
-  { value: "equipement", label: "Équipement" },
-  { value: "transport", label: "Transport" },
-  { value: "main_oeuvre", label: "Main d'œuvre" },
-  { value: "autre", label: "Autre" },
+  { value: "alimentation", label: "🌾 Alimentation" },
+  { value: "sante", label: "💊 Santé / Véto" },
+  { value: "equipement", label: "🔧 Équipement" },
+  { value: "transport", label: "🚛 Transport" },
+  { value: "main_oeuvre", label: "👷 Main d'œuvre" },
+  { value: "habitat", label: "🏠 Habitat / Abri" },
+  { value: "eau_energie", label: "💧 Eau / Énergie" },
+  { value: "autre", label: "📝 Autre" },
 ];
 
+const expenseDescriptions: Record<string, string[]> = {
+  alimentation: ["Achat provende", "Achat fourrage", "Achat son", "Achat tourteau", "Pierre à lécher", "Compléments", "Autre"],
+  sante: ["Vaccination", "Traitement maladie", "Consultation vétérinaire", "Vermifuge", "Chirurgie", "Médicaments", "Autre"],
+  equipement: ["Mangeoire/Abreuvoir", "Clôture", "Enclos/Poulailler", "Bassin (pisciculture)", "Couveuse", "Outil de pesée", "Autre"],
+  transport: ["Transport animaux", "Transport aliments", "Déplacement vétérinaire", "Autre"],
+  main_oeuvre: ["Berger/Gardien", "Ouvrier journalier", "Technicien", "Autre"],
+  habitat: ["Construction abri", "Réparation enclos", "Litière/Paille", "Nettoyage", "Autre"],
+  eau_energie: ["Facture eau", "Facture électricité", "Pompage", "Autre"],
+  autre: ["Assurance", "Taxes", "Formation", "Autre"],
+};
+
 const saleTypes = [
-  { value: "animal", label: "Vente animal" },
-  { value: "lait", label: "Lait" },
-  { value: "oeufs", label: "Œufs" },
-  { value: "poisson", label: "Poisson" },
-  { value: "fumier", label: "Fumier" },
-  { value: "autre", label: "Autre" },
+  { value: "animal", label: "🐄 Vente animal" },
+  { value: "lait", label: "🥛 Lait" },
+  { value: "oeufs", label: "🥚 Œufs" },
+  { value: "poisson", label: "🐟 Poisson" },
+  { value: "fumier", label: "💩 Fumier" },
+  { value: "peau_cuir", label: "🧥 Peau / Cuir" },
+  { value: "miel", label: "🍯 Miel" },
+  { value: "autre", label: "📝 Autre" },
 ];
+
+const saleDescriptions: Record<string, string[]> = {
+  animal: ["Vente sur pied", "Vente après engraissement", "Vente réforme", "Vente jeune", "Autre"],
+  lait: ["Lait frais", "Lait caillé", "Fromage", "Yaourt", "Autre"],
+  oeufs: ["Œufs de consommation", "Œufs à couver", "Autre"],
+  poisson: ["Tilapia", "Clarias", "Carpe", "Autre"],
+  fumier: ["Fumier frais", "Compost", "Autre"],
+  peau_cuir: ["Peau brute", "Cuir traité", "Autre"],
+  miel: ["Miel brut", "Miel filtré", "Autre"],
+  autre: ["Autre produit", "Service (saillie)", "Autre"],
+};
 
 const LivestockFinancePage = () => {
   const { user } = useAuth();
@@ -78,7 +105,7 @@ const LivestockFinancePage = () => {
       notes: expForm.notes || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Dépense enregistrée");
+    toast.success("Dépense enregistrée ✓");
     setOpenExpense(false);
     setExpForm({ farm_id: "", animal_id: "", category: "alimentation", description: "", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
     fetchAll();
@@ -100,7 +127,7 @@ const LivestockFinancePage = () => {
       notes: saleForm.notes || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Vente enregistrée");
+    toast.success("Vente enregistrée ✓");
     setOpenSale(false);
     setSaleForm({ farm_id: "", animal_id: "", sale_type: "animal", description: "", quantity: "1", unit_price: "", buyer: "", sale_date: new Date().toISOString().split("T")[0], notes: "" });
     fetchAll();
@@ -109,6 +136,11 @@ const LivestockFinancePage = () => {
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
   const totalSales = sales.reduce((s, e) => s + Number(e.total_amount), 0);
   const profit = totalSales - totalExpenses;
+
+  const currentExpDescs = expenseDescriptions[expForm.category] || [];
+  const currentSaleDescs = saleDescriptions[saleForm.sale_type] || [];
+
+  const buyers = ["Marché local", "Boucher", "Grossiste", "Particulier", "Restaurant/Hôtel", "Exportation", "Autre"];
 
   return (
     <div className="space-y-6">
@@ -133,17 +165,38 @@ const LivestockFinancePage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Dépense élevage</DialogTitle></DialogHeader>
                 <form onSubmit={handleExpenseSubmit} className="space-y-4">
-                  <Select value={expForm.farm_id} onValueChange={(v) => setExpForm({ ...expForm, farm_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Exploitation *" /></SelectTrigger>
-                    <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Select value={expForm.category} onValueChange={(v) => setExpForm({ ...expForm, category: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{expenseCategories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Input placeholder="Description *" value={expForm.description} onChange={(e) => setExpForm({ ...expForm, description: e.target.value })} required />
-                  <Input type="number" placeholder="Montant (FCFA) *" value={expForm.amount} onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })} required />
-                  <Input type="date" value={expForm.expense_date} onChange={(e) => setExpForm({ ...expForm, expense_date: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label>Exploitation *</Label>
+                    <Select value={expForm.farm_id} onValueChange={(v) => setExpForm({ ...expForm, farm_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Catégorie *</Label>
+                    <Select value={expForm.category} onValueChange={(v) => setExpForm({ ...expForm, category: v, description: "" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{expenseCategories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Description *</Label>
+                    <Select value={expForm.description} onValueChange={(v) => setExpForm({ ...expForm, description: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{currentExpDescs.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label>Montant (FCFA) *</Label><Input type="number" placeholder="0" value={expForm.amount} onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })} required /></div>
+                    <div className="space-y-1"><Label>Date</Label><Input type="date" value={expForm.expense_date} onChange={(e) => setExpForm({ ...expForm, expense_date: e.target.value })} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Animal (optionnel)</Label>
+                    <Select value={expForm.animal_id} onValueChange={(v) => setExpForm({ ...expForm, animal_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Dépense générale" /></SelectTrigger>
+                      <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                   <Button type="submit" className="w-full" disabled={!expForm.farm_id || !expForm.description}>Enregistrer</Button>
                 </form>
               </DialogContent>
@@ -158,11 +211,11 @@ const LivestockFinancePage = () => {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="font-medium">{e.description}</p>
-                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label} • {(e as any).farms?.name} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
+                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label || e.category} • {(e as any).farms?.name} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-destructive">{Number(e.amount).toLocaleString()} FCFA</span>
-                      <Button variant="ghost" size="icon" onClick={async () => { await supabase.from("livestock_expenses").delete().eq("id", e.id); toast.success("Supprimé"); fetchAll(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { if (!confirm("Supprimer ?")) return; await supabase.from("livestock_expenses").delete().eq("id", e.id); toast.success("Supprimé"); fetchAll(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -178,21 +231,48 @@ const LivestockFinancePage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Vente élevage</DialogTitle></DialogHeader>
                 <form onSubmit={handleSaleSubmit} className="space-y-4">
-                  <Select value={saleForm.farm_id} onValueChange={(v) => setSaleForm({ ...saleForm, farm_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Exploitation *" /></SelectTrigger>
-                    <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Select value={saleForm.sale_type} onValueChange={(v) => setSaleForm({ ...saleForm, sale_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{saleTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Input placeholder="Description *" value={saleForm.description} onChange={(e) => setSaleForm({ ...saleForm, description: e.target.value })} required />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input type="number" placeholder="Quantité *" value={saleForm.quantity} onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })} required />
-                    <Input type="number" placeholder="Prix unitaire *" value={saleForm.unit_price} onChange={(e) => setSaleForm({ ...saleForm, unit_price: e.target.value })} required />
+                  <div className="space-y-1">
+                    <Label>Exploitation *</Label>
+                    <Select value={saleForm.farm_id} onValueChange={(v) => setSaleForm({ ...saleForm, farm_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
-                  <Input placeholder="Acheteur" value={saleForm.buyer} onChange={(e) => setSaleForm({ ...saleForm, buyer: e.target.value })} />
-                  <Input type="date" value={saleForm.sale_date} onChange={(e) => setSaleForm({ ...saleForm, sale_date: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label>Type de vente *</Label>
+                    <Select value={saleForm.sale_type} onValueChange={(v) => setSaleForm({ ...saleForm, sale_type: v, description: "" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{saleTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Description *</Label>
+                    <Select value={saleForm.description} onValueChange={(v) => setSaleForm({ ...saleForm, description: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{currentSaleDescs.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label>Quantité *</Label><Input type="number" placeholder="1" value={saleForm.quantity} onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })} required /></div>
+                    <div className="space-y-1"><Label>Prix unitaire (FCFA) *</Label><Input type="number" placeholder="0" value={saleForm.unit_price} onChange={(e) => setSaleForm({ ...saleForm, unit_price: e.target.value })} required /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label>Acheteur</Label>
+                      <Select value={saleForm.buyer} onValueChange={(v) => setSaleForm({ ...saleForm, buyer: v })}>
+                        <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                        <SelectContent>{buyers.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1"><Label>Date</Label><Input type="date" value={saleForm.sale_date} onChange={(e) => setSaleForm({ ...saleForm, sale_date: e.target.value })} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Animal (optionnel)</Label>
+                    <Select value={saleForm.animal_id} onValueChange={(v) => setSaleForm({ ...saleForm, animal_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Vente générale" /></SelectTrigger>
+                      <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                   <Button type="submit" className="w-full" disabled={!saleForm.farm_id || !saleForm.description}>Enregistrer</Button>
                 </form>
               </DialogContent>
@@ -207,11 +287,11 @@ const LivestockFinancePage = () => {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="font-medium">{s.description}</p>
-                      <p className="text-sm text-muted-foreground">{saleTypes.find((t) => t.value === s.sale_type)?.label} • {s.buyer || "—"} • {new Date(s.sale_date).toLocaleDateString("fr-FR")}</p>
+                      <p className="text-sm text-muted-foreground">{saleTypes.find((t) => t.value === s.sale_type)?.label || s.sale_type} • {s.buyer || "—"} • {new Date(s.sale_date).toLocaleDateString("fr-FR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-emerald-600">{Number(s.total_amount).toLocaleString()} FCFA</span>
-                      <Button variant="ghost" size="icon" onClick={async () => { await supabase.from("livestock_sales").delete().eq("id", s.id); toast.success("Supprimé"); fetchAll(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { if (!confirm("Supprimer ?")) return; await supabase.from("livestock_sales").delete().eq("id", s.id); toast.success("Supprimé"); fetchAll(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </CardContent>
                 </Card>

@@ -4,19 +4,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit, Filter } from "lucide-react";
+import { Plus, Trash2, Filter } from "lucide-react";
 
 const speciesOptions = [
-  { value: "bovin", label: "Bovin" },
-  { value: "caprin", label: "Caprin" },
-  { value: "porcin", label: "Porcin" },
-  { value: "volaille", label: "Volaille" },
-  { value: "pisciculture", label: "Pisciculture" },
+  { value: "bovin", label: "Bovin 🐄" },
+  { value: "caprin", label: "Caprin 🐐" },
+  { value: "porcin", label: "Porcin 🐷" },
+  { value: "volaille", label: "Volaille 🐔" },
+  { value: "pisciculture", label: "Pisciculture 🐟" },
 ];
 
 const sexOptions = [
@@ -25,7 +26,28 @@ const sexOptions = [
   { value: "inconnu", label: "Inconnu" },
 ];
 
-const statusOptions = ["actif", "vendu", "mort", "réformé"];
+const statusOptions = [
+  { value: "actif", label: "Actif" },
+  { value: "vendu", label: "Vendu" },
+  { value: "mort", label: "Mort" },
+  { value: "réformé", label: "Réformé" },
+];
+
+const breedsBySpecies: Record<string, string[]> = {
+  bovin: ["Zébu Peulh", "Zébu Azawak", "Zébu Bororo", "N'Dama", "Baoulé", "Borgou", "Métis", "Holstein", "Charolais", "Brahman", "Autre"],
+  caprin: ["Chèvre du Sahel", "Chèvre naine", "Chèvre rousse", "Alpine", "Saanen", "Boer", "Métis", "Autre"],
+  porcin: ["Large White", "Landrace", "Duroc", "Porc local", "Piétrain", "Métis", "Autre"],
+  volaille: ["Poulet local", "Poulet de chair", "Pondeuse", "Pintade", "Canard", "Dinde", "Caille", "Autre"],
+  pisciculture: ["Tilapia", "Clarias (silure)", "Carpe", "Capitaine", "Autre"],
+};
+
+const acquisitionModes = [
+  { value: "achat", label: "Achat" },
+  { value: "naissance", label: "Naissance sur place" },
+  { value: "don", label: "Don" },
+  { value: "echange", label: "Échange" },
+  { value: "heritage", label: "Héritage" },
+];
 
 const AnimalsPage = () => {
   const { user } = useAuth();
@@ -69,13 +91,14 @@ const AnimalsPage = () => {
       notes: form.notes || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Animal ajouté");
+    toast.success("Animal ajouté ✓");
     setOpen(false);
     setForm({ farm_id: "", species: "bovin", name: "", identification_number: "", breed: "", sex: "inconnu", birth_date: "", acquisition_date: new Date().toISOString().split("T")[0], acquisition_cost: "", weight_kg: "", notes: "" });
     fetchAll();
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("Supprimer cet animal ?")) return;
     const { error } = await supabase.from("animals").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Animal supprimé");
@@ -83,6 +106,7 @@ const AnimalsPage = () => {
   };
 
   const filtered = filterSpecies === "all" ? animals : animals.filter((a) => a.species === filterSpecies);
+  const currentBreeds = breedsBySpecies[form.species] || [];
 
   return (
     <div className="space-y-6">
@@ -90,7 +114,7 @@ const AnimalsPage = () => {
         <h1 className="text-2xl font-heading font-bold">Registre des animaux</h1>
         <div className="flex gap-2">
           <Select value={filterSpecies} onValueChange={setFilterSpecies}>
-            <SelectTrigger className="w-40"><Filter className="h-4 w-4 mr-1" /><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-44"><Filter className="h-4 w-4 mr-1" /><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes espèces</SelectItem>
               {speciesOptions.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
@@ -101,30 +125,52 @@ const AnimalsPage = () => {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Nouvel animal</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Select value={form.farm_id} onValueChange={(v) => setForm({ ...form, farm_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Exploitation *" /></SelectTrigger>
-                  <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                </Select>
-                <Select value={form.species} onValueChange={(v) => setForm({ ...form, species: v })}>
-                  <SelectTrigger><SelectValue placeholder="Espèce *" /></SelectTrigger>
-                  <SelectContent>{speciesOptions.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input placeholder="Nom / identifiant" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                <Input placeholder="N° identification" value={form.identification_number} onChange={(e) => setForm({ ...form, identification_number: e.target.value })} />
-                <Input placeholder="Race" value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} />
-                <Select value={form.sex} onValueChange={(v) => setForm({ ...form, sex: v })}>
-                  <SelectTrigger><SelectValue placeholder="Sexe" /></SelectTrigger>
-                  <SelectContent>{sexOptions.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                </Select>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="text-xs text-muted-foreground">Date naissance</label><Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></div>
-                  <div><label className="text-xs text-muted-foreground">Date acquisition</label><Input type="date" value={form.acquisition_date} onChange={(e) => setForm({ ...form, acquisition_date: e.target.value })} /></div>
+                <div className="space-y-1">
+                  <Label>Exploitation *</Label>
+                  <Select value={form.farm_id} onValueChange={(v) => setForm({ ...form, farm_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                    <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <Input type="number" placeholder="Coût acquisition" value={form.acquisition_cost} onChange={(e) => setForm({ ...form, acquisition_cost: e.target.value })} />
-                  <Input type="number" placeholder="Poids (kg)" value={form.weight_kg} onChange={(e) => setForm({ ...form, weight_kg: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label>Espèce *</Label>
+                    <Select value={form.species} onValueChange={(v) => setForm({ ...form, species: v, breed: "" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{speciesOptions.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Race</Label>
+                    <Select value={form.breed} onValueChange={(v) => setForm({ ...form, breed: v })}>
+                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                      <SelectContent>{currentBreeds.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <Input placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Nom / Identifiant</Label>
+                    <Input placeholder="Ex: Bella, N°042" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Sexe</Label>
+                    <Select value={form.sex} onValueChange={(v) => setForm({ ...form, sex: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{sexOptions.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Input placeholder="N° identification (boucle, tatouage...)" value={form.identification_number} onChange={(e) => setForm({ ...form, identification_number: e.target.value })} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1"><Label>Date naissance</Label><Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>Date acquisition</Label><Input type="date" value={form.acquisition_date} onChange={(e) => setForm({ ...form, acquisition_date: e.target.value })} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1"><Label>Coût acquisition (FCFA)</Label><Input type="number" placeholder="0" value={form.acquisition_cost} onChange={(e) => setForm({ ...form, acquisition_cost: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>Poids (kg)</Label><Input type="number" placeholder="0" value={form.weight_kg} onChange={(e) => setForm({ ...form, weight_kg: e.target.value })} /></div>
+                </div>
+                <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
                 <Button type="submit" className="w-full" disabled={!form.farm_id}>Enregistrer</Button>
               </form>
             </DialogContent>
@@ -156,7 +202,7 @@ const AnimalsPage = () => {
                   <span>Sexe: {sexOptions.find((s) => s.value === a.sex)?.label}</span>
                   {a.weight_kg && <span>Poids: {a.weight_kg} kg</span>}
                   {a.birth_date && <span>Né: {new Date(a.birth_date).toLocaleDateString("fr-FR")}</span>}
-                  <span>Statut: {a.status}</span>
+                  <span>Statut: {statusOptions.find(s => s.value === a.status)?.label || a.status}</span>
                   {a.acquisition_cost > 0 && <span>Coût: {Number(a.acquisition_cost).toLocaleString()} FCFA</span>}
                 </div>
               </CardContent>

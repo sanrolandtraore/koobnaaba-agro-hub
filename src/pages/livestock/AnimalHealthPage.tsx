@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,12 +13,33 @@ import { toast } from "sonner";
 import { Plus, Trash2, Heart, AlertTriangle } from "lucide-react";
 
 const eventTypes = [
-  { value: "vaccination", label: "Vaccination" },
-  { value: "traitement", label: "Traitement" },
-  { value: "consultation", label: "Consultation" },
-  { value: "chirurgie", label: "Chirurgie" },
-  { value: "deworming", label: "Vermifuge" },
-  { value: "autre", label: "Autre" },
+  { value: "vaccination", label: "💉 Vaccination" },
+  { value: "traitement", label: "💊 Traitement" },
+  { value: "consultation", label: "🩺 Consultation" },
+  { value: "chirurgie", label: "🔪 Chirurgie" },
+  { value: "deworming", label: "🐛 Vermifuge" },
+  { value: "vitamine", label: "💪 Vitamine/Complément" },
+  { value: "autre", label: "📝 Autre" },
+];
+
+const vaccinations = [
+  "Charbon symptomatique", "Charbon bactéridien", "Pasteurellose", "Péripneumonie (PPCB)",
+  "Fièvre aphteuse", "Dermatose nodulaire", "Brucellose", "Rage",
+  "Newcastle (volaille)", "Gumboro (volaille)", "Choléra aviaire",
+  "Peste des petits ruminants (PPR)", "Clavelée", "Peste porcine",
+  "Autre",
+];
+
+const medications = [
+  "Oxytétracycline", "Pénicilline", "Ivermectine", "Albendazole",
+  "Diminazene (Bérénil)", "Isométamidium", "Lévamisole", "Fenbendazole",
+  "Tylosine", "Amoxicilline", "Sulfadimidine", "Vitamines AD3E",
+  "Fer dextran", "Anti-inflammatoire", "Autre",
+];
+
+const dosageUnits = [
+  "1 ml", "2 ml", "3 ml", "5 ml", "10 ml", "15 ml", "20 ml",
+  "1 comprimé", "2 comprimés", "1 sachet", "Selon poids",
 ];
 
 const AnimalHealthPage = () => {
@@ -59,20 +81,22 @@ const AnimalHealthPage = () => {
       notes: form.notes || null,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("Événement santé ajouté");
+    toast.success("Événement santé ajouté ✓");
     setOpen(false);
     setForm({ animal_id: "", event_type: "vaccination", event_date: new Date().toISOString().split("T")[0], description: "", medication: "", dosage: "", cost: "", vet_name: "", next_date: "", notes: "" });
     fetchAll();
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("Supprimer cet événement ?")) return;
     const { error } = await supabase.from("animal_health_events").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Événement supprimé");
+    toast.success("Supprimé");
     fetchAll();
   };
 
   const upcoming = events.filter((e) => e.next_date && new Date(e.next_date) > new Date());
+  const isVaccination = form.event_type === "vaccination";
 
   return (
     <div className="space-y-6">
@@ -83,26 +107,62 @@ const AnimalHealthPage = () => {
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Événement santé</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Select value={form.animal_id} onValueChange={(v) => setForm({ ...form, animal_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Animal *" /></SelectTrigger>
-                <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{eventTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
-              <Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
-              <Input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Médicament" value={form.medication} onChange={(e) => setForm({ ...form, medication: e.target.value })} />
-                <Input placeholder="Dosage" value={form.dosage} onChange={(e) => setForm({ ...form, dosage: e.target.value })} />
+              <div className="space-y-1">
+                <Label>Animal *</Label>
+                <Select value={form.animal_id} onValueChange={(v) => setForm({ ...form, animal_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Choisir l'animal..." /></SelectTrigger>
+                  <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input type="number" placeholder="Coût (FCFA)" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
-                <Input placeholder="Vétérinaire" value={form.vet_name} onChange={(e) => setForm({ ...form, vet_name: e.target.value })} />
+                <div className="space-y-1">
+                  <Label>Type *</Label>
+                  <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{eventTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Date</Label>
+                  <Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
+                </div>
               </div>
-              <div><label className="text-xs text-muted-foreground">Prochain rendez-vous</label><Input type="date" value={form.next_date} onChange={(e) => setForm({ ...form, next_date: e.target.value })} /></div>
-              <Input placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              {isVaccination ? (
+                <div className="space-y-1">
+                  <Label>Vaccin</Label>
+                  <Select value={form.description} onValueChange={(v) => setForm({ ...form, description: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choisir le vaccin..." /></SelectTrigger>
+                    <SelectContent>{vaccinations.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Label>Description</Label>
+                  <Input placeholder="Détails..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Médicament</Label>
+                  <Select value={form.medication} onValueChange={(v) => setForm({ ...form, medication: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                    <SelectContent>{medications.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Dosage</Label>
+                  <Select value={form.dosage} onValueChange={(v) => setForm({ ...form, dosage: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                    <SelectContent>{dosageUnits.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Coût (FCFA)</Label><Input type="number" placeholder="0" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} /></div>
+                <div className="space-y-1"><Label>Vétérinaire</Label><Input placeholder="Dr..." value={form.vet_name} onChange={(e) => setForm({ ...form, vet_name: e.target.value })} /></div>
+              </div>
+              <div className="space-y-1"><Label>Prochain rendez-vous</Label><Input type="date" value={form.next_date} onChange={(e) => setForm({ ...form, next_date: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
               <Button type="submit" className="w-full" disabled={!form.animal_id}>Enregistrer</Button>
             </form>
           </DialogContent>
@@ -134,7 +194,7 @@ const AnimalHealthPage = () => {
                 <div className="flex items-start gap-3">
                   <Heart className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium">{(e as any).animals?.name || "Animal"} — <Badge variant="outline">{eventTypes.find((t) => t.value === e.event_type)?.label}</Badge></p>
+                    <p className="font-medium">{(e as any).animals?.name || "Animal"} — <Badge variant="outline">{eventTypes.find((t) => t.value === e.event_type)?.label || e.event_type}</Badge></p>
                     <p className="text-sm text-muted-foreground">{e.description || e.medication || "—"} • {new Date(e.event_date).toLocaleDateString("fr-FR")}</p>
                     {e.cost > 0 && <p className="text-sm font-medium">{Number(e.cost).toLocaleString()} FCFA</p>}
                   </div>
