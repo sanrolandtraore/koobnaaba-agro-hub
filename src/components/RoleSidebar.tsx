@@ -44,11 +44,8 @@ const eleveurNav: NavItem[] = [
 const cooperativeNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/members", label: "Membres", icon: Users },
-  { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
-  { to: "/dashboard/harvests", label: "Collectes", icon: Package },
-  { to: "/dashboard/costs", label: "Finances", icon: DollarSign },
-  { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
-  { to: "/dashboard/export", label: "Export", icon: Download },
+  { to: "/dashboard/collectes", label: "Collectes", icon: Package },
+  { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
 ];
 
 const agentNav: NavItem[] = [

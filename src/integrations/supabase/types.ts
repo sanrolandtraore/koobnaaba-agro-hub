@@ -370,6 +370,122 @@ export type Database = {
         }
         Relationships: []
       }
+      cooperative_collectes: {
+        Row: {
+          buyer: string | null
+          collecte_date: string
+          cooperative_user_id: string
+          created_at: string
+          id: string
+          member_id: string | null
+          notes: string | null
+          product_name: string
+          product_type: string
+          quality_grade: string | null
+          quantity_kg: number
+          season: string | null
+          status: string
+          total_amount: number | null
+          unit_price: number | null
+          warehouse: string | null
+        }
+        Insert: {
+          buyer?: string | null
+          collecte_date?: string
+          cooperative_user_id: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          product_name: string
+          product_type?: string
+          quality_grade?: string | null
+          quantity_kg?: number
+          season?: string | null
+          status?: string
+          total_amount?: number | null
+          unit_price?: number | null
+          warehouse?: string | null
+        }
+        Update: {
+          buyer?: string | null
+          collecte_date?: string
+          cooperative_user_id?: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          product_name?: string
+          product_type?: string
+          quality_grade?: string | null
+          quantity_kg?: number
+          season?: string | null
+          status?: string
+          total_amount?: number | null
+          unit_price?: number | null
+          warehouse?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooperative_collectes_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "cooperative_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cooperative_members: {
+        Row: {
+          area_ha: number | null
+          cooperative_user_id: string
+          created_at: string
+          crop_type: string | null
+          full_name: string
+          id: string
+          joined_date: string
+          livestock_type: string | null
+          location: string | null
+          member_type: string
+          notes: string | null
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          area_ha?: number | null
+          cooperative_user_id: string
+          created_at?: string
+          crop_type?: string | null
+          full_name: string
+          id?: string
+          joined_date?: string
+          livestock_type?: string | null
+          location?: string | null
+          member_type?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          area_ha?: number | null
+          cooperative_user_id?: string
+          created_at?: string
+          crop_type?: string | null
+          full_name?: string
+          id?: string
+          joined_date?: string
+          livestock_type?: string | null
+          location?: string | null
+          member_type?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cost_entries: {
         Row: {
           amount: number
