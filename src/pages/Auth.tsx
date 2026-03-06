@@ -6,13 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Sprout, Mail, Lock, User } from "lucide-react";
+import { Sprout, Mail, Lock, User, Wheat, Bug, Users, Compass, Handshake } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const ROLES = [
+  { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Gestion de cultures et parcelles" },
+  { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Gestion d'élevage et troupeaux" },
+  { value: "cooperative", label: "Coopérative", icon: Users, desc: "Gestion de membres et collectes" },
+  { value: "agent_technique", label: "Agent technique", icon: Compass, desc: "Suivi et conseil technique" },
+  { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Financement et accompagnement" },
+] as const;
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -35,7 +45,7 @@ const Auth = () => {
         setLoading(false);
         return;
       }
-      const { error } = await signUp(email, password, fullName);
+      const { error } = await signUp(email, password, fullName, selectedRole);
       if (error) {
         toast.error(error.message);
       } else {
@@ -47,7 +57,7 @@ const Auth = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center gradient-hero p-4">
-      <Card className="w-full max-w-md border-border/50 shadow-warm animate-fade-in">
+      <Card className="w-full max-w-lg border-border/50 shadow-warm animate-fade-in">
         <CardHeader className="text-center space-y-3">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl gradient-warm shadow-warm">
             <Sprout className="h-7 w-7 text-accent-foreground" />
@@ -57,24 +67,48 @@ const Auth = () => {
             <span className="text-gradient-warm">Koobnaaba</span>
           </CardTitle>
           <CardDescription>
-            {isLogin ? "Connectez-vous à votre exploitation" : "Créez votre compte agriculteur"}
+            {isLogin ? "Connectez-vous à votre espace" : "Choisissez votre profil et créez votre compte"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" /> Nom complet
-                </Label>
-                <Input
-                  id="name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ouédraogo Abdoulaye"
-                  required={!isLogin}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Votre profil</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {ROLES.map(({ value, label, icon: Icon, desc }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setSelectedRole(value)}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all",
+                          selectedRole === value
+                            ? "border-primary bg-primary/5 shadow-primary"
+                            : "border-border hover:border-primary/40 hover:bg-muted/50"
+                        )}
+                      >
+                        <Icon className={cn("h-6 w-6", selectedRole === value ? "text-primary" : "text-muted-foreground")} />
+                        <span className="text-xs font-semibold leading-tight">{label}</span>
+                        <span className="text-[10px] text-muted-foreground leading-tight hidden sm:block">{desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" /> Nom complet
+                  </Label>
+                  <Input
+                    id="name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Ouédraogo Abdoulaye"
+                    required={!isLogin}
+                  />
+                </div>
+              </>
             )}
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2">

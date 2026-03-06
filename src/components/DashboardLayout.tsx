@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom";
-import { AppSidebar } from "@/components/AppSidebar";
+import { RoleSidebar } from "@/components/RoleSidebar";
 
 const DashboardLayout = () => {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AppSidebar />
+      <RoleSidebar />
       <main className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl py-6 px-4 md:px-8">
           <Outlet />

@@ -1157,7 +1157,16 @@ export type Database = {
         | "porcin"
         | "volaille"
         | "pisciculture"
-      app_role: "admin" | "manager" | "farmer" | "viewer"
+      app_role:
+        | "admin"
+        | "manager"
+        | "farmer"
+        | "viewer"
+        | "agriculteur"
+        | "eleveur"
+        | "cooperative"
+        | "agent_technique"
+        | "partenaire"
       cost_category:
         | "intrant"
         | "main_oeuvre"
@@ -1302,7 +1311,17 @@ export const Constants = {
       ],
       animal_sex: ["male", "femelle", "inconnu"],
       animal_species: ["bovin", "caprin", "porcin", "volaille", "pisciculture"],
-      app_role: ["admin", "manager", "farmer", "viewer"],
+      app_role: [
+        "admin",
+        "manager",
+        "farmer",
+        "viewer",
+        "agriculteur",
+        "eleveur",
+        "cooperative",
+        "agent_technique",
+        "partenaire",
+      ],
       cost_category: [
         "intrant",
         "main_oeuvre",

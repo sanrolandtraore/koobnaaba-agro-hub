@@ -8,7 +8,8 @@ interface AuthContextType {
   loading: boolean;
   profile: { full_name: string; phone: string | null; avatar_url: string | null } | null;
   roles: string[];
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  primaryRole: string | null;
+  signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
@@ -71,12 +72,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, role: role || "agriculteur" },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -98,8 +99,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const hasRole = (role: string) => roles.includes(role);
 
+  // Primary role: first non-legacy role, or first role
+  const primaryRole = roles.length > 0 ? roles[0] : null;
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, signUp, signIn, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, signUp, signIn, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );
