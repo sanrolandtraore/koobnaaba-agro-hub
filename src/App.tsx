@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DashboardLayout from "./components/DashboardLayout";
-import DashboardHome from "./pages/dashboard/DashboardHome";
+import RoleDashboardHome from "./pages/dashboard/RoleDashboardHome";
 import FarmsPage from "./pages/dashboard/FarmsPage";
 import ParcelsPage from "./pages/dashboard/ParcelsPage";
 import CropCyclesPage from "./pages/dashboard/CropCyclesPage";
@@ -21,6 +21,7 @@ import HarvestsPage from "./pages/dashboard/HarvestsPage";
 import CalendarPage from "./pages/dashboard/CalendarPage";
 import AnalyticsPage from "./pages/dashboard/AnalyticsPage";
 import ExportPage from "./pages/dashboard/ExportPage";
+import MembersPage from "./pages/dashboard/MembersPage";
 import LivestockDashboardPage from "./pages/livestock/LivestockDashboardPage";
 import AnimalsPage from "./pages/livestock/AnimalsPage";
 import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
@@ -42,7 +43,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-              <Route index element={<DashboardHome />} />
+              <Route index element={<RoleDashboardHome />} />
               <Route path="farms" element={<FarmsPage />} />
               <Route path="parcels" element={<ParcelsPage />} />
               <Route path="cycles" element={<CropCyclesPage />} />
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="export" element={<ExportPage />} />
+              <Route path="members" element={<MembersPage />} />
               <Route path="livestock" element={<LivestockDashboardPage />} />
               <Route path="livestock/animals" element={<AnimalsPage />} />
               <Route path="livestock/health" element={<AnimalHealthPage />} />
