@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, Trash2, Navigation } from "lucide-react";
+import { MapPin, Plus, Trash2, Navigation, Locate, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 interface Coordinate {
@@ -11,10 +11,46 @@ interface Coordinate {
 interface GPSPolygonCaptureProps {
   value: Coordinate[];
   onChange: (coords: Coordinate[]) => void;
+  onCenterDetected?: (lat: number, lng: number) => void;
 }
 
-export const GPSPolygonCapture = ({ value, onChange }: GPSPolygonCaptureProps) => {
+// Haversine area calculation (client-side preview)
+function computeAreaHa(coords: Coordinate[]): number {
+  if (coords.length < 3) return 0;
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  let area = 0;
+  const n = coords.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    const lat1 = toRad(coords[i].lat);
+    const lat2 = toRad(coords[j].lat);
+    const dLng = toRad(coords[j].lng - coords[i].lng);
+    area += dLng * (2 + Math.sin(lat1) + Math.sin(lat2));
+  }
+  area = Math.abs((area * R * R) / 2);
+  return Math.round((area / 10000) * 1000) / 1000;
+}
+
+function computePerimeterM(coords: Coordinate[]): number {
+  if (coords.length < 2) return 0;
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  let perimeter = 0;
+  for (let i = 0; i < coords.length; i++) {
+    const j = (i + 1) % coords.length;
+    const dLat = toRad(coords[j].lat - coords[i].lat);
+    const dLng = toRad(coords[j].lng - coords[i].lng);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(coords[i].lat)) * Math.cos(toRad(coords[j].lat)) * Math.sin(dLng / 2) ** 2;
+    perimeter += 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  return Math.round(perimeter);
+}
+
+export const GPSPolygonCapture = ({ value, onChange, onCenterDetected }: GPSPolygonCaptureProps) => {
   const [capturing, setCapturing] = useState(false);
+  const [autoMode, setAutoMode] = useState(false);
+  const watchRef = useRef<number | null>(null);
 
   const captureCurrentPosition = useCallback(() => {
     if (!navigator.geolocation) {
@@ -29,7 +65,10 @@ export const GPSPolygonCapture = ({ value, onChange }: GPSPolygonCaptureProps) =
           lng: Math.round(pos.coords.longitude * 1000000) / 1000000,
         };
         onChange([...value, newCoord]);
-        toast.success(`Point ${value.length + 1} capturé`);
+        if (value.length === 0 && onCenterDetected) {
+          onCenterDetected(newCoord.lat, newCoord.lng);
+        }
+        toast.success(`Point ${value.length + 1} capturé (±${Math.round(pos.coords.accuracy)}m)`);
         setCapturing(false);
       },
       (err) => {
@@ -38,41 +77,89 @@ export const GPSPolygonCapture = ({ value, onChange }: GPSPolygonCaptureProps) =
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
-  }, [value, onChange]);
+  }, [value, onChange, onCenterDetected]);
+
+  // Auto-walk mode: captures points every 3 seconds
+  const toggleAutoMode = useCallback(() => {
+    if (autoMode && watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+      setAutoMode(false);
+      toast.info(`Mode marche arrêté — ${value.length} points`);
+      return;
+    }
+    if (!navigator.geolocation) {
+      toast.error("GPS non disponible");
+      return;
+    }
+    setAutoMode(true);
+    toast.info("Mode marche activé — Marchez le long du contour du champ");
+    let lastLat = 0, lastLng = 0;
+    watchRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = Math.round(pos.coords.latitude * 1000000) / 1000000;
+        const lng = Math.round(pos.coords.longitude * 1000000) / 1000000;
+        // Skip if too close to last point (< ~5m)
+        const dist = Math.sqrt((lat - lastLat) ** 2 + (lng - lastLng) ** 2) * 111000;
+        if (dist < 3 && lastLat !== 0) return;
+        lastLat = lat;
+        lastLng = lng;
+        onChange((prev: Coordinate[]) => [...prev, { lat, lng }]);
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 2000 }
+    );
+  }, [autoMode, value.length, onChange]);
+
+  useEffect(() => {
+    return () => {
+      if (watchRef.current !== null) {
+        navigator.geolocation.clearWatch(watchRef.current);
+      }
+    };
+  }, []);
 
   const removePoint = (index: number) => {
     onChange(value.filter((_, i) => i !== index));
   };
 
-  const toGeoJSON = () => {
-    if (value.length < 3) return null;
-    const coords = value.map((c) => [c.lng, c.lat]);
-    coords.push(coords[0]); // close polygon
-    return { type: "Polygon" as const, coordinates: [coords] };
-  };
+  const areaHa = computeAreaHa(value);
+  const perimeterM = computePerimeterM(value);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Points GPS ({value.length}/min 3)</span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={captureCurrentPosition}
-          disabled={capturing}
-        >
-          {capturing ? (
-            <Navigation className="h-4 w-4 mr-1 animate-pulse" />
-          ) : (
-            <MapPin className="h-4 w-4 mr-1" />
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-sm font-medium">Points GPS ({value.length})</span>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={captureCurrentPosition} disabled={capturing || autoMode}>
+            {capturing ? <Navigation className="h-4 w-4 mr-1 animate-pulse" /> : <MapPin className="h-4 w-4 mr-1" />}
+            {capturing ? "Capture..." : "Point"}
+          </Button>
+          <Button
+            type="button"
+            variant={autoMode ? "destructive" : "secondary"}
+            size="sm"
+            onClick={toggleAutoMode}
+          >
+            <Locate className="h-4 w-4 mr-1" />
+            {autoMode ? "Arrêter" : "Mode marche"}
+          </Button>
+          {value.length > 0 && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => onChange([])}>
+              <RotateCcw className="h-4 w-4 mr-1" />Effacer
+            </Button>
           )}
-          {capturing ? "Capture..." : "Capturer point"}
-        </Button>
+        </div>
       </div>
 
+      {autoMode && (
+        <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 text-sm text-primary animate-pulse">
+          🚶 Mode marche actif — Marchez le long du contour de votre champ. Les points sont capturés automatiquement.
+        </div>
+      )}
+
       {value.length > 0 && (
-        <div className="rounded-lg border bg-muted/30 p-2 space-y-1 max-h-40 overflow-y-auto">
+        <div className="rounded-lg border bg-muted/30 p-2 space-y-1 max-h-32 overflow-y-auto">
           {value.map((coord, i) => (
             <div key={i} className="flex items-center justify-between text-xs">
               <span className="font-mono">
@@ -87,9 +174,15 @@ export const GPSPolygonCapture = ({ value, onChange }: GPSPolygonCaptureProps) =
       )}
 
       {value.length >= 3 && (
-        <p className="text-xs text-success flex items-center gap-1">
-          <Plus className="h-3 w-3" /> Polygone valide — {value.length} sommets
-        </p>
+        <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 space-y-1">
+          <p className="text-sm font-medium text-primary flex items-center gap-1">
+            <Plus className="h-3 w-3" /> Polygone valide — {value.length} sommets
+          </p>
+          <div className="flex gap-4 text-sm">
+            <span><strong>{areaHa}</strong> ha</span>
+            <span><strong>{perimeterM.toLocaleString("fr-FR")}</strong> m périmètre</span>
+          </div>
+        </div>
       )}
     </div>
   );
