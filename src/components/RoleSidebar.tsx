@@ -70,14 +70,6 @@ const partenaireNav: NavItem[] = [
 
 // Admin/manager/farmer/viewer get full menus (legacy)
 const fullNav: NavItem[] = [...agriculteurNav];
-const fullLivestockNav: NavItem[] = [
-  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Bug },
-  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Bug },
-  { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
-  { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
-  { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
-  { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
-];
 
 const roleLabels: Record<string, string> = {
   agriculteur: "Agriculteur",
@@ -114,7 +106,7 @@ function getNavForRole(role: string | null): { main: NavItem[]; livestock?: NavI
     case "admin":
     case "manager":
     case "farmer":
-      return { main: fullNav, livestock: fullLivestockNav };
+      return { main: fullNav };
     default:
       return { main: agriculteurNav };
   }
