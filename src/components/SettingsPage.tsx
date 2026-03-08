@@ -146,10 +146,34 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     toast.success("Préférences enregistrées !");
   };
 
+  const handleChangeEmail = async () => {
+    if (!newEmail || !newEmail.includes("@")) { toast.error("Adresse email invalide"); return; }
+    setSavingEmail(true);
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    setSavingEmail(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Un email de confirmation a été envoyé à votre nouvelle adresse.");
+    setNewEmail("");
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== "SUPPRIMER") { toast.error("Tapez SUPPRIMER pour confirmer"); return; }
-    toast.error("La suppression de compte nécessite une intervention de l'administrateur. Contactez le support.");
-    setDeleteOpen(false);
+    setDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Non authentifié");
+
+      const res = await supabase.functions.invoke("delete-account");
+      if (res.error) throw res.error;
+
+      toast.success("Votre compte a été supprimé.");
+      await signOut();
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de la suppression");
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
   };
 
   if (loading) return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-96" /></div>;
