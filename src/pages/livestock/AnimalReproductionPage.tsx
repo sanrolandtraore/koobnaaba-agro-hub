@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Baby } from "lucide-react";
+import { Plus, Trash2, Baby, WifiOff } from "lucide-react";
+import { useOfflineData } from "@/hooks/useOfflineData";
 
 const reproTypes = [
   { value: "saillie", label: "🐂 Saillie naturelle" },
@@ -24,10 +24,16 @@ const reproTypes = [
 const offspringOptions = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "20"];
 
 const AnimalReproductionPage = () => {
-  const { user } = useAuth();
-  const [events, setEvents] = useState<any[]>([]);
-  const [animals, setAnimals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: events, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+    table: 'animal_reproductions',
+    select: '*, animals!animal_reproductions_animal_id_fkey(name, species)',
+    orderBy: 'event_date',
+  });
+  const { data: animals } = useOfflineData({
+    table: 'animals',
+    select: 'id, name, identification_number, species, sex',
+  });
+
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     animal_id: "", event_type: "saillie", event_date: new Date().toISOString().split("T")[0],
@@ -35,22 +41,9 @@ const AnimalReproductionPage = () => {
     offspring_count: "", offspring_alive: "", cost: "", notes: "",
   });
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const [animalsRes, eventsRes] = await Promise.all([
-      supabase.from("animals").select("id, name, identification_number, species, sex").eq("status", "actif"),
-      supabase.from("animal_reproductions").select("*, animals!animal_reproductions_animal_id_fkey(name, species)").order("event_date", { ascending: false }),
-    ]);
-    setAnimals(animalsRes.data || []);
-    setEvents(eventsRes.data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => { if (user) fetchAll(); }, [user]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("animal_reproductions").insert({
+    const result = await insertRow({
       animal_id: form.animal_id,
       event_type: form.event_type,
       event_date: form.event_date,
@@ -62,30 +55,31 @@ const AnimalReproductionPage = () => {
       cost: form.cost ? Number(form.cost) : 0,
       notes: form.notes || null,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Événement reproduction ajouté ✓");
-    setOpen(false);
-    setForm({ animal_id: "", event_type: "saillie", event_date: new Date().toISOString().split("T")[0], partner_id: "", expected_birth_date: "", actual_birth_date: "", offspring_count: "", offspring_alive: "", cost: "", notes: "" });
-    fetchAll();
+    if (result) {
+      toast.success("Événement reproduction ajouté ✓");
+      setOpen(false);
+      setForm({ animal_id: "", event_type: "saillie", event_date: new Date().toISOString().split("T")[0], partner_id: "", expected_birth_date: "", actual_birth_date: "", offspring_count: "", offspring_alive: "", cost: "", notes: "" });
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ?")) return;
-    const { error } = await supabase.from("animal_reproductions").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Supprimé");
-    fetchAll();
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Supprimé");
   };
 
-  const gestationsEnCours = events.filter((e) => e.expected_birth_date && !e.actual_birth_date && new Date(e.expected_birth_date) > new Date());
-  const females = animals.filter((a) => a.sex === "femelle");
-  const males = animals.filter((a) => a.sex === "male");
+  const gestationsEnCours = events.filter((e: any) => e.expected_birth_date && !e.actual_birth_date && new Date(e.expected_birth_date) > new Date());
+  const females = animals.filter((a: any) => a.sex === "femelle");
+  const males = animals.filter((a: any) => a.sex === "male");
   const showOffspring = ["mise_bas", "avortement"].includes(form.event_type);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-heading font-bold">Reproduction</h1>
+        <div>
+          <h1 className="text-2xl font-heading font-bold">Reproduction</h1>
+          {isOffline && <Badge variant="outline" className="mt-1 text-xs"><WifiOff className="h-3 w-3 mr-1" />Mode hors-ligne</Badge>}
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Nouvel événement</Button></DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -95,7 +89,7 @@ const AnimalReproductionPage = () => {
                 <Label>Animal (mère) *</Label>
                 <Select value={form.animal_id} onValueChange={(v) => setForm({ ...form, animal_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir la femelle..." /></SelectTrigger>
-                  <SelectContent>{females.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
+                  <SelectContent>{females.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -112,7 +106,7 @@ const AnimalReproductionPage = () => {
                 <Label>Père (optionnel)</Label>
                 <Select value={form.partner_id} onValueChange={(v) => setForm({ ...form, partner_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir le mâle..." /></SelectTrigger>
-                  <SelectContent>{males.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
+                  <SelectContent>{males.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -150,8 +144,8 @@ const AnimalReproductionPage = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2"><Baby className="h-5 w-5 text-blue-500" /><span className="font-semibold">Gestations en cours ({gestationsEnCours.length})</span></div>
             <div className="space-y-1">
-              {gestationsEnCours.map((e) => (
-                <p key={e.id} className="text-sm">{(e as any).animals?.name || "Animal"} — prévu le {new Date(e.expected_birth_date).toLocaleDateString("fr-FR")}</p>
+              {gestationsEnCours.map((e: any) => (
+                <p key={e.id} className="text-sm">{e.animals?.name || "Animal"} — prévu le {new Date(e.expected_birth_date).toLocaleDateString("fr-FR")}</p>
               ))}
             </div>
           </CardContent>
@@ -164,11 +158,14 @@ const AnimalReproductionPage = () => {
         <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun événement de reproduction</CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {events.map((e) => (
-            <Card key={e.id}>
+          {events.map((e: any) => (
+            <Card key={e.id} className={e._offline ? 'border-dashed border-amber-400' : ''}>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{(e as any).animals?.name || "Animal"} — <Badge variant="outline">{reproTypes.find((t) => t.value === e.event_type)?.label || e.event_type}</Badge></p>
+                  <p className="font-medium">
+                    {e.animals?.name || "Animal"} — <Badge variant="outline">{reproTypes.find((t) => t.value === e.event_type)?.label || e.event_type}</Badge>
+                    {e._offline && <Badge variant="outline" className="ml-1 text-xs">En attente</Badge>}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(e.event_date).toLocaleDateString("fr-FR")}
                     {e.offspring_count > 0 && ` • ${e.offspring_alive}/${e.offspring_count} petits vivants`}

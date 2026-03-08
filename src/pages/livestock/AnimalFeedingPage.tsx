@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Wheat, Package } from "lucide-react";
+import { Plus, Trash2, Wheat, Package, WifiOff } from "lucide-react";
+import { useOfflineData } from "@/hooks/useOfflineData";
 
 const feedTypes = [
   { value: "Fourrage vert", label: "🌿 Fourrage vert" },
@@ -37,12 +38,20 @@ const suppliers = [
 ];
 
 const AnimalFeedingPage = () => {
-  const { user } = useAuth();
-  const [feedings, setFeedings] = useState<any[]>([]);
-  const [stocks, setStocks] = useState<any[]>([]);
-  const [animals, setAnimals] = useState<any[]>([]);
-  const [farms, setFarms] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: feedings, loading: loadingFeedings, isOffline, insertRow: insertFeeding, deleteRow: deleteFeeding } = useOfflineData({
+    table: 'animal_feedings',
+    select: '*, animals(name, species), farms(name)',
+    orderBy: 'feeding_date',
+  });
+  const { data: stocks, loading: loadingStocks, insertRow: insertStock, deleteRow: deleteStock } = useOfflineData({
+    table: 'feed_stocks',
+    select: '*, farms(name)',
+    orderBy: 'feed_name',
+    ascending: true,
+  });
+  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
+  const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species' });
+
   const [openFeeding, setOpenFeeding] = useState(false);
   const [openStock, setOpenStock] = useState(false);
 
@@ -54,26 +63,9 @@ const AnimalFeedingPage = () => {
     farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "",
   });
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const [farmsRes, animalsRes, feedingsRes, stocksRes] = await Promise.all([
-      supabase.from("farms").select("id, name"),
-      supabase.from("animals").select("id, name, identification_number, species").eq("status", "actif"),
-      supabase.from("animal_feedings").select("*, animals(name, species), farms(name)").order("feeding_date", { ascending: false }),
-      supabase.from("feed_stocks").select("*, farms(name)").order("feed_name"),
-    ]);
-    setFarms(farmsRes.data || []);
-    setAnimals(animalsRes.data || []);
-    setFeedings(feedingsRes.data || []);
-    setStocks(stocksRes.data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => { if (user) fetchAll(); }, [user]);
-
   const handleFeedingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("animal_feedings").insert({
+    const result = await insertFeeding({
       animal_id: feedForm.animal_id || null,
       farm_id: feedForm.farm_id,
       feed_type: feedForm.feed_type,
@@ -82,16 +74,16 @@ const AnimalFeedingPage = () => {
       feeding_date: feedForm.feeding_date,
       notes: feedForm.notes || null,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Alimentation enregistrée ✓");
-    setOpenFeeding(false);
-    setFeedForm({ animal_id: "", farm_id: "", feed_type: "", quantity_kg: "", cost: "", feeding_date: new Date().toISOString().split("T")[0], notes: "" });
-    fetchAll();
+    if (result) {
+      toast.success("Alimentation enregistrée ✓");
+      setOpenFeeding(false);
+      setFeedForm({ animal_id: "", farm_id: "", feed_type: "", quantity_kg: "", cost: "", feeding_date: new Date().toISOString().split("T")[0], notes: "" });
+    }
   };
 
   const handleStockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("feed_stocks").insert({
+    const result = await insertStock({
       farm_id: stockForm.farm_id,
       feed_name: stockForm.feed_name,
       quantity_kg: Number(stockForm.quantity_kg),
@@ -100,32 +92,36 @@ const AnimalFeedingPage = () => {
       last_purchase_date: new Date().toISOString().split("T")[0],
       notes: stockForm.notes || null,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Stock ajouté ✓");
-    setOpenStock(false);
-    setStockForm({ farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "" });
-    fetchAll();
+    if (result) {
+      toast.success("Stock ajouté ✓");
+      setOpenStock(false);
+      setStockForm({ farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "" });
+    }
   };
 
   const handleDeleteFeeding = async (id: string) => {
     if (!confirm("Supprimer ?")) return;
-    await supabase.from("animal_feedings").delete().eq("id", id);
+    await deleteFeeding(id);
     toast.success("Supprimé");
-    fetchAll();
   };
 
   const handleDeleteStock = async (id: string) => {
     if (!confirm("Supprimer ?")) return;
-    await supabase.from("feed_stocks").delete().eq("id", id);
+    await deleteStock(id);
     toast.success("Supprimé");
-    fetchAll();
   };
 
-  const totalStockValue = stocks.reduce((s, st) => s + Number(st.quantity_kg) * Number(st.unit_price), 0);
+  const loading = loadingFeedings || loadingStocks;
+  const totalStockValue = stocks.reduce((s: number, st: any) => s + Number(st.quantity_kg) * Number(st.unit_price), 0);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold">Alimentation & Stocks</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold">Alimentation & Stocks</h1>
+          {isOffline && <Badge variant="outline" className="mt-1 text-xs"><WifiOff className="h-3 w-3 mr-1" />Mode hors-ligne</Badge>}
+        </div>
+      </div>
 
       <Tabs defaultValue="feedings">
         <TabsList>
@@ -144,14 +140,14 @@ const AnimalFeedingPage = () => {
                     <Label>Exploitation *</Label>
                     <Select value={feedForm.farm_id} onValueChange={(v) => setFeedForm({ ...feedForm, farm_id: v })}>
                       <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1">
                     <Label>Animal (optionnel)</Label>
                     <Select value={feedForm.animal_id} onValueChange={(v) => setFeedForm({ ...feedForm, animal_id: v })}>
                       <SelectTrigger><SelectValue placeholder="Groupe / individuel" /></SelectTrigger>
-                      <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
+                      <SelectContent>{animals.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1">
@@ -179,13 +175,13 @@ const AnimalFeedingPage = () => {
             <Card><CardContent className="p-8 text-center text-muted-foreground">Aucune alimentation enregistrée</CardContent></Card>
           ) : (
             <div className="space-y-2">
-              {feedings.map((f) => (
-                <Card key={f.id}>
+              {feedings.map((f: any) => (
+                <Card key={f.id} className={f._offline ? 'border-dashed border-amber-400' : ''}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{f.feed_type} — {Number(f.quantity_kg)} kg</p>
+                      <p className="font-medium">{f.feed_type} — {Number(f.quantity_kg)} kg {f._offline && <Badge variant="outline" className="text-xs">En attente</Badge>}</p>
                       <p className="text-sm text-muted-foreground">
-                        {(f as any).animals?.name || "Groupe"} • {(f as any).farms?.name} • {new Date(f.feeding_date).toLocaleDateString("fr-FR")}
+                        {f.animals?.name || "Groupe"} • {f.farms?.name} • {new Date(f.feeding_date).toLocaleDateString("fr-FR")}
                         {f.cost > 0 && ` • ${Number(f.cost).toLocaleString()} FCFA`}
                       </p>
                     </div>
@@ -209,7 +205,7 @@ const AnimalFeedingPage = () => {
                     <Label>Exploitation *</Label>
                     <Select value={stockForm.farm_id} onValueChange={(v) => setStockForm({ ...stockForm, farm_id: v })}>
                       <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1">
@@ -241,13 +237,13 @@ const AnimalFeedingPage = () => {
             <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun stock enregistré</CardContent></Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {stocks.map((s) => (
-                <Card key={s.id}>
+              {stocks.map((s: any) => (
+                <Card key={s.id} className={s._offline ? 'border-dashed border-amber-400' : ''}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold">{s.feed_name}</p>
-                        <p className="text-sm text-muted-foreground">{(s as any).farms?.name}</p>
+                        <p className="font-semibold">{s.feed_name} {s._offline && <Badge variant="outline" className="text-xs">En attente</Badge>}</p>
+                        <p className="text-sm text-muted-foreground">{s.farms?.name}</p>
                         <p className="text-sm mt-1">{Number(s.quantity_kg)} kg × {Number(s.unit_price).toLocaleString()} FCFA/kg</p>
                         {s.supplier && <p className="text-xs text-muted-foreground">Fournisseur: {s.supplier}</p>}
                       </div>

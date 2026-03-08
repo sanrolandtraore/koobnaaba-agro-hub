@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Heart, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Heart, AlertTriangle, WifiOff } from "lucide-react";
+import { useOfflineData } from "@/hooks/useOfflineData";
 
 const eventTypes = [
   { value: "vaccination", label: "💉 Vaccination" },
@@ -43,32 +43,26 @@ const dosageUnits = [
 ];
 
 const AnimalHealthPage = () => {
-  const { user } = useAuth();
-  const [events, setEvents] = useState<any[]>([]);
-  const [animals, setAnimals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: events, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+    table: 'animal_health_events',
+    select: '*, animals(name, species)',
+    orderBy: 'event_date',
+  });
+  const { data: animals } = useOfflineData({
+    table: 'animals',
+    select: 'id, name, identification_number, species',
+    queryKey: 'actif-only',
+  });
+
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     animal_id: "", event_type: "vaccination", event_date: new Date().toISOString().split("T")[0],
     description: "", medication: "", dosage: "", cost: "", vet_name: "", next_date: "", notes: "",
   });
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const [animalsRes, eventsRes] = await Promise.all([
-      supabase.from("animals").select("id, name, identification_number, species").eq("status", "actif"),
-      supabase.from("animal_health_events").select("*, animals(name, species)").order("event_date", { ascending: false }),
-    ]);
-    setAnimals(animalsRes.data || []);
-    setEvents(eventsRes.data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => { if (user) fetchAll(); }, [user]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("animal_health_events").insert({
+    const result = await insertRow({
       animal_id: form.animal_id,
       event_type: form.event_type,
       event_date: form.event_date,
@@ -80,28 +74,29 @@ const AnimalHealthPage = () => {
       next_date: form.next_date || null,
       notes: form.notes || null,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Événement santé ajouté ✓");
-    setOpen(false);
-    setForm({ animal_id: "", event_type: "vaccination", event_date: new Date().toISOString().split("T")[0], description: "", medication: "", dosage: "", cost: "", vet_name: "", next_date: "", notes: "" });
-    fetchAll();
+    if (result) {
+      toast.success("Événement santé ajouté ✓");
+      setOpen(false);
+      setForm({ animal_id: "", event_type: "vaccination", event_date: new Date().toISOString().split("T")[0], description: "", medication: "", dosage: "", cost: "", vet_name: "", next_date: "", notes: "" });
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cet événement ?")) return;
-    const { error } = await supabase.from("animal_health_events").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Supprimé");
-    fetchAll();
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Supprimé");
   };
 
-  const upcoming = events.filter((e) => e.next_date && new Date(e.next_date) > new Date());
+  const upcoming = events.filter((e: any) => e.next_date && new Date(e.next_date) > new Date());
   const isVaccination = form.event_type === "vaccination";
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-heading font-bold">Santé animale</h1>
+        <div>
+          <h1 className="text-2xl font-heading font-bold">Santé animale</h1>
+          {isOffline && <Badge variant="outline" className="mt-1 text-xs"><WifiOff className="h-3 w-3 mr-1" />Mode hors-ligne</Badge>}
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Nouvel événement</Button></DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -111,7 +106,7 @@ const AnimalHealthPage = () => {
                 <Label>Animal *</Label>
                 <Select value={form.animal_id} onValueChange={(v) => setForm({ ...form, animal_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir l'animal..." /></SelectTrigger>
-                  <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
+                  <SelectContent>{animals.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -174,8 +169,8 @@ const AnimalHealthPage = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2"><AlertTriangle className="h-5 w-5 text-warning" /><span className="font-semibold">Rappels à venir</span></div>
             <div className="space-y-1">
-              {upcoming.slice(0, 5).map((e) => (
-                <p key={e.id} className="text-sm">{(e as any).animals?.name} — {e.event_type} le {new Date(e.next_date).toLocaleDateString("fr-FR")}</p>
+              {upcoming.slice(0, 5).map((e: any) => (
+                <p key={e.id} className="text-sm">{e.animals?.name} — {e.event_type} le {new Date(e.next_date).toLocaleDateString("fr-FR")}</p>
               ))}
             </div>
           </CardContent>
@@ -188,13 +183,16 @@ const AnimalHealthPage = () => {
         <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun événement santé enregistré</CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {events.map((e) => (
-            <Card key={e.id}>
+          {events.map((e: any) => (
+            <Card key={e.id} className={e._offline ? 'border-dashed border-amber-400' : ''}>
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-start gap-3">
                   <Heart className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium">{(e as any).animals?.name || "Animal"} — <Badge variant="outline">{eventTypes.find((t) => t.value === e.event_type)?.label || e.event_type}</Badge></p>
+                    <p className="font-medium">
+                      {e.animals?.name || "Animal"} — <Badge variant="outline">{eventTypes.find((t) => t.value === e.event_type)?.label || e.event_type}</Badge>
+                      {e._offline && <Badge variant="outline" className="ml-1 text-xs">En attente</Badge>}
+                    </p>
                     <p className="text-sm text-muted-foreground">{e.description || e.medication || "—"} • {new Date(e.event_date).toLocaleDateString("fr-FR")}</p>
                     {e.cost > 0 && <p className="text-sm font-medium">{Number(e.cost).toLocaleString()} FCFA</p>}
                   </div>

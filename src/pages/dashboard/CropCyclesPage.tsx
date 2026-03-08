@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Wheat, Calculator } from "lucide-react";
+import { Plus, Trash2, Wheat, Calculator, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useOfflineData } from "@/hooks/useOfflineData";
+import { supabase } from "@/integrations/supabase/client";
 
 const seasons = [
   "Saison pluvieuse 2025", "Saison sèche 2025", "Contre-saison 2025",
@@ -24,39 +26,29 @@ const statusOptions = [
 ];
 
 const CropCyclesPage = () => {
-  const [cycles, setCycles] = useState<any[]>([]);
-  const [parcels, setParcels] = useState<any[]>([]);
-  const [crops, setCrops] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: cycles, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+    table: 'crop_cycles',
+    select: '*, parcels(name, area_ha, farms(name, climate_zones(climate_coefficient))), crop_references(name, avg_yield_per_ha, avg_price_per_kg, variety)',
+  });
+  const { data: parcels } = useOfflineData({ table: 'parcels', select: 'id, name, area_ha' });
+  const { data: crops } = useOfflineData({ table: 'crop_references', select: '*' });
+
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ parcel_id: "", crop_reference_id: "", season: "", start_date: "", end_date: "", status: "planning" });
 
-  const fetchCycles = async () => {
-    const { data, error } = await supabase.from("crop_cycles").select("*, parcels(name, area_ha, farms(name, climate_zones(climate_coefficient))), crop_references(name, avg_yield_per_ha, avg_price_per_kg, variety)").order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    else setCycles(data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchCycles();
-    supabase.from("parcels").select("id, name, area_ha").then(({ data }) => setParcels(data || []));
-    supabase.from("crop_references").select("*").then(({ data }) => setCrops(data || []));
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parcel = parcels.find(p => p.id === form.parcel_id);
-    const crop = crops.find(c => c.id === form.crop_reference_id);
+    const parcel = parcels.find((p: any) => p.id === form.parcel_id);
+    const crop = crops.find((c: any) => c.id === form.crop_reference_id);
 
     let expected_yield_kg: number | null = null;
     let expected_revenue: number | null = null;
-    if (parcel && crop && crop.avg_yield_per_ha) {
-      expected_yield_kg = (parcel.area_ha || 0) * crop.avg_yield_per_ha;
-      if (crop.avg_price_per_kg) expected_revenue = expected_yield_kg * crop.avg_price_per_kg;
+    if (parcel && crop && (crop as any).avg_yield_per_ha) {
+      expected_yield_kg = ((parcel as any).area_ha || 0) * (crop as any).avg_yield_per_ha;
+      if ((crop as any).avg_price_per_kg) expected_revenue = expected_yield_kg * (crop as any).avg_price_per_kg;
     }
 
-    const { error } = await supabase.from("crop_cycles").insert({
+    const result = await insertRow({
       parcel_id: form.parcel_id,
       crop_reference_id: form.crop_reference_id || null,
       season: form.season,
@@ -66,26 +58,25 @@ const CropCyclesPage = () => {
       expected_yield_kg,
       expected_revenue,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Cycle cultural créé !");
-    setForm({ parcel_id: "", crop_reference_id: "", season: "", start_date: "", end_date: "", status: "planning" });
-    setOpen(false);
-    fetchCycles();
+    if (result) {
+      toast.success("Cycle cultural créé !");
+      setForm({ parcel_id: "", crop_reference_id: "", season: "", start_date: "", end_date: "", status: "planning" });
+      setOpen(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ce cycle ?")) return;
-    const { error } = await supabase.from("crop_cycles").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Cycle supprimé"); fetchCycles(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Cycle supprimé");
   };
 
   const handleCalculate = async (id: string) => {
+    if (!navigator.onLine) { toast.warning("Calcul disponible uniquement en ligne"); return; }
     try {
       const { error } = await supabase.functions.invoke("calculate-crop-cycle", { body: { crop_cycle_id: id } });
       if (error) throw error;
       toast.success("Calculs exécutés !");
-      fetchCycles();
     } catch (err: any) {
       toast.error(err.message || "Erreur de calcul");
     }
@@ -105,7 +96,10 @@ const CropCyclesPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Cycles culturaux</h1>
-          <p className="text-muted-foreground mt-1">Planifiez et suivez vos saisons de culture</p>
+          <p className="text-muted-foreground mt-1">
+            Planifiez et suivez vos saisons de culture
+            {isOffline && <Badge variant="outline" className="ml-2 text-xs"><WifiOff className="h-3 w-3 mr-1" />Hors-ligne</Badge>}
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -118,14 +112,14 @@ const CropCyclesPage = () => {
                 <Label>Parcelle *</Label>
                 <Select value={form.parcel_id} onValueChange={(v) => setForm({ ...form, parcel_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir la parcelle" /></SelectTrigger>
-                  <SelectContent>{parcels.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.area_ha} ha)</SelectItem>)}</SelectContent>
+                  <SelectContent>{parcels.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.area_ha} ha)</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Culture</Label>
                 <Select value={form.crop_reference_id} onValueChange={(v) => setForm({ ...form, crop_reference_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir la culture" /></SelectTrigger>
-                  <SelectContent>{crops.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.variety ? ` (${c.variety})` : ""}</SelectItem>)}</SelectContent>
+                  <SelectContent>{crops.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}{c.variety ? ` (${c.variety})` : ""}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
@@ -146,11 +140,9 @@ const CropCyclesPage = () => {
                   <SelectContent>{statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-
-              {/* Preview */}
               {form.parcel_id && form.crop_reference_id && (() => {
-                const p = parcels.find(x => x.id === form.parcel_id);
-                const c = crops.find(x => x.id === form.crop_reference_id);
+                const p = parcels.find((x: any) => x.id === form.parcel_id) as any;
+                const c = crops.find((x: any) => x.id === form.crop_reference_id) as any;
                 if (!p || !c) return null;
                 const yld = (p.area_ha || 0) * (c.avg_yield_per_ha || 0);
                 const rev = yld * (c.avg_price_per_kg || 0);
@@ -163,7 +155,6 @@ const CropCyclesPage = () => {
                   </div>
                 );
               })()}
-
               <Button type="submit" className="w-full gradient-primary text-primary-foreground">Créer le cycle</Button>
             </form>
           </DialogContent>
@@ -181,11 +172,14 @@ const CropCyclesPage = () => {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {cycles.map((c) => (
-            <Card key={c.id} className="shadow-sm hover:shadow-warm transition-shadow">
+          {cycles.map((c: any) => (
+            <Card key={c.id} className={`shadow-sm hover:shadow-warm transition-shadow ${c._offline ? 'border-dashed border-amber-400' : ''}`}>
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
-                  <CardTitle className="text-lg">{c.crop_references?.name || "Culture non définie"}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {c.crop_references?.name || "Culture non définie"}
+                    {c._offline && <Badge variant="outline" className="ml-2 text-xs">En attente</Badge>}
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground">{c.parcels?.name} · {c.season}</p>
                 </div>
                 <div className="flex items-center gap-2">
