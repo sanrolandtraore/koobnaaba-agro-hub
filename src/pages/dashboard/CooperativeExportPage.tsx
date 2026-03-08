@@ -10,11 +10,13 @@ import { Download, FileText, FileSpreadsheet } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-type ExportType = "members" | "collectes";
+type ExportType = "members" | "collectes" | "sales" | "distributions";
 
 const exportOptions: { value: ExportType; label: string }[] = [
   { value: "members", label: "Registre des membres" },
   { value: "collectes", label: "Collectes / Achats" },
+  { value: "sales", label: "Ventes groupées" },
+  { value: "distributions", label: "Répartitions par membre" },
 ];
 
 const CooperativeExportPage = () => {
