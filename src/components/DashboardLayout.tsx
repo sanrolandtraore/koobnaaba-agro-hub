@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import logo from "@/assets/logo.png";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
