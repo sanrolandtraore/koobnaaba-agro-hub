@@ -183,6 +183,7 @@ const AnalyticsPage = () => {
         </CardContent>
       </Card>
     </div>
+    </PremiumGate>
   );
 };
 
