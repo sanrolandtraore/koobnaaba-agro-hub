@@ -6,9 +6,11 @@ import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
-  FolderOpen, Layers, Award, Store,
+  FolderOpen, Layers, Award, Store, Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useCooperativeRole } from "@/hooks/useCooperativeRole";
 
 export type NavItem = { to: string; label: string; icon: React.ElementType };
 
@@ -136,18 +138,30 @@ interface SidebarContentProps {
 export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   const { profile, signOut, primaryRole } = useAuth();
   const location = useLocation();
-  const nav = getNavForRole(primaryRole);
-  const RoleIcon = roleIcons[primaryRole || "agriculteur"] || Wheat;
+  const { isCoopMember, isReadOnly, memberRole } = useCooperativeRole();
+
+  // If user is a cooperative member, show cooperative nav
+  const effectiveRole = isCoopMember ? "cooperative" : primaryRole;
+  const nav = getNavForRole(effectiveRole);
+  const RoleIcon = roleIcons[effectiveRole || "agriculteur"] || Wheat;
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-sidebar-border">
         <img src={logo} alt="KoobNaaba" className="h-10 w-auto shrink-0" />
-        <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
-          <RoleIcon className="h-3 w-3" />
-          {roleLabels[primaryRole || "agriculteur"]}
-        </span>
+        <div className="flex flex-col">
+          <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
+            <RoleIcon className="h-3 w-3" />
+            {isCoopMember ? "Coopérative" : roleLabels[primaryRole || "agriculteur"]}
+          </span>
+          {isReadOnly && (
+            <Badge variant="outline" className="text-[9px] mt-1 gap-1 border-sidebar-foreground/20 text-sidebar-foreground/50">
+              <Eye className="h-2.5 w-2.5" />
+              Lecture seule
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Nav */}

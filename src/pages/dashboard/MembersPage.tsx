@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCooperativeRole } from "@/hooks/useCooperativeRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, Users, UserPlus, Search } from "lucide-react";
+import { Plus, Trash2, Users, UserPlus, Search, Copy, Link2 } from "lucide-react";
 
 const memberTypes = [
   { value: "producteur", label: "Producteur" },
@@ -68,7 +69,10 @@ type Member = {
 
 const MembersPage = () => {
   const { user } = useAuth();
+  const { isCoopOwner, isCoopAdmin, isReadOnly, cooperativeUserId } = useCooperativeRole();
+  const canEdit = isCoopOwner || isCoopAdmin;
   const [members, setMembers] = useState<Member[]>([]);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -80,8 +84,10 @@ const MembersPage = () => {
     joined_date: new Date().toISOString().split("T")[0], notes: "",
   });
 
+  const effectiveUserId = cooperativeUserId || user?.id;
+
   const fetchMembers = async () => {
-    if (!user) return;
+    if (!effectiveUserId) return;
     const { data } = await supabase
       .from("cooperative_members")
       .select("*")
@@ -90,13 +96,23 @@ const MembersPage = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMembers(); }, [user]);
+  const fetchInviteCode = async () => {
+    if (!isCoopOwner || !user) return;
+    const { data } = await supabase
+      .from("cooperative_profiles")
+      .select("invite_code")
+      .eq("cooperative_user_id", user.id)
+      .maybeSingle();
+    if (data?.invite_code) setInviteCode(data.invite_code);
+  };
+
+  useEffect(() => { fetchMembers(); fetchInviteCode(); }, [user, effectiveUserId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!effectiveUserId) return;
     const { error } = await supabase.from("cooperative_members").insert({
-      cooperative_user_id: user.id,
+      cooperative_user_id: effectiveUserId,
       full_name: form.full_name,
       phone: form.phone || null,
       location: form.location || null,
@@ -123,6 +139,20 @@ const MembersPage = () => {
     fetchMembers();
   };
 
+  const generateInviteCode = async () => {
+    const { data, error } = await supabase.rpc("generate_cooperative_invite_code");
+    if (error) { toast.error(error.message); return; }
+    setInviteCode(data as string);
+    toast.success("Code d'invitation généré !");
+  };
+
+  const copyInviteCode = () => {
+    if (inviteCode) {
+      navigator.clipboard.writeText(inviteCode);
+      toast.success("Code copié !");
+    }
+  };
+
   const filtered = members.filter(m => {
     const matchSearch = m.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (m.phone || "").includes(search) || (m.location || "").toLowerCase().includes(search.toLowerCase());
@@ -143,10 +173,21 @@ const MembersPage = () => {
           <h1 className="text-2xl font-heading font-bold">Gestion des membres</h1>
           <p className="text-muted-foreground mt-1">Gérez les membres de votre coopérative</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button><UserPlus className="h-4 w-4 mr-2" />Nouveau membre</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          {isCoopOwner && (
+            <Button variant="outline" onClick={inviteCode ? copyInviteCode : generateInviteCode}>
+              {inviteCode ? (
+                <><Copy className="h-4 w-4 mr-2" />{inviteCode}</>
+              ) : (
+                <><Link2 className="h-4 w-4 mr-2" />Générer un code</>
+              )}
+            </Button>
+          )}
+          {canEdit && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button><UserPlus className="h-4 w-4 mr-2" />Nouveau membre</Button>
+              </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Ajouter un membre</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -193,6 +234,8 @@ const MembersPage = () => {
             </form>
           </DialogContent>
         </Dialog>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -248,9 +291,11 @@ const MembersPage = () => {
                       {statuses.find(s => s.value === m.status)?.label || m.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

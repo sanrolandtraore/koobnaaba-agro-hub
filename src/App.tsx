@@ -54,6 +54,7 @@ const LivestockFinancePage = lazy(() => import("./pages/livestock/LivestockFinan
 const LivestockServicesPage = lazy(() => import("./pages/livestock/LivestockServicesPage"));
 const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
 const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
+const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -125,6 +126,7 @@ const App = () => (
               <Route path="livestock/finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
               <Route path="livestock/services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
               <Route path="pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
+              <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

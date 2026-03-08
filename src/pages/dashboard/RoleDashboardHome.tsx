@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useCooperativeRole } from "@/hooks/useCooperativeRole";
 import DashboardHome from "@/pages/dashboard/DashboardHome";
 import LivestockDashboardPage from "@/pages/livestock/LivestockDashboardPage";
 import CooperativeDashboard from "@/pages/dashboard/CooperativeDashboard";
@@ -7,6 +8,10 @@ import PartenaireDashboard from "@/pages/dashboard/PartenaireDashboard";
 
 const RoleDashboardHome = () => {
   const { primaryRole } = useAuth();
+  const { isCoopMember } = useCooperativeRole();
+
+  // If user is a linked cooperative member, show cooperative dashboard
+  if (isCoopMember) return <CooperativeDashboard />;
 
   switch (primaryRole) {
     case "eleveur":
