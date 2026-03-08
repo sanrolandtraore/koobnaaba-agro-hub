@@ -84,6 +84,7 @@ const AnalyticsPage = () => {
   if (loading) return <div className="space-y-4">{[1, 2, 3].map(i => <Card key={i} className="animate-pulse"><CardContent className="h-40" /></Card>)}</div>;
 
   return (
+    <PremiumGate feature="analytics">
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold">Analyse & Simulation</h1>
