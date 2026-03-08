@@ -35,6 +35,7 @@ import CooperativeParcelsPage from "./pages/dashboard/CooperativeParcelsPage";
 import CooperativeEquipmentPage from "./pages/dashboard/CooperativeEquipmentPage";
 import CooperativeDocumentsPage from "./pages/dashboard/CooperativeDocumentsPage";
 import CooperativeScorePage from "./pages/dashboard/CooperativeScorePage";
+import UserProfilePage from "./pages/dashboard/UserProfilePage";
 import CropPlanningPage from "./pages/dashboard/CropPlanningPage";
 import ServicesPage from "./pages/dashboard/ServicesPage";
 import AgentDashboard from "./pages/dashboard/AgentDashboard";
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="cooperative-documents" element={<CooperativeDocumentsPage />} />
               <Route path="cooperative-score" element={<CooperativeScorePage />} />
               <Route path="services" element={<ServicesPage />} />
+              <Route path="profile" element={<UserProfilePage />} />
               <Route path="expert/requests" element={<AgentDashboard />} />
               <Route path="livestock" element={<LivestockDashboardPage />} />
               <Route path="livestock/animals" element={<AnimalsPage />} />
