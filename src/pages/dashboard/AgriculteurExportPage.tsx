@@ -148,6 +148,7 @@ const AgriculteurExportPage = () => {
         </CardContent>
       </Card>
     </div>
+    </PremiumGate>
   );
 };
 

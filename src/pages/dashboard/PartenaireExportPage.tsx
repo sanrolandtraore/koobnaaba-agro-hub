@@ -67,6 +67,7 @@ const PartenaireExportPage = () => {
         />
       )}
     </div>
+    </PremiumGate>
   );
 };
 

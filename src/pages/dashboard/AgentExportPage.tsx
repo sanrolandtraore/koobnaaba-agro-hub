@@ -67,6 +67,7 @@ const AgentExportPage = () => {
         />
       )}
     </div>
+    </PremiumGate>
   );
 };
 

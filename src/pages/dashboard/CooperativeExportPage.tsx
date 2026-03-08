@@ -106,6 +106,7 @@ const CooperativeExportPage = () => {
         />
       )}
     </div>
+    </PremiumGate>
   );
 };
 

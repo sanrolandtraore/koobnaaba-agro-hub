@@ -100,6 +100,7 @@ const EleveurExportPage = () => {
         />
       )}
     </div>
+    </PremiumGate>
   );
 };
 
