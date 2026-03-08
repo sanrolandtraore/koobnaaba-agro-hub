@@ -89,7 +89,7 @@ export function useOfflineData<T = any>({
 
   const insertRow = useCallback(async (row: any) => {
     if (navigator.onLine) {
-      const { data: result, error } = await (supabase.from(table) as any).insert(row).select();
+      const { data: result, error } = await (supabase.from(table as any) as any).insert(row).select();
       if (error) {
         toast.error(error.message);
         return null;
