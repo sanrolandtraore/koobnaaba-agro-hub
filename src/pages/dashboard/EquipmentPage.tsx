@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useOfflineData } from "@/hooks/useOfflineData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,26 +8,24 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Wrench, Edit2 } from "lucide-react";
+import { Plus, Trash2, Wrench, Edit2, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+const statusColors: Record<string, string> = { disponible: "bg-success/10 text-success", en_maintenance: "bg-warning/10 text-warning", hors_service: "bg-destructive/10 text-destructive" };
+const statusLabels: Record<string, string> = { disponible: "Disponible", en_maintenance: "En maintenance", hors_service: "Hors service" };
+const typeLabels: Record<string, string> = { outil: "Outil", machine: "Machine", vehicule: "Véhicule", irrigation: "Irrigation", stockage: "Stockage" };
+
 const EquipmentPage = () => {
-  const [equipment, setEquipment] = useState<any[]>([]);
+  const { data: equipment, loading, isOffline, insertRow, updateRow, deleteRow } = useOfflineData({
+    table: "equipment",
+    select: "*, farms(name)",
+  });
   const [farms, setFarms] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ farm_id: "", name: "", type: "outil", status: "disponible", purchase_date: "", purchase_cost: "", notes: "" });
 
-  const fetchEquipment = async () => {
-    const { data, error } = await supabase.from("equipment").select("*, farms(name)").order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    else setEquipment(data || []);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchEquipment();
     supabase.from("farms").select("id, name").then(({ data }) => setFarms(data || []));
   }, []);
 
@@ -36,15 +35,13 @@ const EquipmentPage = () => {
     e.preventDefault();
     const payload = { ...form, purchase_cost: parseFloat(form.purchase_cost) || 0, purchase_date: form.purchase_date || null };
     if (editing) {
-      const { error } = await supabase.from("equipment").update(payload).eq("id", editing.id);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Équipement modifié !");
+      const ok = await updateRow(editing.id, payload);
+      if (ok) toast.success("Équipement modifié !");
     } else {
-      const { error } = await supabase.from("equipment").insert(payload);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Équipement ajouté !");
+      const result = await insertRow(payload);
+      if (result) toast.success("Équipement ajouté !");
     }
-    resetForm(); setOpen(false); fetchEquipment();
+    resetForm(); setOpen(false);
   };
 
   const handleEdit = (eq: any) => {
@@ -54,20 +51,18 @@ const EquipmentPage = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cet équipement ?")) return;
-    const { error } = await supabase.from("equipment").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Équipement supprimé"); fetchEquipment(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Équipement supprimé");
   };
-
-  const statusColors: Record<string, string> = { disponible: "bg-success/10 text-success", en_maintenance: "bg-warning/10 text-warning", hors_service: "bg-destructive/10 text-destructive" };
-  const statusLabels: Record<string, string> = { disponible: "Disponible", en_maintenance: "En maintenance", hors_service: "Hors service" };
-  const typeLabels: Record<string, string> = { outil: "Outil", machine: "Machine", vehicule: "Véhicule", irrigation: "Irrigation", stockage: "Stockage" };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Équipements</h1>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            Équipements
+            {isOffline && <WifiOff className="h-4 w-4 text-warning" />}
+          </h1>
           <p className="text-muted-foreground mt-1">Inventaire du matériel agricole</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
@@ -90,18 +85,14 @@ const EquipmentPage = () => {
                   <Label>Type</Label>
                   <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Statut</Label>
                   <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
@@ -121,8 +112,8 @@ const EquipmentPage = () => {
         <Card className="border-dashed"><CardContent className="flex flex-col items-center justify-center py-12"><Wrench className="h-12 w-12 text-muted-foreground mb-4" /><p className="text-muted-foreground">Aucun équipement</p></CardContent></Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {equipment.map((eq) => (
-            <Card key={eq.id} className="shadow-sm hover:shadow-warm transition-shadow">
+          {equipment.map((eq: any) => (
+            <Card key={eq.id} className={`shadow-sm hover:shadow-warm transition-shadow ${eq._offline ? "border-warning/50" : ""}`}>
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
                   <CardTitle className="text-lg">{eq.name}</CardTitle>
@@ -130,6 +121,7 @@ const EquipmentPage = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Badge variant="outline" className={statusColors[eq.status] || ""}>{statusLabels[eq.status] || eq.status}</Badge>
+                  {eq._offline && <Badge variant="outline" className="bg-warning/10 text-warning text-xs">hors-ligne</Badge>}
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(eq)}><Edit2 className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => handleDelete(eq.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>

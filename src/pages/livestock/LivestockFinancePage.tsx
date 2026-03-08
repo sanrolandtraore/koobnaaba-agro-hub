@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOfflineData } from "@/hooks/useOfflineData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Trash2, TrendingDown, TrendingUp, DollarSign } from "lucide-react";
+import { Plus, Trash2, TrendingDown, TrendingUp, DollarSign, WifiOff } from "lucide-react";
 
 const expenseCategories = [
   { value: "alimentation", label: "🌾 Alimentation" },
@@ -56,13 +57,25 @@ const saleDescriptions: Record<string, string[]> = {
   autre: ["Autre produit", "Service (saillie)", "Autre"],
 };
 
+const buyers = ["Marché local", "Boucher", "Grossiste", "Particulier", "Restaurant/Hôtel", "Exportation", "Autre"];
+
 const LivestockFinancePage = () => {
   const { user } = useAuth();
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [sales, setSales] = useState<any[]>([]);
+
+  const { data: expenses, loading: loadingExp, isOffline, insertRow: insertExpense, deleteRow: deleteExpense } = useOfflineData({
+    table: "livestock_expenses",
+    select: "*, farms(name), animals(name)",
+    orderBy: "expense_date",
+  });
+
+  const { data: sales, loading: loadingSale, insertRow: insertSale, deleteRow: deleteSale } = useOfflineData({
+    table: "livestock_sales",
+    select: "*, farms(name), animals(name)",
+    orderBy: "sale_date",
+  });
+
   const [farms, setFarms] = useState<any[]>([]);
   const [animals, setAnimals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [openExpense, setOpenExpense] = useState(false);
   const [openSale, setOpenSale] = useState(false);
 
@@ -76,26 +89,23 @@ const LivestockFinancePage = () => {
     sale_date: new Date().toISOString().split("T")[0], notes: "",
   });
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const [farmsRes, animalsRes, expRes, salesRes] = await Promise.all([
-      supabase.from("farms").select("id, name"),
-      supabase.from("animals").select("id, name, identification_number, species"),
-      supabase.from("livestock_expenses").select("*, farms(name), animals(name)").order("expense_date", { ascending: false }),
-      supabase.from("livestock_sales").select("*, farms(name), animals(name)").order("sale_date", { ascending: false }),
-    ]);
-    setFarms(farmsRes.data || []);
-    setAnimals(animalsRes.data || []);
-    setExpenses(expRes.data || []);
-    setSales(salesRes.data || []);
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (user) {
+      Promise.all([
+        supabase.from("farms").select("id, name"),
+        supabase.from("animals").select("id, name, identification_number, species"),
+      ]).then(([farmsRes, animalsRes]) => {
+        setFarms(farmsRes.data || []);
+        setAnimals(animalsRes.data || []);
+      });
+    }
+  }, [user]);
 
-  useEffect(() => { if (user) fetchAll(); }, [user]);
+  const loading = loadingExp || loadingSale;
 
   const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("livestock_expenses").insert({
+    const result = await insertExpense({
       farm_id: expForm.farm_id,
       animal_id: expForm.animal_id || null,
       category: expForm.category,
@@ -104,17 +114,17 @@ const LivestockFinancePage = () => {
       expense_date: expForm.expense_date,
       notes: expForm.notes || null,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Dépense enregistrée ✓");
-    setOpenExpense(false);
-    setExpForm({ farm_id: "", animal_id: "", category: "alimentation", description: "", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
-    fetchAll();
+    if (result) {
+      toast.success("Dépense enregistrée ✓");
+      setOpenExpense(false);
+      setExpForm({ farm_id: "", animal_id: "", category: "alimentation", description: "", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
+    }
   };
 
   const handleSaleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const total = Number(saleForm.quantity) * Number(saleForm.unit_price);
-    const { error } = await supabase.from("livestock_sales").insert({
+    const result = await insertSale({
       farm_id: saleForm.farm_id,
       animal_id: saleForm.animal_id || null,
       sale_type: saleForm.sale_type,
@@ -126,25 +136,26 @@ const LivestockFinancePage = () => {
       sale_date: saleForm.sale_date,
       notes: saleForm.notes || null,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Vente enregistrée ✓");
-    setOpenSale(false);
-    setSaleForm({ farm_id: "", animal_id: "", sale_type: "animal", description: "", quantity: "1", unit_price: "", buyer: "", sale_date: new Date().toISOString().split("T")[0], notes: "" });
-    fetchAll();
+    if (result) {
+      toast.success("Vente enregistrée ✓");
+      setOpenSale(false);
+      setSaleForm({ farm_id: "", animal_id: "", sale_type: "animal", description: "", quantity: "1", unit_price: "", buyer: "", sale_date: new Date().toISOString().split("T")[0], notes: "" });
+    }
   };
 
-  const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
-  const totalSales = sales.reduce((s, e) => s + Number(e.total_amount), 0);
+  const totalExpenses = expenses.reduce((s, e: any) => s + Number(e.amount), 0);
+  const totalSales = sales.reduce((s, e: any) => s + Number(e.total_amount), 0);
   const profit = totalSales - totalExpenses;
 
   const currentExpDescs = expenseDescriptions[expForm.category] || [];
   const currentSaleDescs = saleDescriptions[saleForm.sale_type] || [];
 
-  const buyers = ["Marché local", "Boucher", "Grossiste", "Particulier", "Restaurant/Hôtel", "Exportation", "Autre"];
-
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold">Comptabilité Élevage</h1>
+      <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+        Comptabilité Élevage
+        {isOffline && <WifiOff className="h-4 w-4 text-warning" />}
+      </h1>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card><CardContent className="p-4 flex items-center gap-3"><TrendingDown className="h-8 w-8 text-destructive" /><div><p className="text-sm text-muted-foreground">Total dépenses</p><p className="text-xl font-bold">{totalExpenses.toLocaleString()} FCFA</p></div></CardContent></Card>
@@ -206,16 +217,16 @@ const LivestockFinancePage = () => {
             <Card><CardContent className="p-8 text-center text-muted-foreground">Aucune dépense</CardContent></Card>
           ) : (
             <div className="space-y-2">
-              {expenses.map((e) => (
-                <Card key={e.id}>
+              {expenses.map((e: any) => (
+                <Card key={e.id} className={e._offline ? "border-warning/50" : ""}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{e.description}</p>
-                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label || e.category} • {(e as any).farms?.name} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
+                      <p className="font-medium">{e.description} {e._offline && <span className="text-xs text-warning">(hors-ligne)</span>}</p>
+                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label || e.category} • {e.farms?.name} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-destructive">{Number(e.amount).toLocaleString()} FCFA</span>
-                      <Button variant="ghost" size="icon" onClick={async () => { if (!confirm("Supprimer ?")) return; await supabase.from("livestock_expenses").delete().eq("id", e.id); toast.success("Supprimé"); fetchAll(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { if (!confirm("Supprimer ?")) return; const ok = await deleteExpense(e.id); if (ok) toast.success("Supprimé"); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -282,16 +293,16 @@ const LivestockFinancePage = () => {
             <Card><CardContent className="p-8 text-center text-muted-foreground">Aucune vente</CardContent></Card>
           ) : (
             <div className="space-y-2">
-              {sales.map((s) => (
-                <Card key={s.id}>
+              {sales.map((s: any) => (
+                <Card key={s.id} className={s._offline ? "border-warning/50" : ""}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{s.description}</p>
+                      <p className="font-medium">{s.description} {s._offline && <span className="text-xs text-warning">(hors-ligne)</span>}</p>
                       <p className="text-sm text-muted-foreground">{saleTypes.find((t) => t.value === s.sale_type)?.label || s.sale_type} • {s.buyer || "—"} • {new Date(s.sale_date).toLocaleDateString("fr-FR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-emerald-600">{Number(s.total_amount).toLocaleString()} FCFA</span>
-                      <Button variant="ghost" size="icon" onClick={async () => { if (!confirm("Supprimer ?")) return; await supabase.from("livestock_sales").delete().eq("id", s.id); toast.success("Supprimé"); fetchAll(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { if (!confirm("Supprimer ?")) return; const ok = await deleteSale(s.id); if (ok) toast.success("Supprimé"); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </CardContent>
                 </Card>
