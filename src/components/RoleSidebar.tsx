@@ -4,7 +4,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
-  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
+  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown, ShoppingBag,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award,
 } from "lucide-react";
