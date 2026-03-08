@@ -6,6 +6,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiter (per-instance)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function isRateLimited(identifier: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(identifier);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(identifier, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -18,6 +34,15 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Identifiant, nom complet et nouveau mot de passe requis" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limiting
+    const cleanedIdentifier = identifier.trim().toLowerCase();
+    if (isRateLimited(cleanedIdentifier)) {
+      return new Response(
+        JSON.stringify({ error: "Trop de tentatives. Réessayez dans une heure." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -39,21 +64,18 @@ serve(async (req) => {
     let userId: string | null = null;
 
     if (isEmail) {
-      // Look up by real email in profiles
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
         .select("user_id, full_name")
         .eq("email", identifier.trim());
 
       if (profiles && profiles.length > 0) {
-        // Match by full_name for security
         const match = profiles.find(
-          (p) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
+          (p: any) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
         );
         if (match) userId = match.user_id;
       }
     } else {
-      // Look up by phone in profiles
       const cleaned = identifier.replace(/[^0-9+]/g, "");
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
@@ -62,13 +84,22 @@ serve(async (req) => {
 
       if (profiles && profiles.length > 0) {
         const match = profiles.find(
-          (p) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
+          (p: any) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
         );
         if (match) userId = match.user_id;
       }
     }
 
+    // Log the attempt to audit_log regardless of outcome
+    await supabaseAdmin.from("audit_log").insert({
+      action: "password_reset_attempt",
+      table_name: "auth.users",
+      record_id: userId || null,
+      new_data: { identifier: isEmail ? identifier : "phone:***" + identifier.slice(-4), success: !!userId },
+    });
+
     if (!userId) {
+      // Generic error to prevent user enumeration
       return new Response(
         JSON.stringify({ error: "Aucun compte trouvé avec ces informations. Vérifiez votre identifiant et votre nom complet." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -82,7 +113,7 @@ serve(async (req) => {
 
     if (error) {
       return new Response(
-        JSON.stringify({ error: "Erreur lors de la réinitialisation: " + error.message }),
+        JSON.stringify({ error: "Erreur lors de la réinitialisation du mot de passe." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
