@@ -74,7 +74,7 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
-  { to: "/dashboard/profile", label: "Mon Compte", icon: User },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export-partenaire", label: "Rapports", icon: Download },
 ];
 
