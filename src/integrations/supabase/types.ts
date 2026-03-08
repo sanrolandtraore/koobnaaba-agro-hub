@@ -869,6 +869,182 @@ export type Database = {
           },
         ]
       }
+      equipment_bookings: {
+        Row: {
+          created_at: string
+          deposit_amount: number
+          deposit_paid: boolean
+          end_date: string
+          id: string
+          listing_id: string
+          notes: string | null
+          payment_status: string
+          renter_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["booking_status"]
+          stripe_payment_id: string | null
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deposit_amount?: number
+          deposit_paid?: boolean
+          end_date: string
+          id?: string
+          listing_id: string
+          notes?: string | null
+          payment_status?: string
+          renter_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          stripe_payment_id?: string | null
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deposit_amount?: number
+          deposit_paid?: boolean
+          end_date?: string
+          id?: string
+          listing_id?: string
+          notes?: string | null
+          payment_status?: string
+          renter_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          stripe_payment_id?: string | null
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_listings: {
+        Row: {
+          availability_end: string | null
+          availability_start: string | null
+          avg_rating: number | null
+          brand: string | null
+          created_at: string
+          daily_rate: number
+          deposit_amount: number
+          description: string | null
+          equipment_type: string
+          id: string
+          images: string[] | null
+          latitude: number | null
+          location_name: string | null
+          longitude: number | null
+          model: string | null
+          owner_id: string
+          review_count: number | null
+          status: string
+          title: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          availability_end?: string | null
+          availability_start?: string | null
+          avg_rating?: number | null
+          brand?: string | null
+          created_at?: string
+          daily_rate?: number
+          deposit_amount?: number
+          description?: string | null
+          equipment_type?: string
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          model?: string | null
+          owner_id: string
+          review_count?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          availability_end?: string | null
+          availability_start?: string | null
+          avg_rating?: number | null
+          brand?: string | null
+          created_at?: string
+          daily_rate?: number
+          deposit_amount?: number
+          description?: string | null
+          equipment_type?: string
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          model?: string | null
+          owner_id?: string
+          review_count?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      equipment_reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          rating: number
+          reviewer_id: string
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          rating: number
+          reviewer_id: string
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          rating?: number
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farms: {
         Row: {
           climate_zone_id: string | null
@@ -1236,6 +1412,60 @@ export type Database = {
           },
         ]
       }
+      partner_directory: {
+        Row: {
+          address: string | null
+          category: Database["public"]["Enums"]["partner_category"]
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_verified: boolean
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          name: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          category: Database["public"]["Enums"]["partner_category"]
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_verified?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: Database["public"]["Enums"]["partner_category"]
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_verified?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1438,11 +1668,23 @@ export type Database = {
         | "cooperative"
         | "agent_technique"
         | "partenaire"
+      booking_status:
+        | "en_attente"
+        | "confirmee"
+        | "en_cours"
+        | "terminee"
+        | "annulee"
       cost_category:
         | "intrant"
         | "main_oeuvre"
         | "equipement"
         | "transport"
+        | "autre"
+      partner_category:
+        | "credit_agricole"
+        | "assurance_agricole"
+        | "fournisseur_intrants"
+        | "ministere_agriculture"
         | "autre"
     }
     CompositeTypes: {
@@ -1593,11 +1835,25 @@ export const Constants = {
         "agent_technique",
         "partenaire",
       ],
+      booking_status: [
+        "en_attente",
+        "confirmee",
+        "en_cours",
+        "terminee",
+        "annulee",
+      ],
       cost_category: [
         "intrant",
         "main_oeuvre",
         "equipement",
         "transport",
+        "autre",
+      ],
+      partner_category: [
+        "credit_agricole",
+        "assurance_agricole",
+        "fournisseur_intrants",
+        "ministere_agriculture",
         "autre",
       ],
     },
