@@ -10,11 +10,13 @@ import { Download, FileText, FileSpreadsheet } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-type ExportType = "members" | "collectes";
+type ExportType = "members" | "collectes" | "sales" | "distributions";
 
 const exportOptions: { value: ExportType; label: string }[] = [
   { value: "members", label: "Registre des membres" },
   { value: "collectes", label: "Collectes / Achats" },
+  { value: "sales", label: "Ventes groupées" },
+  { value: "distributions", label: "Répartitions par membre" },
 ];
 
 const CooperativeExportPage = () => {
@@ -27,9 +29,19 @@ const CooperativeExportPage = () => {
       const { data } = await supabase.from("cooperative_members").select("*").order("full_name");
       return { rows: data || [], columns: ["full_name", "phone", "location", "member_type", "crop_type", "livestock_type", "area_ha", "status", "joined_date"], title: "Registre des membres" };
     }
-    const { data } = await supabase.from("cooperative_collectes").select("*, cooperative_members(full_name)").order("collecte_date", { ascending: false });
-    const rows = (data || []).map((r: any) => ({ ...r, membre: r.cooperative_members?.full_name || "" }));
-    return { rows, columns: ["collecte_date", "membre", "product_name", "quantity_kg", "quality_grade", "unit_price", "total_amount", "status", "warehouse", "buyer"], title: "Collectes" };
+    if (type === "collectes") {
+      const { data } = await supabase.from("cooperative_collectes").select("*, cooperative_members(full_name)").order("collecte_date", { ascending: false });
+      const rows = (data || []).map((r: any) => ({ ...r, membre: r.cooperative_members?.full_name || "" }));
+      return { rows, columns: ["collecte_date", "membre", "product_name", "quantity_kg", "quality_grade", "unit_price", "total_amount", "status", "warehouse", "buyer"], title: "Collectes" };
+    }
+    if (type === "sales") {
+      const { data } = await supabase.from("cooperative_sales").select("*").order("sale_date", { ascending: false });
+      return { rows: data || [], columns: ["sale_date", "product_name", "product_type", "quantity_kg", "unit_price", "total_amount", "buyer", "payment_status"], title: "Ventes groupées" };
+    }
+    // distributions
+    const { data } = await supabase.from("cooperative_distributions").select("*, cooperative_members(full_name), cooperative_sales(product_name)").order("created_at", { ascending: false });
+    const rows = (data || []).map((r: any) => ({ ...r, membre: r.cooperative_members?.full_name || "", vente: r.cooperative_sales?.product_name || "", payé: r.paid ? "Oui" : "Non" }));
+    return { rows, columns: ["membre", "vente", "quantity_kg", "member_share", "payé", "paid_date"], title: "Répartitions" };
   };
 
   const exportCSV = async () => {
