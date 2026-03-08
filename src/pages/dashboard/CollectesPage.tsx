@@ -130,61 +130,63 @@ const CollectesPage = () => {
           <h1 className="text-2xl font-heading font-bold">Collectes</h1>
           <p className="text-muted-foreground mt-1">Enregistrez et suivez les collectes de vos membres</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nouvelle collecte</Button></DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Enregistrer une collecte</DialogTitle></DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div><Label>Membre</Label>
-                <Select value={form.member_id} onValueChange={v => setForm(f => ({ ...f, member_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionner un membre" /></SelectTrigger>
-                  <SelectContent>{members.map(m => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Type de produit *</Label>
-                <Select value={form.product_type} onValueChange={v => setForm(f => ({ ...f, product_type: v, product_name: "" }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{productTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Produit *</Label>
-                <Select value={form.product_name} onValueChange={v => setForm(f => ({ ...f, product_name: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
-                  <SelectContent>{(productNames[form.product_type] || []).map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Quantité (kg) *</Label><Input type="number" required value={form.quantity_kg} onChange={e => setForm(f => ({ ...f, quantity_kg: e.target.value }))} /></div>
-                <div><Label>Qualité</Label>
-                  <Select value={form.quality_grade} onValueChange={v => setForm(f => ({ ...f, quality_grade: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{qualityGrades.map(g => <SelectItem key={g} value={g}>Grade {g}</SelectItem>)}</SelectContent>
+        {canEdit && (
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nouvelle collecte</Button></DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>Enregistrer une collecte</DialogTitle></DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div><Label>Membre</Label>
+                  <Select value={form.member_id} onValueChange={v => setForm(f => ({ ...f, member_id: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner un membre" /></SelectTrigger>
+                    <SelectContent>{members.map(m => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Prix unitaire (FCFA/kg)</Label><Input type="number" value={form.unit_price} onChange={e => setForm(f => ({ ...f, unit_price: e.target.value }))} /></div>
-                <div><Label>Saison</Label>
-                  <Select value={form.season} onValueChange={v => setForm(f => ({ ...f, season: v }))}>
+                <div><Label>Type de produit *</Label>
+                  <Select value={form.product_type} onValueChange={v => setForm(f => ({ ...f, product_type: v, product_name: "" }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{seasons.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    <SelectContent>{productTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div><Label>Date de collecte</Label><Input type="date" value={form.collecte_date} onChange={e => setForm(f => ({ ...f, collecte_date: e.target.value }))} /></div>
-              <div><Label>Entrepôt</Label><Input value={form.warehouse} onChange={e => setForm(f => ({ ...f, warehouse: e.target.value }))} placeholder="Ex: Magasin central" /></div>
-              <div><Label>Statut</Label>
-                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{collecteStatuses.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              {form.status === "vendu" && <div><Label>Acheteur</Label><Input value={form.buyer} onChange={e => setForm(f => ({ ...f, buyer: e.target.value }))} /></div>}
-              <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
-              <Button type="submit" className="w-full">Enregistrer</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div><Label>Produit *</Label>
+                  <Select value={form.product_name} onValueChange={v => setForm(f => ({ ...f, product_name: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                    <SelectContent>{(productNames[form.product_type] || []).map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Quantité (kg) *</Label><Input type="number" required value={form.quantity_kg} onChange={e => setForm(f => ({ ...f, quantity_kg: e.target.value }))} /></div>
+                  <div><Label>Qualité</Label>
+                    <Select value={form.quality_grade} onValueChange={v => setForm(f => ({ ...f, quality_grade: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{qualityGrades.map(g => <SelectItem key={g} value={g}>Grade {g}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Prix unitaire (FCFA/kg)</Label><Input type="number" value={form.unit_price} onChange={e => setForm(f => ({ ...f, unit_price: e.target.value }))} /></div>
+                  <div><Label>Saison</Label>
+                    <Select value={form.season} onValueChange={v => setForm(f => ({ ...f, season: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{seasons.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div><Label>Date de collecte</Label><Input type="date" value={form.collecte_date} onChange={e => setForm(f => ({ ...f, collecte_date: e.target.value }))} /></div>
+                <div><Label>Entrepôt</Label><Input value={form.warehouse} onChange={e => setForm(f => ({ ...f, warehouse: e.target.value }))} placeholder="Ex: Magasin central" /></div>
+                <div><Label>Statut</Label>
+                  <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{collecteStatuses.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                {form.status === "vendu" && <div><Label>Acheteur</Label><Input value={form.buyer} onChange={e => setForm(f => ({ ...f, buyer: e.target.value }))} /></div>}
+                <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
+                <Button type="submit" className="w-full">Enregistrer</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
