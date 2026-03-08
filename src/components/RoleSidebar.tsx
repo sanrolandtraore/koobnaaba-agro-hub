@@ -14,6 +14,7 @@ const agriculteurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
   { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin },
+  { to: "/dashboard/planning", label: "Planification", icon: Calculator },
   { to: "/dashboard/cycles", label: "Cycles culturaux", icon: Wheat },
   { to: "/dashboard/activities", label: "Activités", icon: Activity },
   { to: "/dashboard/harvests", label: "Récoltes & Lots", icon: Package },
