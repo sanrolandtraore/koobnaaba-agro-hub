@@ -56,6 +56,7 @@ export const cooperativeNav: NavItem[] = [
   { to: "/dashboard/cooperative-equipment", label: "Mécanisation", icon: Wrench },
   { to: "/dashboard/cooperative-documents", label: "Documents", icon: FolderOpen },
   { to: "/dashboard/cooperative-score", label: "Score coopérative", icon: Award },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
 ];
 
