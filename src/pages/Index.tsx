@@ -116,7 +116,7 @@ const Index = () => {
               <Button size="lg" onClick={() => navigate("/auth")} className="gradient-warm text-accent-foreground font-semibold px-8 shadow-warm hover:opacity-90 transition-opacity">
                 Commencer <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+              <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="border-black bg-black text-white hover:bg-black/90 hover:text-white">
                 Se connecter
               </Button>
             </div>
