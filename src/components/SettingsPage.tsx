@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
-  Settings, User, Lock, Bell, Palette, Globe, Trash2, Upload, Save, Camera, Eye, EyeOff,
+  Settings, User, Lock, Bell, Palette, Globe, Trash2, Upload, Save, Camera, Eye, EyeOff, Mail, Loader2,
 } from "lucide-react";
 
 const AFRICAN_COUNTRIES = [
@@ -51,9 +51,12 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     full_name: "", phone: "", country: "", avatar_url: "",
@@ -143,10 +146,34 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     toast.success("Préférences enregistrées !");
   };
 
+  const handleChangeEmail = async () => {
+    if (!newEmail || !newEmail.includes("@")) { toast.error("Adresse email invalide"); return; }
+    setSavingEmail(true);
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    setSavingEmail(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Un email de confirmation a été envoyé à votre nouvelle adresse.");
+    setNewEmail("");
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== "SUPPRIMER") { toast.error("Tapez SUPPRIMER pour confirmer"); return; }
-    toast.error("La suppression de compte nécessite une intervention de l'administrateur. Contactez le support.");
-    setDeleteOpen(false);
+    setDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Non authentifié");
+
+      const res = await supabase.functions.invoke("delete-account");
+      if (res.error) throw res.error;
+
+      toast.success("Votre compte a été supprimé.");
+      await signOut();
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de la suppression");
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
   };
 
   if (loading) return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-96" /></div>;
@@ -209,8 +236,23 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
                   <Input value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))} placeholder="+226 70 00 00 00" />
                 </div>
                 <div>
-                  <Label>Email</Label>
+                  <Label>Email actuel</Label>
                   <Input value={user?.email || ""} disabled className="bg-muted" />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1"><Mail className="h-3 w-3" />Changer d'email</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      value={newEmail}
+                      onChange={e => setNewEmail(e.target.value)}
+                      placeholder="nouvelle@adresse.com"
+                    />
+                    <Button size="sm" onClick={handleChangeEmail} disabled={savingEmail || !newEmail}>
+                      {savingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Un email de confirmation sera envoyé</p>
                 </div>
                 <div>
                   <Label className="flex items-center gap-1"><Globe className="h-3 w-3" />Pays</Label>
@@ -345,9 +387,9 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setDeleteOpen(false)}>Annuler</Button>
-                    <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleteConfirm !== "SUPPRIMER"}>
-                      Confirmer la suppression
+                    <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>Annuler</Button>
+                    <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleteConfirm !== "SUPPRIMER" || deleting}>
+                      {deleting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Suppression...</> : "Confirmer la suppression"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
