@@ -150,10 +150,18 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-sidebar-border">
         <img src={logo} alt="KoobNaaba" className="h-10 w-auto shrink-0" />
-        <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
-          <RoleIcon className="h-3 w-3" />
-          {roleLabels[primaryRole || "agriculteur"]}
-        </span>
+        <div className="flex flex-col">
+          <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
+            <RoleIcon className="h-3 w-3" />
+            {isCoopMember ? "Coopérative" : roleLabels[primaryRole || "agriculteur"]}
+          </span>
+          {isReadOnly && (
+            <Badge variant="outline" className="text-[9px] mt-1 gap-1 border-sidebar-foreground/20 text-sidebar-foreground/50">
+              <Eye className="h-2.5 w-2.5" />
+              Lecture seule
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Nav */}
