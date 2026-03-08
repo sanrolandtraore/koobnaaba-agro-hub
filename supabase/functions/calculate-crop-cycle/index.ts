@@ -65,16 +65,15 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Non authentifié" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     // Service role client for data operations
     const supabase = createClient(
@@ -82,11 +81,25 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Corps de requête invalide" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const { crop_cycle_id, parcel_id, geometry } = body;
 
     // ===== Ownership verification =====
     if (parcel_id) {
+      if (typeof parcel_id !== "string") {
+        return new Response(JSON.stringify({ error: "parcel_id invalide" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { data: ownerData } = await supabase.rpc("get_farm_owner_from_parcel", { _parcel_id: parcel_id });
       if (ownerData !== userId) {
         return new Response(JSON.stringify({ error: "Accès interdit" }), {
@@ -97,6 +110,12 @@ Deno.serve(async (req) => {
     }
 
     if (crop_cycle_id) {
+      if (typeof crop_cycle_id !== "string") {
+        return new Response(JSON.stringify({ error: "crop_cycle_id invalide" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { data: ownerData } = await supabase.rpc("get_farm_owner_from_cycle", { _cycle_id: crop_cycle_id });
       if (ownerData !== userId) {
         return new Response(JSON.stringify({ error: "Accès interdit" }), {
@@ -282,6 +301,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("calculate-crop-cycle error:", err);
     return new Response(JSON.stringify({ error: "Erreur serveur" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
