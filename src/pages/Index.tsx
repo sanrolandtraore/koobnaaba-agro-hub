@@ -65,7 +65,7 @@ const Index = () => {
       <footer className="border-t border-border py-8 bg-muted">
         <div className="container max-w-5xl mx-auto px-4 flex items-center justify-between">
           <img src={logo} alt="KoobNaaba" className="h-8 w-auto" />
-          <p className="text-sm text-muted-foreground">© 2026 KoobNaaba. Pour l'agriculture burkinabè.</p>
+          <p className="text-sm text-muted-foreground">© 2026 KoobNaaba. Pour l'agriculture africaine.</p>
         </div>
       </footer>
     </div>

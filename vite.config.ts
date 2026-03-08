@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "Koobnaaba - Gestion Agricole",
         short_name: "Koobnaaba",
-        description: "Plateforme de gestion agricole intelligente pour le Burkina Faso",
+        description: "Plateforme de gestion agricole intelligente pour l'Afrique",
         theme_color: "#2d6a4f",
         background_color: "#faf8f5",
         display: "standalone",
