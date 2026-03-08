@@ -10,6 +10,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
+  const { isPremium } = useSubscription();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
