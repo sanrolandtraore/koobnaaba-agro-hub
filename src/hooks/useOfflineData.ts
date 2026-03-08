@@ -17,6 +17,7 @@ interface UseOfflineDataOptions {
   orderBy?: string;
   ascending?: boolean;
   filter?: { column: string; value: any }[];
+  limit?: number;
 }
 
 export function useOfflineData<T = any>({
