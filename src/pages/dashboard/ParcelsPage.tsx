@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit, Map, Navigation, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Edit, Map, Navigation, Eye, EyeOff, WifiOff } from "lucide-react";
 import { GPSPolygonCapture, coordsToGeoJSON } from "@/components/GPSPolygonCapture";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOfflineData } from "@/hooks/useOfflineData";
 
 const ParcelMapPreview = lazy(() => import("@/components/ParcelMapPreview"));
 
-// Selection lists
 const soilTypes = [
   "Argileux", "Sableux", "Limoneux", "Argilo-sableux", "Argilo-limoneux",
   "Sablo-limoneux", "Latéritique", "Gravillonnaire", "Alluvial", "Vertisol",
@@ -31,9 +31,12 @@ const parcelStatuses = [
 ];
 
 const ParcelsPage = () => {
-  const [parcels, setParcels] = useState<any[]>([]);
-  const [farms, setFarms] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: parcels, loading, isOffline, refetch, insertRow, updateRow, deleteRow } = useOfflineData({
+    table: 'parcels',
+    select: '*, farms(name)',
+  });
+  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({
@@ -42,20 +45,6 @@ const ParcelsPage = () => {
   const [gpsPoints, setGpsPoints] = useState<{ lat: number; lng: number }[]>([]);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [showMap, setShowMap] = useState<string | null>(null);
-
-  const fetchParcels = async () => {
-    const { data, error } = await supabase.from("parcels").select("*, farms(name)").order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    else setParcels(data || []);
-    setLoading(false);
-  };
-
-  const fetchFarms = async () => {
-    const { data } = await supabase.from("farms").select("id, name");
-    setFarms(data || []);
-  };
-
-  useEffect(() => { fetchParcels(); fetchFarms(); }, []);
 
   const resetForm = () => {
     setForm({ name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", status: "active" });
@@ -76,7 +65,6 @@ const ParcelsPage = () => {
       status: form.status,
     };
 
-    // Set lat/lng from first GPS point or polygon centroid
     if (gpsPoints.length > 0) {
       payload.latitude = gpsPoints.reduce((s, c) => s + c.lat, 0) / gpsPoints.length;
       payload.longitude = gpsPoints.reduce((s, c) => s + c.lng, 0) / gpsPoints.length;
@@ -85,32 +73,35 @@ const ParcelsPage = () => {
       payload.geometry = geometry;
     }
 
-    let parcelId: string | null = null;
-
     if (editing) {
-      const { error } = await supabase.from("parcels").update(payload).eq("id", editing.id);
-      if (error) { toast.error(error.message); return; }
-      parcelId = editing.id;
-      toast.success("Parcelle mise à jour !");
+      const ok = await updateRow(editing.id, payload);
+      if (ok) {
+        toast.success("Parcelle mise à jour !");
+        // Trigger backend area calculation if online
+        if (geometry && navigator.onLine) {
+          try {
+            await supabase.functions.invoke("calculate-crop-cycle", {
+              body: { parcel_id: editing.id, geometry },
+            });
+          } catch (_) { /* silent */ }
+        }
+      }
     } else {
-      const { data, error } = await supabase.from("parcels").insert(payload).select("id").single();
-      if (error) { toast.error(error.message); return; }
-      parcelId = data.id;
-      toast.success("Parcelle créée !");
-    }
-
-    // Trigger backend area calculation
-    if (geometry && parcelId) {
-      try {
-        await supabase.functions.invoke("calculate-crop-cycle", {
-          body: { parcel_id: parcelId, geometry },
-        });
-      } catch (_) { /* silent */ }
+      const result = await insertRow(payload);
+      if (result) {
+        toast.success("Parcelle créée !");
+        if (geometry && navigator.onLine && result.id) {
+          try {
+            await supabase.functions.invoke("calculate-crop-cycle", {
+              body: { parcel_id: result.id, geometry },
+            });
+          } catch (_) { /* silent */ }
+        }
+      }
     }
 
     resetForm();
     setOpen(false);
-    fetchParcels();
   };
 
   const handleEdit = (p: any) => {
@@ -135,9 +126,8 @@ const ParcelsPage = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette parcelle ?")) return;
-    const { error } = await supabase.from("parcels").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Parcelle supprimée"); fetchParcels(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Parcelle supprimée");
   };
 
   const getParcelCoords = (p: any): { lat: number; lng: number }[] => {
@@ -153,9 +143,8 @@ const ParcelsPage = () => {
     return <Badge variant={variant}>{s?.label || status}</Badge>;
   };
 
-  // Stats
-  const totalArea = parcels.reduce((s, p) => s + Number(p.calculated_area_ha || p.area_ha || 0), 0);
-  const gpsCount = parcels.filter(p => p.geometry).length;
+  const totalArea = parcels.reduce((s: number, p: any) => s + Number(p.calculated_area_ha || p.area_ha || 0), 0);
+  const gpsCount = parcels.filter((p: any) => p.geometry).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -164,6 +153,7 @@ const ParcelsPage = () => {
           <h1 className="text-2xl font-heading font-bold">Parcelles</h1>
           <p className="text-muted-foreground mt-1">
             {parcels.length} parcelle{parcels.length !== 1 ? "s" : ""} · {Math.round(totalArea * 100) / 100} ha · {gpsCount} cartographiée{gpsCount !== 1 ? "s" : ""}
+            {isOffline && <Badge variant="outline" className="ml-2 text-xs"><WifiOff className="h-3 w-3 mr-1" />Hors-ligne</Badge>}
           </p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
@@ -179,15 +169,13 @@ const ParcelsPage = () => {
                 <Label>Exploitation *</Label>
                 <Select value={form.farm_id} onValueChange={(v) => setForm({ ...form, farm_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir l'exploitation" /></SelectTrigger>
-                  <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label>Nom de la parcelle *</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Parcelle A" />
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Type de sol</Label>
@@ -204,7 +192,6 @@ const ParcelsPage = () => {
                   </Select>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Superficie manuelle (ha)</Label>
@@ -219,8 +206,6 @@ const ParcelsPage = () => {
                   </Select>
                 </div>
               </div>
-
-              {/* GPS Capture */}
               <div className="rounded-lg border p-3 space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Navigation className="h-4 w-4 text-primary" />
@@ -237,7 +222,6 @@ const ParcelsPage = () => {
                   </Suspense>
                 )}
               </div>
-
               <Button type="submit" className="w-full gradient-primary text-primary-foreground">
                 {editing ? "Mettre à jour" : "Créer la parcelle"}
               </Button>
@@ -257,11 +241,10 @@ const ParcelsPage = () => {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {parcels.map((p) => {
+          {parcels.map((p: any) => {
             const coords = getParcelCoords(p);
             return (
-              <Card key={p.id} className="shadow-sm hover:shadow-warm transition-shadow overflow-hidden">
-                {/* Map preview toggle */}
+              <Card key={p.id} className={`shadow-sm hover:shadow-warm transition-shadow overflow-hidden ${p._offline ? 'border-dashed border-amber-400' : ''}`}>
                 {coords.length >= 3 && showMap === p.id && (
                   <Suspense fallback={<Skeleton className="h-[180px] w-full" />}>
                     <ParcelMapPreview coordinates={coords} height="180px" />
@@ -269,7 +252,10 @@ const ParcelsPage = () => {
                 )}
                 <CardHeader className="flex flex-row items-start justify-between pb-2">
                   <div>
-                    <CardTitle className="text-lg">{p.name}</CardTitle>
+                    <CardTitle className="text-lg">
+                      {p.name}
+                      {p._offline && <Badge variant="outline" className="ml-2 text-xs">En attente</Badge>}
+                    </CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">{p.farms?.name}</p>
                   </div>
                   <div className="flex gap-1">
