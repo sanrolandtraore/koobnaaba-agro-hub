@@ -35,10 +35,12 @@ const DashboardLayout = () => {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="container max-w-6xl py-4 px-4 md:py-6 md:px-8">
-            <Outlet />
+          <Outlet />
           </div>
         </main>
       </div>
+
+      <VoiceAssistant />
     </div>
   );
 };
