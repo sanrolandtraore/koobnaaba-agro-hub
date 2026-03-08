@@ -2076,6 +2076,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_subscription_limit: {
+        Args: { _resource: string; _user_id: string }
+        Returns: undefined
+      }
       get_farm_owner_from_animal: {
         Args: { _animal_id: string }
         Returns: string
