@@ -69,7 +69,7 @@ const LivestockServicesPage = () => {
       supabase.from("farms").select("id, name"),
     ]);
     // Filter to livestock service types only
-    const livestockTypes = LIVESTOCK_SERVICE_TYPES.map(s => s.value);
+    const livestockTypes = LIVESTOCK_SERVICE_TYPES.map(s => s.value) as readonly string[];
     const allReqs = (rRes.data as ServiceRequest[]) || [];
     setRequests(allReqs.filter(r => livestockTypes.includes(r.service_type)));
     setFarms(fRes.data || []);
