@@ -36,6 +36,8 @@ import CooperativeEquipmentPage from "./pages/dashboard/CooperativeEquipmentPage
 import CooperativeDocumentsPage from "./pages/dashboard/CooperativeDocumentsPage";
 import CooperativeScorePage from "./pages/dashboard/CooperativeScorePage";
 import UserProfilePage from "./pages/dashboard/UserProfilePage";
+import PartnerProfilePage from "./pages/dashboard/PartnerProfilePage";
+import PartnerRequestsPage from "./pages/dashboard/PartnerRequestsPage";
 import CropPlanningPage from "./pages/dashboard/CropPlanningPage";
 import ServicesPage from "./pages/dashboard/ServicesPage";
 import AgentDashboard from "./pages/dashboard/AgentDashboard";
