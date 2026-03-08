@@ -22,7 +22,7 @@ const Index = () => {
               <span className="text-gradient-warm">enfin facile.</span>
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl">
-              La plateforme de gestion agricole intelligente conçue pour les agriculteurs du Burkina Faso. 
+              La plateforme de gestion agricole intelligente conçue pour les agriculteurs africains. 
               Gérez vos exploitations, suivez vos cultures et optimisez vos rendements.
             </p>
             <div className="flex gap-4 flex-wrap justify-center">
@@ -65,7 +65,7 @@ const Index = () => {
       <footer className="border-t border-border py-8 bg-muted">
         <div className="container max-w-5xl mx-auto px-4 flex items-center justify-between">
           <img src={logo} alt="KoobNaaba" className="h-8 w-auto" />
-          <p className="text-sm text-muted-foreground">© 2026 KoobNaaba. Pour l'agriculture burkinabè.</p>
+          <p className="text-sm text-muted-foreground">© 2026 KoobNaaba. Pour l'agriculture africaine.</p>
         </div>
       </footer>
     </div>
