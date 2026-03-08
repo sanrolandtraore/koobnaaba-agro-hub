@@ -101,6 +101,7 @@ const MembersPage = () => {
       phone: form.phone || null,
       location: form.location || null,
       member_type: form.member_type,
+      cooperative_role: form.cooperative_role,
       crop_type: form.crop_type || null,
       livestock_type: form.livestock_type || null,
       area_ha: form.area_ha ? parseFloat(form.area_ha) : 0,
@@ -111,7 +112,7 @@ const MembersPage = () => {
     if (error) { toast.error("Erreur: " + error.message); return; }
     toast.success("Membre ajouté !");
     setOpen(false);
-    setForm({ full_name: "", phone: "", location: "", member_type: "producteur", crop_type: "", livestock_type: "", area_ha: "", status: "actif", joined_date: new Date().toISOString().split("T")[0], notes: "" });
+    setForm({ full_name: "", phone: "", location: "", member_type: "producteur", cooperative_role: "membre", crop_type: "", livestock_type: "", area_ha: "", status: "actif", joined_date: new Date().toISOString().split("T")[0], notes: "" });
     fetchMembers();
   };
 
