@@ -237,8 +237,9 @@ const MembersPage = () => {
             <TableBody>
               {filtered.map(m => (
                 <TableRow key={m.id}>
-                  <TableCell className="font-medium">{m.full_name}</TableCell>
-                  <TableCell>{memberTypes.find(t => t.value === m.member_type)?.label || m.member_type}</TableCell>
+                   <TableCell className="font-medium">{m.full_name}</TableCell>
+                   <TableCell><Badge variant={m.cooperative_role !== "membre" ? "default" : "outline"}>{cooperativeRoles.find(r => r.value === m.cooperative_role)?.label || m.cooperative_role}</Badge></TableCell>
+                   <TableCell>{memberTypes.find(t => t.value === m.member_type)?.label || m.member_type}</TableCell>
                   <TableCell>{m.location || "—"}</TableCell>
                   <TableCell>{m.phone || "—"}</TableCell>
                   <TableCell>{m.area_ha ? `${m.area_ha} ha` : "—"}</TableCell>
