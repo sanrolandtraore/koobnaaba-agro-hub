@@ -69,7 +69,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, phone, country, avatar_url, preferences")
+        .select("full_name, phone, country, avatar_url, preferences, email")
         .eq("user_id", user.id)
         .single();
       if (data) {
@@ -79,6 +79,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
           country: (data as any).country || "",
           avatar_url: data.avatar_url || "",
         });
+        setNewEmail((data as any).email || "");
         const p = (data as any).preferences;
         if (p) setPrefs({ theme: p.theme || "system", language: p.language || "fr", notifications: p.notifications !== false });
       }
@@ -116,6 +117,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
         full_name: profileForm.full_name,
         phone: profileForm.phone || null,
         country: profileForm.country || null,
+        email: newEmail || null,
       } as any)
       .eq("user_id", user.id);
     setSavingProfile(false);
@@ -146,15 +148,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     toast.success("Préférences enregistrées !");
   };
 
-  const handleChangeEmail = async () => {
-    if (!newEmail || !newEmail.includes("@")) { toast.error("Adresse email invalide"); return; }
-    setSavingEmail(true);
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
-    setSavingEmail(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Un email de confirmation a été envoyé à votre nouvelle adresse.");
-    setNewEmail("");
-  };
+
 
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== "SUPPRIMER") { toast.error("Tapez SUPPRIMER pour confirmer"); return; }
@@ -222,7 +216,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
                 </div>
                 <div>
                   <p className="font-semibold">{profileForm.full_name || "Utilisateur"}</p>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  <p className="text-sm text-muted-foreground">{profileForm.phone || "Aucun téléphone"}</p>
                 </div>
               </div>
 
@@ -236,23 +230,14 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
                   <Input value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))} placeholder="+226 70 00 00 00" />
                 </div>
                 <div>
-                  <Label>Email actuel</Label>
-                  <Input value={user?.email || ""} disabled className="bg-muted" />
-                </div>
-                <div>
-                  <Label className="flex items-center gap-1"><Mail className="h-3 w-3" />Changer d'email</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="email"
-                      value={newEmail}
-                      onChange={e => setNewEmail(e.target.value)}
-                      placeholder="nouvelle@adresse.com"
-                    />
-                    <Button size="sm" onClick={handleChangeEmail} disabled={savingEmail || !newEmail}>
-                      {savingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Un email de confirmation sera envoyé</p>
+                  <Label className="flex items-center gap-1"><Mail className="h-3 w-3" /> Email (optionnel)</Label>
+                  <Input
+                    type="email"
+                    value={newEmail}
+                    onChange={e => setNewEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Pour recevoir des notifications par email</p>
                 </div>
                 <div>
                   <Label className="flex items-center gap-1"><Globe className="h-3 w-3" />Pays</Label>
