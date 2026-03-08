@@ -148,15 +148,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     toast.success("Préférences enregistrées !");
   };
 
-  const handleChangeEmail = async () => {
-    if (!newEmail || !newEmail.includes("@")) { toast.error("Adresse email invalide"); return; }
-    setSavingEmail(true);
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
-    setSavingEmail(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Un email de confirmation a été envoyé à votre nouvelle adresse.");
-    setNewEmail("");
-  };
+
 
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== "SUPPRIMER") { toast.error("Tapez SUPPRIMER pour confirmer"); return; }
