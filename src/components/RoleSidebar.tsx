@@ -106,7 +106,7 @@ function getNavForRole(role: string | null): { main: NavItem[]; livestock?: NavI
     case "admin":
     case "manager":
     case "farmer":
-      return { main: fullNav, livestock: fullLivestockNav };
+      return { main: fullNav };
     default:
       return { main: agriculteurNav };
   }
