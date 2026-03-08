@@ -3,7 +3,8 @@ import { Outlet } from "react-router-dom";
 import { RoleSidebar, SidebarNavContent } from "@/components/RoleSidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Sprout } from "lucide-react";
+import { Menu } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
@@ -27,12 +28,7 @@ const DashboardLayout = () => {
               <SidebarNavContent onNavigate={() => setOpen(false)} />
             </SheetContent>
           </Sheet>
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg gradient-warm">
-              <Sprout className="h-4 w-4 text-sidebar-primary-foreground" />
-            </div>
-            <span className="text-base font-heading font-bold text-sidebar-foreground">Koobnaaba</span>
-          </div>
+          <img src={logo} alt="KoobNaaba" className="h-8 w-auto" />
         </header>
 
         {/* Main content */}
