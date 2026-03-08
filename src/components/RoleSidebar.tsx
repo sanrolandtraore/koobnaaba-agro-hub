@@ -4,7 +4,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
-  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown, ShoppingBag,
+  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award, Store,
 } from "lucide-react";
@@ -26,8 +26,7 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/costs", label: "Coûts", icon: DollarSign },
   { to: "/dashboard/investment", label: "Investissement", icon: Calculator },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
-  { to: "/dashboard/marketplace", label: "Marketplace", icon: ShoppingBag },
-  { to: "/dashboard/service-marketplace", label: "Services Marketplace", icon: Store },
+  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
@@ -44,7 +43,7 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/livestock/services", label: "Services Vétérinaires", icon: ClipboardList },
-  { to: "/dashboard/service-marketplace", label: "Services Marketplace", icon: Store },
+  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
@@ -69,7 +68,7 @@ export const cooperativeNav: NavItem[] = [
 export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
-  { to: "/dashboard/service-marketplace", label: "Services Marketplace", icon: Store },
+  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
@@ -80,7 +79,7 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/partner-profile", label: "Mon profil", icon: Handshake },
   { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
-  { to: "/dashboard/service-marketplace", label: "Services Marketplace", icon: Store },
+  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
