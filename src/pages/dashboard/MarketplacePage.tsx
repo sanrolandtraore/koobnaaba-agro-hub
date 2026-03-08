@@ -140,7 +140,7 @@ const MarketplacePage = () => {
                       </div>
                       {(eq.avg_rating ?? 0) > 0 && (
                         <div className="flex items-center gap-0.5 text-xs shrink-0">
-                          <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                          <Star className="h-3.5 w-3.5 text-chart-4 fill-chart-4" />
                           <span className="font-medium">{Number(eq.avg_rating).toFixed(1)}</span>
                           <span className="text-muted-foreground">({eq.review_count})</span>
                         </div>
