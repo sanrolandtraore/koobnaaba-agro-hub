@@ -1,5 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
+import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Wheat, BarChart3, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
