@@ -81,6 +81,12 @@ const App = () => (
               <Route path="collectes" element={<CollectesPage />} />
               <Route path="cooperative-export" element={<CooperativeExportPage />} />
               <Route path="cooperative-finance" element={<CooperativeFinancePage />} />
+              <Route path="cooperative-profile" element={<CooperativeProfilePage />} />
+              <Route path="cooperative-cotisations" element={<CooperativeCotisationsPage />} />
+              <Route path="cooperative-parcels" element={<CooperativeParcelsPage />} />
+              <Route path="cooperative-equipment" element={<CooperativeEquipmentPage />} />
+              <Route path="cooperative-documents" element={<CooperativeDocumentsPage />} />
+              <Route path="cooperative-score" element={<CooperativeScorePage />} />
               <Route path="services" element={<ServicesPage />} />
               <Route path="expert/requests" element={<AgentDashboard />} />
               <Route path="livestock" element={<LivestockDashboardPage />} />

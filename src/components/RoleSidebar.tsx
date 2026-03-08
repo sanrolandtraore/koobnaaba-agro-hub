@@ -48,9 +48,15 @@ export const eleveurNav: NavItem[] = [
 
 export const cooperativeNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/cooperative-profile", label: "Profil coopérative", icon: Building2 },
   { to: "/dashboard/members", label: "Membres", icon: Users },
   { to: "/dashboard/collectes", label: "Collectes", icon: Package },
-  { to: "/dashboard/cooperative-finance", label: "Finances", icon: Wallet },
+  { to: "/dashboard/cooperative-cotisations", label: "Cotisations & Fonds", icon: Wallet },
+  { to: "/dashboard/cooperative-finance", label: "Ventes & Répartitions", icon: DollarSign },
+  { to: "/dashboard/cooperative-parcels", label: "Parcelles groupées", icon: Layers },
+  { to: "/dashboard/cooperative-equipment", label: "Mécanisation", icon: Wrench },
+  { to: "/dashboard/cooperative-documents", label: "Documents", icon: FolderOpen },
+  { to: "/dashboard/cooperative-score", label: "Score coopérative", icon: Award },
   { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
 ];
 
