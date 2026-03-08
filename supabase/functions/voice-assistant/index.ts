@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate the user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
@@ -27,17 +26,17 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const userId = user.id;
+
     // Check subscription - AI is premium-only
-    const userId = claimsData.claims.sub as string;
     const { data: subData } = await supabase
       .from("user_subscriptions")
       .select("plan, status, expires_at")
@@ -56,6 +55,13 @@ serve(async (req) => {
     }
 
     const { transcript, context } = await req.json();
+    if (!transcript || typeof transcript !== "string" || transcript.length > 5000) {
+      return new Response(JSON.stringify({ error: "Transcription invalide" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -82,7 +88,7 @@ Types de services disponibles:
 Types d'équipement pour location:
 - tracteur, motoculteur, semoir, pulvérisateur, moissonneuse, remorque, charrue, décortiqueuse
 
-Contexte actuel de l'utilisateur: ${context || "page principale"}
+Contexte actuel de l'utilisateur: ${typeof context === "string" ? context.slice(0, 200) : "page principale"}
 
 Réponds TOUJOURS en français simple et accessible. Sois chaleureux et patient.`;
 
@@ -188,7 +194,19 @@ Réponds TOUJOURS en français simple et accessible. Sois chaleureux et patient.
       });
     }
 
-    const result = JSON.parse(toolCall.function.arguments);
+    let result: any;
+    try {
+      result = JSON.parse(toolCall.function.arguments);
+    } catch {
+      return new Response(JSON.stringify({
+        intent: "general_help",
+        response_message: "Une erreur est survenue, veuillez réessayer.",
+        navigation: "none",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
