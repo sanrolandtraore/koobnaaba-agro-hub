@@ -435,6 +435,60 @@ export type Database = {
           },
         ]
       }
+      cooperative_distributions: {
+        Row: {
+          cooperative_user_id: string
+          created_at: string
+          id: string
+          member_id: string | null
+          member_share: number
+          notes: string | null
+          paid: boolean
+          paid_date: string | null
+          quantity_kg: number
+          sale_id: string | null
+        }
+        Insert: {
+          cooperative_user_id: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          member_share?: number
+          notes?: string | null
+          paid?: boolean
+          paid_date?: string | null
+          quantity_kg?: number
+          sale_id?: string | null
+        }
+        Update: {
+          cooperative_user_id?: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          member_share?: number
+          notes?: string | null
+          paid?: boolean
+          paid_date?: string | null
+          quantity_kg?: number
+          sale_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooperative_distributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "cooperative_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cooperative_distributions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "cooperative_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cooperative_members: {
         Row: {
           area_ha: number | null
@@ -483,6 +537,51 @@ export type Database = {
           phone?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cooperative_sales: {
+        Row: {
+          buyer: string | null
+          cooperative_user_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_status: string
+          product_name: string
+          product_type: string
+          quantity_kg: number
+          sale_date: string
+          total_amount: number
+          unit_price: number
+        }
+        Insert: {
+          buyer?: string | null
+          cooperative_user_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string
+          product_name: string
+          product_type?: string
+          quantity_kg?: number
+          sale_date?: string
+          total_amount?: number
+          unit_price?: number
+        }
+        Update: {
+          buyer?: string | null
+          cooperative_user_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string
+          product_name?: string
+          product_type?: string
+          quantity_kg?: number
+          sale_date?: string
+          total_amount?: number
+          unit_price?: number
         }
         Relationships: []
       }
