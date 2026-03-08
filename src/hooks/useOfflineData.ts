@@ -17,6 +17,7 @@ interface UseOfflineDataOptions {
   orderBy?: string;
   ascending?: boolean;
   filter?: { column: string; value: any }[];
+  limit?: number;
 }
 
 export function useOfflineData<T = any>({
@@ -26,6 +27,7 @@ export function useOfflineData<T = any>({
   orderBy = 'created_at',
   ascending = false,
   filter,
+  limit = 500,
 }: UseOfflineDataOptions) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ export function useOfflineData<T = any>({
             query = query.eq(f.column, f.value);
           }
         }
-        query = query.order(orderBy, { ascending });
+        query = query.order(orderBy, { ascending }).limit(limit);
 
         const { data: result, error } = await query;
         if (error) throw error;

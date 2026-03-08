@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,50 +10,67 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DashboardLayout from "./components/DashboardLayout";
-import RoleDashboardHome from "./pages/dashboard/RoleDashboardHome";
-import FarmsPage from "./pages/dashboard/FarmsPage";
-import ParcelsPage from "./pages/dashboard/ParcelsPage";
-import CropCyclesPage from "./pages/dashboard/CropCyclesPage";
-import ActivitiesPage from "./pages/dashboard/ActivitiesPage";
-import CostsPage from "./pages/dashboard/CostsPage";
-import InvestmentPlanPage from "./pages/dashboard/InvestmentPlanPage";
-import WorkersPage from "./pages/dashboard/WorkersPage";
-import EquipmentPage from "./pages/dashboard/EquipmentPage";
-import HarvestsPage from "./pages/dashboard/HarvestsPage";
-import CalendarPage from "./pages/dashboard/CalendarPage";
-import AnalyticsPage from "./pages/dashboard/AnalyticsPage";
-import AgriculteurExportPage from "./pages/dashboard/AgriculteurExportPage";
-import EleveurExportPage from "./pages/dashboard/EleveurExportPage";
-import AgentExportPage from "./pages/dashboard/AgentExportPage";
-import PartenaireExportPage from "./pages/dashboard/PartenaireExportPage";
-import MembersPage from "./pages/dashboard/MembersPage";
-import CollectesPage from "./pages/dashboard/CollectesPage";
-import CooperativeExportPage from "./pages/dashboard/CooperativeExportPage";
-import CooperativeFinancePage from "./pages/dashboard/CooperativeFinancePage";
-import CooperativeProfilePage from "./pages/dashboard/CooperativeProfilePage";
-import CooperativeCotisationsPage from "./pages/dashboard/CooperativeCotisationsPage";
-import CooperativeParcelsPage from "./pages/dashboard/CooperativeParcelsPage";
-import CooperativeEquipmentPage from "./pages/dashboard/CooperativeEquipmentPage";
-import CooperativeDocumentsPage from "./pages/dashboard/CooperativeDocumentsPage";
-import CooperativeScorePage from "./pages/dashboard/CooperativeScorePage";
-import PartnerProfilePage from "./pages/dashboard/PartnerProfilePage";
-import PartnerRequestsPage from "./pages/dashboard/PartnerRequestsPage";
-import CropPlanningPage from "./pages/dashboard/CropPlanningPage";
-import ServicesPage from "./pages/dashboard/ServicesPage";
-import AgentDashboard from "./pages/dashboard/AgentDashboard";
-import RoleSettingsRouter from "./pages/dashboard/RoleSettingsRouter";
-import LivestockDashboardPage from "./pages/livestock/LivestockDashboardPage";
-import AnimalsPage from "./pages/livestock/AnimalsPage";
-import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
-import AnimalReproductionPage from "./pages/livestock/AnimalReproductionPage";
-import AnimalFeedingPage from "./pages/livestock/AnimalFeedingPage";
-import LivestockFinancePage from "./pages/livestock/LivestockFinancePage";
-import LivestockServicesPage from "./pages/livestock/LivestockServicesPage";
-import PricingPage from "./pages/dashboard/PricingPage";
-import ServiceMarketplacePage from "./pages/dashboard/ServiceMarketplacePage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy-loaded dashboard pages for code splitting
+const RoleDashboardHome = lazy(() => import("./pages/dashboard/RoleDashboardHome"));
+const FarmsPage = lazy(() => import("./pages/dashboard/FarmsPage"));
+const ParcelsPage = lazy(() => import("./pages/dashboard/ParcelsPage"));
+const CropCyclesPage = lazy(() => import("./pages/dashboard/CropCyclesPage"));
+const ActivitiesPage = lazy(() => import("./pages/dashboard/ActivitiesPage"));
+const CostsPage = lazy(() => import("./pages/dashboard/CostsPage"));
+const InvestmentPlanPage = lazy(() => import("./pages/dashboard/InvestmentPlanPage"));
+const WorkersPage = lazy(() => import("./pages/dashboard/WorkersPage"));
+const EquipmentPage = lazy(() => import("./pages/dashboard/EquipmentPage"));
+const HarvestsPage = lazy(() => import("./pages/dashboard/HarvestsPage"));
+const CalendarPage = lazy(() => import("./pages/dashboard/CalendarPage"));
+const AnalyticsPage = lazy(() => import("./pages/dashboard/AnalyticsPage"));
+const AgriculteurExportPage = lazy(() => import("./pages/dashboard/AgriculteurExportPage"));
+const EleveurExportPage = lazy(() => import("./pages/dashboard/EleveurExportPage"));
+const AgentExportPage = lazy(() => import("./pages/dashboard/AgentExportPage"));
+const PartenaireExportPage = lazy(() => import("./pages/dashboard/PartenaireExportPage"));
+const MembersPage = lazy(() => import("./pages/dashboard/MembersPage"));
+const CollectesPage = lazy(() => import("./pages/dashboard/CollectesPage"));
+const CooperativeExportPage = lazy(() => import("./pages/dashboard/CooperativeExportPage"));
+const CooperativeFinancePage = lazy(() => import("./pages/dashboard/CooperativeFinancePage"));
+const CooperativeProfilePage = lazy(() => import("./pages/dashboard/CooperativeProfilePage"));
+const CooperativeCotisationsPage = lazy(() => import("./pages/dashboard/CooperativeCotisationsPage"));
+const CooperativeParcelsPage = lazy(() => import("./pages/dashboard/CooperativeParcelsPage"));
+const CooperativeEquipmentPage = lazy(() => import("./pages/dashboard/CooperativeEquipmentPage"));
+const CooperativeDocumentsPage = lazy(() => import("./pages/dashboard/CooperativeDocumentsPage"));
+const CooperativeScorePage = lazy(() => import("./pages/dashboard/CooperativeScorePage"));
+const PartnerProfilePage = lazy(() => import("./pages/dashboard/PartnerProfilePage"));
+const PartnerRequestsPage = lazy(() => import("./pages/dashboard/PartnerRequestsPage"));
+const CropPlanningPage = lazy(() => import("./pages/dashboard/CropPlanningPage"));
+const ServicesPage = lazy(() => import("./pages/dashboard/ServicesPage"));
+const AgentDashboard = lazy(() => import("./pages/dashboard/AgentDashboard"));
+const RoleSettingsRouter = lazy(() => import("./pages/dashboard/RoleSettingsRouter"));
+const LivestockDashboardPage = lazy(() => import("./pages/livestock/LivestockDashboardPage"));
+const AnimalsPage = lazy(() => import("./pages/livestock/AnimalsPage"));
+const AnimalHealthPage = lazy(() => import("./pages/livestock/AnimalHealthPage"));
+const AnimalReproductionPage = lazy(() => import("./pages/livestock/AnimalReproductionPage"));
+const AnimalFeedingPage = lazy(() => import("./pages/livestock/AnimalFeedingPage"));
+const LivestockFinancePage = lazy(() => import("./pages/livestock/LivestockFinancePage"));
+const LivestockServicesPage = lazy(() => import("./pages/livestock/LivestockServicesPage"));
+const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
+const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-48">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  </div>
+);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -66,47 +84,47 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-              <Route index element={<RoleDashboardHome />} />
-              <Route path="farms" element={<FarmsPage />} />
-              <Route path="parcels" element={<ParcelsPage />} />
-              <Route path="cycles" element={<CropCyclesPage />} />
-              <Route path="planning" element={<CropPlanningPage />} />
-              <Route path="activities" element={<ActivitiesPage />} />
-              <Route path="costs" element={<CostsPage />} />
-              <Route path="investment" element={<InvestmentPlanPage />} />
-              <Route path="workers" element={<WorkersPage />} />
-              <Route path="equipment" element={<EquipmentPage />} />
-              <Route path="harvests" element={<HarvestsPage />} />
-              <Route path="calendar" element={<CalendarPage />} />
-              <Route path="analytics" element={<AnalyticsPage />} />
-              <Route path="marketplace" element={<ServiceMarketplacePage />} />
-              <Route path="export" element={<AgriculteurExportPage />} />
-              <Route path="export-eleveur" element={<EleveurExportPage />} />
-              <Route path="export-agent" element={<AgentExportPage />} />
-              <Route path="export-partenaire" element={<PartenaireExportPage />} />
-              <Route path="members" element={<MembersPage />} />
-              <Route path="collectes" element={<CollectesPage />} />
-              <Route path="cooperative-export" element={<CooperativeExportPage />} />
-              <Route path="cooperative-finance" element={<CooperativeFinancePage />} />
-              <Route path="cooperative-profile" element={<CooperativeProfilePage />} />
-              <Route path="cooperative-cotisations" element={<CooperativeCotisationsPage />} />
-              <Route path="cooperative-parcels" element={<CooperativeParcelsPage />} />
-              <Route path="cooperative-equipment" element={<CooperativeEquipmentPage />} />
-              <Route path="cooperative-documents" element={<CooperativeDocumentsPage />} />
-              <Route path="cooperative-score" element={<CooperativeScorePage />} />
-              <Route path="services" element={<ServicesPage />} />
-              <Route path="settings" element={<RoleSettingsRouter />} />
-              <Route path="partner-profile" element={<PartnerProfilePage />} />
-              <Route path="partner-requests" element={<PartnerRequestsPage />} />
-              <Route path="expert/requests" element={<AgentDashboard />} />
-              <Route path="livestock" element={<LivestockDashboardPage />} />
-              <Route path="livestock/animals" element={<AnimalsPage />} />
-              <Route path="livestock/health" element={<AnimalHealthPage />} />
-              <Route path="livestock/reproduction" element={<AnimalReproductionPage />} />
-              <Route path="livestock/feeding" element={<AnimalFeedingPage />} />
-              <Route path="livestock/finance" element={<LivestockFinancePage />} />
-              <Route path="livestock/services" element={<LivestockServicesPage />} />
-              <Route path="pricing" element={<PricingPage />} />
+              <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
+              <Route path="farms" element={<Suspense fallback={<PageLoader />}><FarmsPage /></Suspense>} />
+              <Route path="parcels" element={<Suspense fallback={<PageLoader />}><ParcelsPage /></Suspense>} />
+              <Route path="cycles" element={<Suspense fallback={<PageLoader />}><CropCyclesPage /></Suspense>} />
+              <Route path="planning" element={<Suspense fallback={<PageLoader />}><CropPlanningPage /></Suspense>} />
+              <Route path="activities" element={<Suspense fallback={<PageLoader />}><ActivitiesPage /></Suspense>} />
+              <Route path="costs" element={<Suspense fallback={<PageLoader />}><CostsPage /></Suspense>} />
+              <Route path="investment" element={<Suspense fallback={<PageLoader />}><InvestmentPlanPage /></Suspense>} />
+              <Route path="workers" element={<Suspense fallback={<PageLoader />}><WorkersPage /></Suspense>} />
+              <Route path="equipment" element={<Suspense fallback={<PageLoader />}><EquipmentPage /></Suspense>} />
+              <Route path="harvests" element={<Suspense fallback={<PageLoader />}><HarvestsPage /></Suspense>} />
+              <Route path="calendar" element={<Suspense fallback={<PageLoader />}><CalendarPage /></Suspense>} />
+              <Route path="analytics" element={<Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense>} />
+              <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
+              <Route path="export" element={<Suspense fallback={<PageLoader />}><AgriculteurExportPage /></Suspense>} />
+              <Route path="export-eleveur" element={<Suspense fallback={<PageLoader />}><EleveurExportPage /></Suspense>} />
+              <Route path="export-agent" element={<Suspense fallback={<PageLoader />}><AgentExportPage /></Suspense>} />
+              <Route path="export-partenaire" element={<Suspense fallback={<PageLoader />}><PartenaireExportPage /></Suspense>} />
+              <Route path="members" element={<Suspense fallback={<PageLoader />}><MembersPage /></Suspense>} />
+              <Route path="collectes" element={<Suspense fallback={<PageLoader />}><CollectesPage /></Suspense>} />
+              <Route path="cooperative-export" element={<Suspense fallback={<PageLoader />}><CooperativeExportPage /></Suspense>} />
+              <Route path="cooperative-finance" element={<Suspense fallback={<PageLoader />}><CooperativeFinancePage /></Suspense>} />
+              <Route path="cooperative-profile" element={<Suspense fallback={<PageLoader />}><CooperativeProfilePage /></Suspense>} />
+              <Route path="cooperative-cotisations" element={<Suspense fallback={<PageLoader />}><CooperativeCotisationsPage /></Suspense>} />
+              <Route path="cooperative-parcels" element={<Suspense fallback={<PageLoader />}><CooperativeParcelsPage /></Suspense>} />
+              <Route path="cooperative-equipment" element={<Suspense fallback={<PageLoader />}><CooperativeEquipmentPage /></Suspense>} />
+              <Route path="cooperative-documents" element={<Suspense fallback={<PageLoader />}><CooperativeDocumentsPage /></Suspense>} />
+              <Route path="cooperative-score" element={<Suspense fallback={<PageLoader />}><CooperativeScorePage /></Suspense>} />
+              <Route path="services" element={<Suspense fallback={<PageLoader />}><ServicesPage /></Suspense>} />
+              <Route path="settings" element={<Suspense fallback={<PageLoader />}><RoleSettingsRouter /></Suspense>} />
+              <Route path="partner-profile" element={<Suspense fallback={<PageLoader />}><PartnerProfilePage /></Suspense>} />
+              <Route path="partner-requests" element={<Suspense fallback={<PageLoader />}><PartnerRequestsPage /></Suspense>} />
+              <Route path="expert/requests" element={<Suspense fallback={<PageLoader />}><AgentDashboard /></Suspense>} />
+              <Route path="livestock" element={<Suspense fallback={<PageLoader />}><LivestockDashboardPage /></Suspense>} />
+              <Route path="livestock/animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
+              <Route path="livestock/health" element={<Suspense fallback={<PageLoader />}><AnimalHealthPage /></Suspense>} />
+              <Route path="livestock/reproduction" element={<Suspense fallback={<PageLoader />}><AnimalReproductionPage /></Suspense>} />
+              <Route path="livestock/feeding" element={<Suspense fallback={<PageLoader />}><AnimalFeedingPage /></Suspense>} />
+              <Route path="livestock/finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
+              <Route path="livestock/services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
+              <Route path="pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
