@@ -54,11 +54,7 @@ const cooperativeNav: NavItem[] = [
 
 const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/farms", label: "Exploitations suivies", icon: MapPin },
-  { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin },
-  { to: "/dashboard/cycles", label: "Cycles culturaux", icon: Wheat },
-  { to: "/dashboard/livestock", label: "Élevage", icon: Bug },
-  { to: "/dashboard/calendar", label: "Calendrier", icon: CalendarDays },
+  { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
