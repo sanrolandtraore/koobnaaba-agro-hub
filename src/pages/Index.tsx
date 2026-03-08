@@ -28,13 +28,16 @@ const partners = [
 ];
 
 // ── Gallery data ──
-const galleryItems = [
-  { src: galleryFarmField, title: "Champs de mil au coucher du soleil", desc: "Récolte traditionnelle dans la savane" },
-  { src: galleryLivestock, title: "Élevage bovin au Sahel", desc: "Troupeau en pâturage naturel" },
-  { src: galleryCooperative, title: "Réunion de coopérative", desc: "Producteurs échangeant sur la récolte" },
-  { src: galleryHarvest, title: "Marché de produits frais", desc: "Diversité des cultures locales" },
-  { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain" },
-  { src: galleryIrrigation, title: "Systèmes d'irrigation", desc: "Modernisation des pratiques agricoles" },
+const galleryItems: { src: string; title: string; desc: string; type: "image" | "video" }[] = [
+  { src: galleryFarmField, title: "Champs de mil au coucher du soleil", desc: "Récolte traditionnelle dans la savane", type: "image" },
+  { src: videoHarvest, title: "Récolte en action", desc: "Scènes de récolte sous le soleil doré", type: "video" },
+  { src: galleryLivestock, title: "Élevage bovin au Sahel", desc: "Troupeau en pâturage naturel", type: "image" },
+  { src: videoLivestock, title: "Vie pastorale", desc: "Le quotidien de l'élevage en savane", type: "video" },
+  { src: galleryCooperative, title: "Réunion de coopérative", desc: "Producteurs échangeant sur la récolte", type: "image" },
+  { src: galleryHarvest, title: "Marché de produits frais", desc: "Diversité des cultures locales", type: "image" },
+  { src: videoIrrigation, title: "Irrigation moderne", desc: "Systèmes d'arrosage en fonctionnement", type: "video" },
+  { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain", type: "image" },
+  { src: galleryIrrigation, title: "Systèmes d'irrigation", desc: "Modernisation des pratiques agricoles", type: "image" },
 ];
 
 // ── Auto-scroll carousel hook ──
