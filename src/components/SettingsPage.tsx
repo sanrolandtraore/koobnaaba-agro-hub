@@ -224,7 +224,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
                 </div>
                 <div>
                   <p className="font-semibold">{profileForm.full_name || "Utilisateur"}</p>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  <p className="text-sm text-muted-foreground">{profileForm.phone || "Aucun téléphone"}</p>
                 </div>
               </div>
 
