@@ -139,7 +139,19 @@ const MembersPage = () => {
     fetchMembers();
   };
 
-  const filtered = members.filter(m => {
+  const generateInviteCode = async () => {
+    const { data, error } = await supabase.rpc("generate_cooperative_invite_code");
+    if (error) { toast.error(error.message); return; }
+    setInviteCode(data as string);
+    toast.success("Code d'invitation généré !");
+  };
+
+  const copyInviteCode = () => {
+    if (inviteCode) {
+      navigator.clipboard.writeText(inviteCode);
+      toast.success("Code copié !");
+    }
+  };
     const matchSearch = m.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (m.phone || "").includes(search) || (m.location || "").toLowerCase().includes(search.toLowerCase());
     const matchType = filterType === "all" || m.member_type === filterType;
