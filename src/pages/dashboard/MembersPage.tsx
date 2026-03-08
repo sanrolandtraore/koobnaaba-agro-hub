@@ -57,6 +57,7 @@ type Member = {
   phone: string | null;
   location: string | null;
   member_type: string;
+  cooperative_role: string;
   crop_type: string | null;
   livestock_type: string | null;
   area_ha: number | null;
