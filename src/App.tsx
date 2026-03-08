@@ -47,6 +47,7 @@ import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
 import AnimalReproductionPage from "./pages/livestock/AnimalReproductionPage";
 import AnimalFeedingPage from "./pages/livestock/AnimalFeedingPage";
 import LivestockFinancePage from "./pages/livestock/LivestockFinancePage";
+import LivestockServicesPage from "./pages/livestock/LivestockServicesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="livestock/reproduction" element={<AnimalReproductionPage />} />
               <Route path="livestock/feeding" element={<AnimalFeedingPage />} />
               <Route path="livestock/finance" element={<LivestockFinancePage />} />
+              <Route path="livestock/services" element={<LivestockServicesPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
