@@ -387,9 +387,9 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setDeleteOpen(false)}>Annuler</Button>
-                    <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleteConfirm !== "SUPPRIMER"}>
-                      Confirmer la suppression
+                    <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>Annuler</Button>
+                    <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleteConfirm !== "SUPPRIMER" || deleting}>
+                      {deleting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Suppression...</> : "Confirmer la suppression"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
