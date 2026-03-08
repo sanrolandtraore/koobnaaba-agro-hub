@@ -86,7 +86,7 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export-partenaire", label: "Rapports", icon: Download },
+  { to: "/dashboard/export", label: "Rapports", icon: Download },
 ];
 
 const fullNav: NavItem[] = [...agriculteurNav];
