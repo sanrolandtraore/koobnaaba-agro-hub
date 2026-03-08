@@ -9,6 +9,9 @@ import OfflineIndicator from "@/components/OfflineIndicator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import MentionsLegales from "./pages/MentionsLegales";
+import ConditionsUtilisation from "./pages/ConditionsUtilisation";
+import PolitiqueConfidentialite from "./pages/PolitiqueConfidentialite";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -83,6 +86,9 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/mentions-legales" element={<MentionsLegales />} />
+            <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
+            <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
