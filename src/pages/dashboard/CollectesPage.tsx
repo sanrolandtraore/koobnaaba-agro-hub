@@ -84,7 +84,7 @@ const CollectesPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const qty = parseFloat(form.quantity_kg) || 0;
+    const effectiveId = cooperativeUserId || user.id;
     const price = parseFloat(form.unit_price) || 0;
     const { error } = await supabase.from("cooperative_collectes").insert({
       cooperative_user_id: user.id,
