@@ -11,6 +11,9 @@ import galleryCooperative from "@/assets/gallery/cooperative.jpg";
 import galleryHarvest from "@/assets/gallery/harvest.jpg";
 import galleryDigital from "@/assets/gallery/digital-farming.jpg";
 import galleryIrrigation from "@/assets/gallery/irrigation.jpg";
+import videoHarvest from "@/assets/gallery/harvest-video.mp4";
+import videoLivestock from "@/assets/gallery/livestock-video.mp4";
+import videoIrrigation from "@/assets/gallery/irrigation-video.mp4";
 
 // ── Partner data ──
 const partners = [
