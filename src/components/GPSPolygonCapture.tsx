@@ -94,17 +94,18 @@ export const GPSPolygonCapture = ({ value, onChange, onCenterDetected }: GPSPoly
     }
     setAutoMode(true);
     toast.info("Mode marche activé — Marchez le long du contour du champ");
+    const currentPoints = [...value];
     let lastLat = 0, lastLng = 0;
     watchRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const lat = Math.round(pos.coords.latitude * 1000000) / 1000000;
         const lng = Math.round(pos.coords.longitude * 1000000) / 1000000;
-        // Skip if too close to last point (< ~5m)
         const dist = Math.sqrt((lat - lastLat) ** 2 + (lng - lastLng) ** 2) * 111000;
         if (dist < 3 && lastLat !== 0) return;
         lastLat = lat;
         lastLng = lng;
-        onChange((prev: Coordinate[]) => [...prev, { lat, lng }]);
+        currentPoints.push({ lat, lng });
+        onChange([...currentPoints]);
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 2000 }
