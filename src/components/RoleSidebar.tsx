@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type NavItem = { to: string; label: string; icon: React.ElementType };
+export type NavItem = { to: string; label: string; icon: React.ElementType };
 
-const agriculteurNav: NavItem[] = [
+export const agriculteurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
   { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin },
@@ -28,7 +28,7 @@ const agriculteurNav: NavItem[] = [
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
-const eleveurNav: NavItem[] = [
+export const eleveurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
   { to: "/dashboard/livestock", label: "Tableau élevage", icon: Bug },
@@ -44,7 +44,7 @@ const eleveurNav: NavItem[] = [
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
-const cooperativeNav: NavItem[] = [
+export const cooperativeNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/members", label: "Membres", icon: Users },
   { to: "/dashboard/collectes", label: "Collectes", icon: Package },
@@ -52,24 +52,23 @@ const cooperativeNav: NavItem[] = [
   { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
 ];
 
-const agentNav: NavItem[] = [
+export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
-const partenaireNav: NavItem[] = [
+export const partenaireNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
   { to: "/dashboard/export", label: "Rapports", icon: Download },
 ];
 
-// Admin/manager/farmer/viewer get full menus (legacy)
 const fullNav: NavItem[] = [...agriculteurNav];
 
-const roleLabels: Record<string, string> = {
+export const roleLabels: Record<string, string> = {
   agriculteur: "Agriculteur",
   eleveur: "Éleveur",
   cooperative: "Coopérative",
@@ -81,7 +80,7 @@ const roleLabels: Record<string, string> = {
   viewer: "Observateur",
 };
 
-const roleIcons: Record<string, React.ElementType> = {
+export const roleIcons: Record<string, React.ElementType> = {
   agriculteur: Wheat,
   eleveur: Bug,
   cooperative: Building2,
@@ -93,14 +92,13 @@ const roleIcons: Record<string, React.ElementType> = {
   viewer: BarChart3,
 };
 
-function getNavForRole(role: string | null): { main: NavItem[]; livestock?: NavItem[]; } {
+export function getNavForRole(role: string | null): { main: NavItem[] } {
   switch (role) {
     case "eleveur": return { main: eleveurNav };
     case "cooperative": return { main: cooperativeNav };
     case "agent_technique": return { main: agentNav };
     case "partenaire": return { main: partenaireNav };
     case "agriculteur": return { main: agriculteurNav };
-    // Legacy roles get full access
     case "admin":
     case "manager":
     case "farmer":
@@ -110,19 +108,24 @@ function getNavForRole(role: string | null): { main: NavItem[]; livestock?: NavI
   }
 }
 
-export const RoleSidebar = () => {
+interface SidebarContentProps {
+  onNavigate?: () => void;
+}
+
+export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   const { profile, signOut, primaryRole } = useAuth();
   const location = useLocation();
   const nav = getNavForRole(primaryRole);
   const RoleIcon = roleIcons[primaryRole || "agriculteur"] || Wheat;
 
   return (
-    <aside className="flex h-screen w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+      {/* Header */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-warm">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-warm shrink-0">
           <Sprout className="h-5 w-5 text-sidebar-primary-foreground" />
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0">
           <span className="text-lg font-heading font-bold text-sidebar-foreground leading-tight">Koobnaaba</span>
           <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
             <RoleIcon className="h-3 w-3" />
@@ -131,11 +134,13 @@ export const RoleSidebar = () => {
         </div>
       </div>
 
+      {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {nav.main.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
+            onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               location.pathname === to
@@ -143,38 +148,16 @@ export const RoleSidebar = () => {
                 : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-4 w-4 shrink-0" />
             {label}
           </Link>
         ))}
-
-        {nav.livestock && (
-          <>
-            <div className="pt-3 pb-1 px-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">Élevage</span>
-            </div>
-            {nav.livestock.map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  location.pathname === to
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Link>
-            ))}
-          </>
-        )}
       </nav>
 
+      {/* Footer */}
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent shrink-0">
             <User className="h-4 w-4 text-sidebar-accent-foreground" />
           </div>
           <span className="text-sm font-medium truncate">{profile?.full_name || "Utilisateur"}</span>
@@ -183,12 +166,19 @@ export const RoleSidebar = () => {
           variant="ghost"
           size="sm"
           className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          onClick={signOut}
+          onClick={() => { onNavigate?.(); signOut(); }}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Déconnexion
         </Button>
       </div>
-    </aside>
+    </div>
   );
 };
+
+// Desktop sidebar (hidden on mobile)
+export const RoleSidebar = () => (
+  <aside className="hidden md:flex h-screen w-64 flex-col border-r border-sidebar-border shrink-0">
+    <SidebarNavContent />
+  </aside>
+);
