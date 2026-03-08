@@ -236,23 +236,14 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
                   <Input value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))} placeholder="+226 70 00 00 00" />
                 </div>
                 <div>
-                  <Label>Email actuel</Label>
-                  <Input value={user?.email || ""} disabled className="bg-muted" />
-                </div>
-                <div>
-                  <Label className="flex items-center gap-1"><Mail className="h-3 w-3" />Changer d'email</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="email"
-                      value={newEmail}
-                      onChange={e => setNewEmail(e.target.value)}
-                      placeholder="nouvelle@adresse.com"
-                    />
-                    <Button size="sm" onClick={handleChangeEmail} disabled={savingEmail || !newEmail}>
-                      {savingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Un email de confirmation sera envoyé</p>
+                  <Label className="flex items-center gap-1"><Mail className="h-3 w-3" /> Email (optionnel)</Label>
+                  <Input
+                    type="email"
+                    value={newEmail}
+                    onChange={e => setNewEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Pour recevoir des notifications par email</p>
                 </div>
                 <div>
                   <Label className="flex items-center gap-1"><Globe className="h-3 w-3" />Pays</Label>
