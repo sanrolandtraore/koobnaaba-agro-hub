@@ -105,7 +105,7 @@ const Auth = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetIdentifier.trim() || !resetName.trim()) { toast.error("Veuillez remplir tous les champs"); return; }
-    if (newPassword.length < 6) { toast.error("Le mot de passe doit contenir au moins 6 caractères"); return; }
+    if (newPassword.length < 8) { toast.error("Le mot de passe doit contenir au moins 8 caractères"); return; }
     if (newPassword !== confirmPassword) { toast.error("Les mots de passe ne correspondent pas"); return; }
 
     setLoading(true);
