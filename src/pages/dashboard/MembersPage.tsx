@@ -179,7 +179,13 @@ const MembersPage = () => {
                     <SelectContent>{livestockTypes.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-              )}
+               )}
+              <div><Label>Rôle dans la coopérative</Label>
+                <Select value={form.cooperative_role} onValueChange={v => setForm(f => ({ ...f, cooperative_role: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{cooperativeRoles.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>Superficie (ha)</Label><Input type="number" step="0.1" value={form.area_ha} onChange={e => setForm(f => ({ ...f, area_ha: e.target.value }))} /></div>
               <div><Label>Date d'adhésion</Label><Input type="date" value={form.joined_date} onChange={e => setForm(f => ({ ...f, joined_date: e.target.value }))} /></div>
               <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
