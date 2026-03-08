@@ -49,7 +49,6 @@ import AnimalFeedingPage from "./pages/livestock/AnimalFeedingPage";
 import LivestockFinancePage from "./pages/livestock/LivestockFinancePage";
 import LivestockServicesPage from "./pages/livestock/LivestockServicesPage";
 import PricingPage from "./pages/dashboard/PricingPage";
-import MarketplacePage from "./pages/dashboard/MarketplacePage";
 import ServiceMarketplacePage from "./pages/dashboard/ServiceMarketplacePage";
 import NotFound from "./pages/NotFound";
 
