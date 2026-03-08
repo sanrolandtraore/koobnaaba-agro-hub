@@ -45,6 +45,7 @@ const cooperativeNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/members", label: "Membres", icon: Users },
   { to: "/dashboard/collectes", label: "Collectes", icon: Package },
+  { to: "/dashboard/cooperative-finance", label: "Finances", icon: Wallet },
   { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
 ];
 
