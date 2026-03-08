@@ -69,7 +69,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, phone, country, avatar_url, preferences")
+        .select("full_name, phone, country, avatar_url, preferences, email")
         .eq("user_id", user.id)
         .single();
       if (data) {
@@ -79,6 +79,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
           country: (data as any).country || "",
           avatar_url: data.avatar_url || "",
         });
+        setNewEmail((data as any).email || "");
         const p = (data as any).preferences;
         if (p) setPrefs({ theme: p.theme || "system", language: p.language || "fr", notifications: p.notifications !== false });
       }
