@@ -64,7 +64,7 @@ export const cooperativeNav: NavItem[] = [
   { to: "/dashboard/cooperative-score", label: "Score coopérative", icon: Award },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
+  { to: "/dashboard/export", label: "Export PDF/CSV", icon: Download },
 ];
 
 export const agentNav: NavItem[] = [

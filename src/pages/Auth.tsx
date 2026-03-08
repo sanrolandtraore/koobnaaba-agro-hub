@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Lock, User, Wheat, Bug, Users, Compass, Handshake, Phone, ArrowLeft, KeyRound } from "lucide-react";
+import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
