@@ -163,7 +163,7 @@ const Auth = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
-                <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+                <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
               </div>
               <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
                 {loading ? "Chargement..." : "Réinitialiser le mot de passe"}
