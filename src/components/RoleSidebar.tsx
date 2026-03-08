@@ -37,18 +37,18 @@ export const agriculteurNav: NavItem[] = [
 
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Beef },
-  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Beef },
-  { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
-  { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
-  { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
-  { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
+  { to: "/dashboard/livestock-dashboard", label: "Tableau élevage", icon: Beef },
+  { to: "/dashboard/animals", label: "Animaux", icon: Beef },
+  { to: "/dashboard/animal-health", label: "Santé", icon: Heart },
+  { to: "/dashboard/animal-reproduction", label: "Reproduction", icon: Baby },
+  { to: "/dashboard/animal-feeding", label: "Alimentation", icon: Utensils },
+  { to: "/dashboard/livestock-finance", label: "Comptabilité", icon: Wallet },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
-  { to: "/dashboard/livestock/services", label: "Services Vétérinaires", icon: ClipboardList },
+  { to: "/dashboard/livestock-services", label: "Services Vétérinaires", icon: ClipboardList },
   { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
+  { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
 export const cooperativeNav: NavItem[] = [
