@@ -75,6 +75,7 @@ const MembersPage = () => {
   const [filterType, setFilterType] = useState("all");
   const [form, setForm] = useState({
     full_name: "", phone: "", location: "", member_type: "producteur",
+    cooperative_role: "membre",
     crop_type: "", livestock_type: "", area_ha: "", status: "actif",
     joined_date: new Date().toISOString().split("T")[0], notes: "",
   });
