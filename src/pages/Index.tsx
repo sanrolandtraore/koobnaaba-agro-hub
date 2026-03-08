@@ -246,12 +246,23 @@ const Index = () => {
                 {galleryItems.map((item, i) => (
                   <div key={i} className="flex-shrink-0 w-full relative">
                     <div className="aspect-[16/9] overflow-hidden">
-                      <img
-                        src={item.src}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                        loading={i === 0 ? "eager" : "lazy"}
-                      />
+                      {item.type === "video" ? (
+                        <video
+                          src={item.src}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={item.src}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                          loading={i === 0 ? "eager" : "lazy"}
+                        />
+                      )}
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
