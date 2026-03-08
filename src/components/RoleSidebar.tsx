@@ -41,7 +41,7 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
-  { to: "/dashboard/profile", label: "Mon Profil", icon: User },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
 ];
 
