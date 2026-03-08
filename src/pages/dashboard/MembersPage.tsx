@@ -21,6 +21,15 @@ const memberTypes = [
   { value: "commercant", label: "Commerçant" },
 ];
 
+const cooperativeRoles = [
+  { value: "president", label: "Président" },
+  { value: "vice_president", label: "Vice-président" },
+  { value: "tresorier", label: "Trésorier" },
+  { value: "secretaire", label: "Secrétaire" },
+  { value: "commissaire", label: "Commissaire aux comptes" },
+  { value: "membre", label: "Membre" },
+];
+
 const cropTypes = [
   "Maïs", "Riz", "Sorgho", "Mil", "Arachide", "Coton", "Soja", "Niébé",
   "Sésame", "Igname", "Manioc", "Patate douce", "Oignon", "Tomate", "Mangue", "Karité",
