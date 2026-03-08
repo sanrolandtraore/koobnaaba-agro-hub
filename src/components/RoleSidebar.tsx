@@ -44,6 +44,7 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/equipment", label: "Équipements", icon: Wrench },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
+  { to: "/dashboard/profile", label: "Mon Profil", icon: User },
   { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
 ];
 

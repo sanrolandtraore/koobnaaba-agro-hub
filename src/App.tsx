@@ -89,6 +89,7 @@ const App = () => (
               <Route path="cooperative-documents" element={<CooperativeDocumentsPage />} />
               <Route path="cooperative-score" element={<CooperativeScorePage />} />
               <Route path="services" element={<ServicesPage />} />
+              <Route path="profile" element={<UserProfilePage />} />
               <Route path="expert/requests" element={<AgentDashboard />} />
               <Route path="livestock" element={<LivestockDashboardPage />} />
               <Route path="livestock/animals" element={<AnimalsPage />} />
