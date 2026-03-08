@@ -1,18 +1,63 @@
 import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Wheat, BarChart3, ArrowRight, Mail, Phone, MapPinned } from "lucide-react";
+import { MapPin, Wheat, BarChart3, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import logo from "@/assets/logo.png";
+import galleryFarmField from "@/assets/gallery/farm-field.jpg";
+import galleryLivestock from "@/assets/gallery/livestock.jpg";
+import galleryCooperative from "@/assets/gallery/cooperative.jpg";
+import galleryHarvest from "@/assets/gallery/harvest.jpg";
+import galleryDigital from "@/assets/gallery/digital-farming.jpg";
+import galleryIrrigation from "@/assets/gallery/irrigation.jpg";
+
+// ── Partner data ──
+const partners = [
+  { name: "Ministère de l'Agriculture", category: "Institution" },
+  { name: "Banque Agricole du Faso", category: "Finance" },
+  { name: "SOFITEX", category: "Filière coton" },
+  { name: "INERA", category: "Recherche" },
+  { name: "FAO Burkina", category: "Organisation" },
+  { name: "Coris Bank", category: "Finance" },
+  { name: "AGRODIA", category: "Distribution" },
+  { name: "SN-SOSUCO", category: "Agro-industrie" },
+];
+
+// ── Gallery data ──
+const galleryItems = [
+  { src: galleryFarmField, title: "Champs de mil au coucher du soleil", desc: "Récolte traditionnelle dans la savane" },
+  { src: galleryLivestock, title: "Élevage bovin au Sahel", desc: "Troupeau en pâturage naturel" },
+  { src: galleryCooperative, title: "Réunion de coopérative", desc: "Producteurs échangeant sur la récolte" },
+  { src: galleryHarvest, title: "Marché de produits frais", desc: "Diversité des cultures locales" },
+  { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain" },
+  { src: galleryIrrigation, title: "Systèmes d'irrigation", desc: "Modernisation des pratiques agricoles" },
+];
+
+// ── Auto-scroll carousel hook ──
+function useCarousel(length: number, interval = 4000) {
+  const [index, setIndex] = useState(0);
+  const prev = useCallback(() => setIndex(i => (i - 1 + length) % length), [length]);
+  const next = useCallback(() => setIndex(i => (i + 1) % length), [length]);
+  useEffect(() => {
+    const id = setInterval(next, interval);
+    return () => clearInterval(id);
+  }, [next, interval]);
+  return { index, setIndex, prev, next };
+}
 
 const Index = () => {
   const navigate = useNavigate();
+  const partnerCarousel = useCarousel(partners.length, 3000);
+  const galleryCarousel = useCarousel(galleryItems.length, 5000);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top bar with theme toggle */}
+      {/* Top bar */}
       <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />
       </div>
+
+      {/* Hero */}
       <section className="gradient-hero min-h-[80vh] flex items-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 right-20 w-72 h-72 rounded-full bg-secondary blur-3xl" />
@@ -36,6 +81,70 @@ const Index = () => {
               <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
                 Se connecter
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Partner Banner Carousel */}
+      <section className="py-10 bg-muted/30 border-y border-border overflow-hidden">
+        <div className="container max-w-5xl mx-auto px-4">
+          <h3 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-6">
+            Nos partenaires de confiance
+          </h3>
+          <div className="relative">
+            <button
+              onClick={partnerCarousel.prev}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors"
+              aria-label="Précédent"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground" />
+            </button>
+            <button
+              onClick={partnerCarousel.next}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors"
+              aria-label="Suivant"
+            >
+              <ChevronRight className="h-4 w-4 text-foreground" />
+            </button>
+
+            <div className="overflow-hidden mx-10">
+              <div
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${partnerCarousel.index * (100 / 4)}%)` }}
+              >
+                {[...partners, ...partners].map((p, i) => (
+                  <div
+                    key={`${p.name}-${i}`}
+                    className="flex-shrink-0 w-1/2 md:w-1/4 px-3"
+                  >
+                    <div
+                      className="bg-card border border-border rounded-xl p-5 text-center hover:shadow-warm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full flex flex-col items-center justify-center gap-2"
+                      onClick={() => {}}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
+                        {p.name.charAt(0)}
+                      </div>
+                      <span className="text-sm font-semibold text-foreground leading-tight">{p.name}</span>
+                      <span className="text-xs text-muted-foreground">{p.category}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dots */}
+            <div className="flex justify-center gap-1.5 mt-5">
+              {partners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => partnerCarousel.setIndex(i)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === partnerCarousel.index ? "w-6 bg-primary" : "w-2 bg-border hover:bg-muted-foreground/40"
+                  }`}
+                  aria-label={`Partenaire ${i + 1}`}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -65,8 +174,78 @@ const Index = () => {
         </div>
       </section>
 
-      {/* À propos */}
+      {/* Gallery Carousel */}
       <section className="py-20 bg-muted/50">
+        <div className="container max-w-5xl mx-auto px-4">
+          <h2 className="text-3xl font-heading font-bold text-center mb-4">
+            Découvrez le <span className="text-gradient-warm">terrain</span>
+          </h2>
+          <p className="text-center text-muted-foreground mb-10 max-w-xl mx-auto">
+            Des champs de mil aux marchés locaux, notre plateforme accompagne chaque étape.
+          </p>
+
+          <div className="relative">
+            <button
+              onClick={galleryCarousel.prev}
+              className="absolute left-2 md:-left-5 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-background/90 border border-border shadow-lg hover:bg-accent transition-colors"
+              aria-label="Image précédente"
+            >
+              <ChevronLeft className="h-5 w-5 text-foreground" />
+            </button>
+            <button
+              onClick={galleryCarousel.next}
+              className="absolute right-2 md:-right-5 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-background/90 border border-border shadow-lg hover:bg-accent transition-colors"
+              aria-label="Image suivante"
+            >
+              <ChevronRight className="h-5 w-5 text-foreground" />
+            </button>
+
+            <div className="overflow-hidden rounded-2xl">
+              <div
+                className="flex transition-transform duration-700 ease-in-out"
+                style={{ transform: `translateX(-${galleryCarousel.index * 100}%)` }}
+              >
+                {galleryItems.map((item, i) => (
+                  <div key={i} className="flex-shrink-0 w-full relative">
+                    <div className="aspect-[16/9] overflow-hidden">
+                      <img
+                        src={item.src}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                        loading={i === 0 ? "eager" : "lazy"}
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+                      <h3 className="text-xl md:text-2xl font-heading font-bold text-white mb-1">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm md:text-base text-white/80">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dots */}
+            <div className="flex justify-center gap-2 mt-6">
+              {galleryItems.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => galleryCarousel.setIndex(i)}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${
+                    i === galleryCarousel.index ? "w-8 bg-primary" : "w-2.5 bg-border hover:bg-muted-foreground/40"
+                  }`}
+                  aria-label={`Image ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* À propos */}
+      <section className="py-20 bg-background">
         <div className="container max-w-5xl mx-auto px-4">
           <h2 className="text-3xl font-heading font-bold text-center mb-12">
             À propos de <span className="text-gradient-warm">KoobNaaba</span>
@@ -104,15 +283,12 @@ const Index = () => {
       <footer className="border-t border-border bg-muted">
         <div className="container max-w-5xl mx-auto px-4 py-12">
           <div className="grid gap-8 md:grid-cols-4">
-            {/* Logo & description */}
             <div className="md:col-span-1 space-y-3">
               <img src={logo} alt="KoobNaaba" className="h-10 w-auto" />
               <p className="text-sm text-muted-foreground">
                 La plateforme de gestion agricole intelligente pour l'Afrique.
               </p>
             </div>
-
-            {/* Liens légaux */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">Ressources légales</h4>
               <nav className="flex flex-col gap-2">
@@ -121,8 +297,6 @@ const Index = () => {
                 <Link to="/politique-confidentialite" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Politique de confidentialité</Link>
               </nav>
             </div>
-
-            {/* Contact */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">Contact</h4>
               <div className="flex flex-col gap-2 text-sm text-muted-foreground">
@@ -140,8 +314,6 @@ const Index = () => {
                 </a>
               </div>
             </div>
-
-            {/* Réseaux sociaux */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">Suivez-nous</h4>
               <div className="flex gap-3">
@@ -160,7 +332,6 @@ const Index = () => {
               </div>
             </div>
           </div>
-
           <div className="mt-10 pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">© 2026 KoobNaaba SARL. Tous droits réservés.</p>
             <p className="text-xs text-muted-foreground">Siège social : Ouagadougou, Burkina Faso</p>
