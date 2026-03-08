@@ -2088,6 +2088,7 @@ export type Database = {
         Args: { _parcel_id: string }
         Returns: string
       }
+      get_user_total_costs: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
