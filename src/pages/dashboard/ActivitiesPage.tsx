@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Activity } from "lucide-react";
+import { Plus, Trash2, Activity, WifiOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useOfflineData } from "@/hooks/useOfflineData";
 
 const activityTypes = [
   { value: "labour", label: "Labour" },
@@ -22,30 +23,25 @@ const activityTypes = [
 
 const ActivitiesPage = () => {
   const { user } = useAuth();
-  const [activities, setActivities] = useState<any[]>([]);
-  const [cycles, setCycles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: activities, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+    table: 'activity_logs',
+    select: '*, crop_cycles(season, parcels(name), crop_references(name))',
+    orderBy: 'date',
+  });
+  const { data: cycles } = useOfflineData({
+    table: 'crop_cycles',
+    select: 'id, season, parcels(name), crop_references(name)',
+  });
+
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ crop_cycle_id: "", activity_type: "labour" as string, description: "", date: new Date().toISOString().split("T")[0], quantity: "", unit: "", cost: "" });
-
-  const fetchActivities = async () => {
-    const { data, error } = await supabase.from("activity_logs").select("*, crop_cycles(season, parcels(name), crop_references(name))").order("date", { ascending: false });
-    if (error) toast.error(error.message);
-    else setActivities(data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchActivities();
-    supabase.from("crop_cycles").select("id, season, parcels(name), crop_references(name)").then(({ data }) => setCycles(data || []));
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const { error } = await supabase.from("activity_logs").insert({
+    const result = await insertRow({
       crop_cycle_id: form.crop_cycle_id,
-      activity_type: form.activity_type as any,
+      activity_type: form.activity_type,
       description: form.description || null,
       date: form.date,
       quantity: form.quantity ? parseFloat(form.quantity) : null,
@@ -53,18 +49,17 @@ const ActivitiesPage = () => {
       cost: form.cost ? parseFloat(form.cost) : 0,
       performed_by: user.id,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Activité enregistrée !");
-    setForm({ crop_cycle_id: "", activity_type: "labour", description: "", date: new Date().toISOString().split("T")[0], quantity: "", unit: "", cost: "" });
-    setOpen(false);
-    fetchActivities();
+    if (result) {
+      toast.success("Activité enregistrée !");
+      setForm({ crop_cycle_id: "", activity_type: "labour", description: "", date: new Date().toISOString().split("T")[0], quantity: "", unit: "", cost: "" });
+      setOpen(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette activité ?")) return;
-    const { error } = await supabase.from("activity_logs").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Supprimée"); fetchActivities(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Supprimée");
   };
 
   return (
@@ -72,7 +67,10 @@ const ActivitiesPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Activités</h1>
-          <p className="text-muted-foreground mt-1">Journal des activités agricoles</p>
+          <p className="text-muted-foreground mt-1">
+            Journal des activités agricoles
+            {isOffline && <Badge variant="outline" className="ml-2 text-xs"><WifiOff className="h-3 w-3 mr-1" />Hors-ligne</Badge>}
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -85,7 +83,7 @@ const ActivitiesPage = () => {
                 <Label>Cycle cultural *</Label>
                 <Select value={form.crop_cycle_id} onValueChange={(v) => setForm({ ...form, crop_cycle_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
-                  <SelectContent>{cycles.map((c) => <SelectItem key={c.id} value={c.id}>{c.crop_references?.name || "N/A"} - {c.parcels?.name} ({c.season})</SelectItem>)}</SelectContent>
+                  <SelectContent>{cycles.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.crop_references?.name || "N/A"} - {c.parcels?.name} ({c.season})</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
@@ -118,13 +116,14 @@ const ActivitiesPage = () => {
         </Card>
       ) : (
         <div className="space-y-3">
-          {activities.map((a) => (
-            <Card key={a.id} className="shadow-sm">
+          {activities.map((a: any) => (
+            <Card key={a.id} className={`shadow-sm ${a._offline ? 'border-dashed border-amber-400' : ''}`}>
               <CardContent className="flex items-center justify-between py-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <span className="font-medium capitalize">{activityTypes.find(t => t.value === a.activity_type)?.label || a.activity_type}</span>
                     <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">{a.crop_cycles?.crop_references?.name} · {a.crop_cycles?.parcels?.name}</span>
+                    {a._offline && <Badge variant="outline" className="text-xs">En attente</Badge>}
                   </div>
                   {a.description && <p className="text-sm text-muted-foreground mt-1">{a.description}</p>}
                   <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
