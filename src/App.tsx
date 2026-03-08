@@ -92,6 +92,8 @@ const App = () => (
               <Route path="cooperative-score" element={<CooperativeScorePage />} />
               <Route path="services" element={<ServicesPage />} />
               <Route path="profile" element={<UserProfilePage />} />
+              <Route path="partner-profile" element={<PartnerProfilePage />} />
+              <Route path="partner-requests" element={<PartnerRequestsPage />} />
               <Route path="expert/requests" element={<AgentDashboard />} />
               <Route path="livestock" element={<LivestockDashboardPage />} />
               <Route path="livestock/animals" element={<AnimalsPage />} />

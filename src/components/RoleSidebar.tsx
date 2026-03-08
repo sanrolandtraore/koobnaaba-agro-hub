@@ -71,8 +71,11 @@ export const agentNav: NavItem[] = [
 
 export const partenaireNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/partner-profile", label: "Mon profil", icon: Handshake },
+  { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
+  { to: "/dashboard/profile", label: "Mon Compte", icon: User },
   { to: "/dashboard/export-partenaire", label: "Rapports", icon: Download },
 ];
 
