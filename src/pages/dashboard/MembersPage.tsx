@@ -73,6 +73,7 @@ const MembersPage = () => {
   const canEdit = isCoopOwner || isCoopAdmin;
   const [members, setMembers] = useState<Member[]>([]);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -83,8 +84,10 @@ const MembersPage = () => {
     joined_date: new Date().toISOString().split("T")[0], notes: "",
   });
 
+  const effectiveUserId = cooperativeUserId || user?.id;
+
   const fetchMembers = async () => {
-    if (!user) return;
+    if (!effectiveUserId) return;
     const { data } = await supabase
       .from("cooperative_members")
       .select("*")
@@ -93,7 +96,17 @@ const MembersPage = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMembers(); }, [user]);
+  const fetchInviteCode = async () => {
+    if (!isCoopOwner || !user) return;
+    const { data } = await supabase
+      .from("cooperative_profiles")
+      .select("invite_code")
+      .eq("cooperative_user_id", user.id)
+      .maybeSingle();
+    if (data?.invite_code) setInviteCode(data.invite_code);
+  };
+
+  useEffect(() => { fetchMembers(); fetchInviteCode(); }, [user, effectiveUserId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
