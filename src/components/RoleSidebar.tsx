@@ -42,7 +42,7 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/equipment", label: "Équipements", icon: Wrench },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
-  { to: "/dashboard/export", label: "Export", icon: Download },
+  { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
 ];
 
 export const cooperativeNav: NavItem[] = [
@@ -57,14 +57,14 @@ export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
-  { to: "/dashboard/export", label: "Export", icon: Download },
+  { to: "/dashboard/export-agent", label: "Export", icon: Download },
 ];
 
 export const partenaireNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
-  { to: "/dashboard/export", label: "Rapports", icon: Download },
+  { to: "/dashboard/export-partenaire", label: "Rapports", icon: Download },
 ];
 
 const fullNav: NavItem[] = [...agriculteurNav];

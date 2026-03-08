@@ -21,7 +21,10 @@ import EquipmentPage from "./pages/dashboard/EquipmentPage";
 import HarvestsPage from "./pages/dashboard/HarvestsPage";
 import CalendarPage from "./pages/dashboard/CalendarPage";
 import AnalyticsPage from "./pages/dashboard/AnalyticsPage";
-import ExportPage from "./pages/dashboard/ExportPage";
+import AgriculteurExportPage from "./pages/dashboard/AgriculteurExportPage";
+import EleveurExportPage from "./pages/dashboard/EleveurExportPage";
+import AgentExportPage from "./pages/dashboard/AgentExportPage";
+import PartenaireExportPage from "./pages/dashboard/PartenaireExportPage";
 import MembersPage from "./pages/dashboard/MembersPage";
 import CollectesPage from "./pages/dashboard/CollectesPage";
 import CooperativeExportPage from "./pages/dashboard/CooperativeExportPage";
@@ -64,7 +67,10 @@ const App = () => (
               <Route path="harvests" element={<HarvestsPage />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
-              <Route path="export" element={<ExportPage />} />
+              <Route path="export" element={<AgriculteurExportPage />} />
+              <Route path="export-eleveur" element={<EleveurExportPage />} />
+              <Route path="export-agent" element={<AgentExportPage />} />
+              <Route path="export-partenaire" element={<PartenaireExportPage />} />
               <Route path="members" element={<MembersPage />} />
               <Route path="collectes" element={<CollectesPage />} />
               <Route path="cooperative-export" element={<CooperativeExportPage />} />

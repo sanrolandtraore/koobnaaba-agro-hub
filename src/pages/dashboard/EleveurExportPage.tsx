@@ -1,0 +1,111 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { FileText, FileSpreadsheet } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+type ExportType = "animals" | "health" | "reproductions" | "feedings" | "feed_stocks" | "livestock_expenses" | "livestock_sales";
+
+const exportOptions: { value: ExportType; label: string }[] = [
+  { value: "animals", label: "Registre animaux" },
+  { value: "health", label: "Santé animale" },
+  { value: "reproductions", label: "Reproduction" },
+  { value: "feedings", label: "Alimentation" },
+  { value: "feed_stocks", label: "Stocks aliments" },
+  { value: "livestock_expenses", label: "Dépenses élevage" },
+  { value: "livestock_sales", label: "Ventes élevage" },
+];
+
+const fetchData = async (type: ExportType) => {
+  switch (type) {
+    case "animals": return supabase.from("animals").select("name, identification_number, species, breed, sex, status, birth_date, acquisition_date, acquisition_cost, weight_kg, farms(name)").order("created_at", { ascending: false });
+    case "health": return supabase.from("animal_health_events").select("event_date, event_type, description, medication, dosage, cost, vet_name, next_date, animals(name, species)").order("event_date", { ascending: false });
+    case "reproductions": return supabase.from("animal_reproductions").select("event_date, event_type, expected_birth_date, actual_birth_date, offspring_count, offspring_alive, cost, animals!animal_reproductions_animal_id_fkey(name, species)").order("event_date", { ascending: false });
+    case "feedings": return supabase.from("animal_feedings").select("feeding_date, feed_type, quantity_kg, cost, animals(name), farms(name)").order("feeding_date", { ascending: false });
+    case "feed_stocks": return supabase.from("feed_stocks").select("feed_name, quantity_kg, unit_price, supplier, last_purchase_date, farms(name)").order("feed_name");
+    case "livestock_expenses": return supabase.from("livestock_expenses").select("expense_date, category, description, amount, farms(name), animals(name)").order("expense_date", { ascending: false });
+    case "livestock_sales": return supabase.from("livestock_sales").select("sale_date, sale_type, description, quantity, unit_price, total_amount, buyer, farms(name), animals(name)").order("sale_date", { ascending: false });
+  }
+};
+
+const flattenRow = (row: any): Record<string, any> => {
+  const flat: Record<string, any> = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      for (const [k2, v2] of Object.entries(v as Record<string, any>)) flat[`${k}_${k2}`] = v2;
+    } else flat[k] = v;
+  }
+  return flat;
+};
+
+const EleveurExportPage = () => {
+  const [selected, setSelected] = useState<ExportType>("animals");
+  const [loading, setLoading] = useState(false);
+
+  const doExport = async (format: "csv" | "pdf") => {
+    setLoading(true);
+    try {
+      const { data, error } = await fetchData(selected);
+      if (error) throw error;
+      if (!data?.length) { toast.error("Aucune donnée à exporter"); return; }
+      const rows = data.map(flattenRow);
+      const headers = Object.keys(rows[0]);
+      const title = exportOptions.find(o => o.value === selected)?.label || selected;
+
+      if (format === "csv") {
+        const csv = [headers.join(";"), ...rows.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(";"))].join("\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = `koobnaaba_elevage_${selected}.csv`; a.click();
+        URL.revokeObjectURL(url);
+        toast.success("CSV exporté !");
+      } else {
+        const doc = new jsPDF({ orientation: headers.length > 6 ? "landscape" : "portrait" });
+        doc.setFontSize(16); doc.text(`KoobNaaba — ${title}`, 14, 18);
+        doc.setFontSize(9); doc.text(`Généré le ${new Date().toLocaleDateString("fr")}`, 14, 25);
+        autoTable(doc, { startY: 30, head: [headers], body: rows.map(r => headers.map(h => String(r[h] ?? ""))), styles: { fontSize: 7 }, headStyles: { fillColor: [34, 120, 74] } });
+        doc.save(`koobnaaba_elevage_${selected}.pdf`);
+        toast.success("PDF exporté !");
+      }
+    } catch (err: any) { toast.error(err.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-heading font-bold">Export — Élevage</h1>
+        <p className="text-muted-foreground mt-1">Exportez vos données d'élevage en PDF ou CSV</p>
+      </div>
+      <Card>
+        <CardHeader><CardTitle>Sélection du rapport</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Type de données</Label>
+            <Select value={selected} onValueChange={v => setSelected(v as ExportType)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {exportOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={() => doExport("pdf")} disabled={loading} className="flex-1">
+              <FileText className="h-4 w-4 mr-2" />{loading ? "Export..." : "Exporter PDF"}
+            </Button>
+            <Button onClick={() => doExport("csv")} disabled={loading} variant="outline" className="flex-1">
+              <FileSpreadsheet className="h-4 w-4 mr-2" />{loading ? "Export..." : "Exporter CSV"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default EleveurExportPage;
