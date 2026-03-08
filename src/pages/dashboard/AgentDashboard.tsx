@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   ClipboardList, Clock, CheckCircle, Loader2, XCircle,
   Microscope, Bug, Droplets, Tractor, Fish, Egg, MapPin, GraduationCap,
-  BarChart3, Users, Sprout, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby,
+  BarChart3, Users, Wheat, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby,
   Waves, Mountain, Sun, Home, FileSearch, FileText, Award, Warehouse, Factory,
   ShoppingBag, QrCode, Salad,
 } from "lucide-react";
@@ -24,8 +24,8 @@ const SERVICE_LABELS: Record<string, { label: string; icon: React.ElementType }>
   diagnostic_sol: { label: "Diagnostic sol et aménagement", icon: Microscope },
   diagnostic_maladie: { label: "Diagnostic maladie et traitement", icon: Bug },
   lutte_biologique: { label: "Lutte biologique intégrée", icon: Bug },
-  semences: { label: "Sélection et certification semences", icon: Sprout },
-  fertilisation: { label: "Plan de fertilisation", icon: Sprout },
+  semences: { label: "Sélection et certification semences", icon: Wheat },
+  fertilisation: { label: "Plan de fertilisation", icon: Wheat },
   compostage: { label: "Compostage et fumure organique", icon: Leaf },
   maraichage: { label: "Maraîchage et cultures horticoles", icon: Salad },
   culture_bio: { label: "Agriculture biologique", icon: Leaf },
