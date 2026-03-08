@@ -85,11 +85,10 @@ const CollectesPage = () => {
     e.preventDefault();
     if (!user) return;
     const effectiveId = cooperativeUserId || user.id;
+    const qty = parseFloat(form.quantity_kg) || 0;
     const price = parseFloat(form.unit_price) || 0;
     const { error } = await supabase.from("cooperative_collectes").insert({
-      cooperative_user_id: user.id,
-      member_id: form.member_id || null,
-      product_type: form.product_type,
+      cooperative_user_id: effectiveId,
       product_name: form.product_name,
       quantity_kg: qty,
       quality_grade: form.quality_grade,
