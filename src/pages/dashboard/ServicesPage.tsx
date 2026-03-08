@@ -203,28 +203,33 @@ const ServicesPage = () => {
               <DialogTitle className="font-heading">Demander un service technique</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+               <div className="space-y-3">
                 <Label className="font-semibold">Type de service *</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {SERVICE_TYPES.map(({ value, label, icon: Icon, desc }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, service_type: value }))}
-                      className={`flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-all ${
-                        form.service_type === value
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/40 hover:bg-muted/50"
-                      }`}
-                    >
-                      <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${form.service_type === value ? "text-primary" : "text-muted-foreground"}`} />
-                      <div>
-                        <span className="text-sm font-semibold leading-tight block">{label}</span>
-                        <span className="text-[11px] text-muted-foreground leading-tight">{desc}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                {SERVICE_CATEGORIES.map(({ category, services }) => (
+                  <div key={category}>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1.5">{category}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                      {services.map(({ value, label, icon: Icon, desc }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, service_type: value }))}
+                          className={`flex items-start gap-3 rounded-xl border-2 p-2.5 text-left transition-all ${
+                            form.service_type === value
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/40 hover:bg-muted/50"
+                          }`}
+                        >
+                          <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${form.service_type === value ? "text-primary" : "text-muted-foreground"}`} />
+                          <div>
+                            <span className="text-xs font-semibold leading-tight block">{label}</span>
+                            <span className="text-[10px] text-muted-foreground leading-tight">{desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
