@@ -126,6 +126,7 @@ const App = () => (
               <Route path="livestock/finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
               <Route path="livestock/services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
               <Route path="pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
+              <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
