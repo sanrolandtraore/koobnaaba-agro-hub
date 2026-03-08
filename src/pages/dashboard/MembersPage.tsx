@@ -225,6 +225,7 @@ const MembersPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
+                <TableHead>Rôle coop.</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Région</TableHead>
                 <TableHead>Téléphone</TableHead>
