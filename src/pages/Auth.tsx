@@ -60,12 +60,10 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center gradient-hero p-4">
       <Card className="w-full max-w-lg border-border/50 shadow-warm animate-fade-in">
         <CardHeader className="text-center space-y-3">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl gradient-warm shadow-warm">
-            <Sprout className="h-7 w-7 text-accent-foreground" />
-          </div>
+          <img src={logo} alt="KoobNaaba" className="mx-auto h-16 w-auto" />
           <CardTitle className="text-2xl font-heading">
             {isLogin ? "Bienvenue sur" : "Rejoignez"}{" "}
-            <span className="text-gradient-warm">Koobnaaba</span>
+            <span className="text-gradient-warm">KoobNaaba</span>
           </CardTitle>
           <CardDescription>
             {isLogin ? "Connectez-vous à votre espace" : "Choisissez votre profil et créez votre compte"}
