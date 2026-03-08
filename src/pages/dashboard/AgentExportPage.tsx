@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PremiumGate from "@/components/PremiumGate";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ const AgentExportPage = () => {
   };
 
   return (
+    <PremiumGate feature="export">
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold">Export — Expert Agronome</h1>
@@ -65,6 +67,7 @@ const AgentExportPage = () => {
         />
       )}
     </div>
+    </PremiumGate>
   );
 };
 

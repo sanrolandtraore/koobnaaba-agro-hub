@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import logo from "@/assets/logo.png";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
+  const { isPremium } = useSubscription();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -40,7 +42,7 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      <VoiceAssistant />
+      {isPremium && <VoiceAssistant />}
     </div>
   );
 };

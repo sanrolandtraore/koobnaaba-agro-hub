@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PremiumGate from "@/components/PremiumGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +71,7 @@ const CooperativeExportPage = () => {
   };
 
   return (
+    <PremiumGate feature="export">
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold">Export coopérative</h1>
@@ -104,6 +106,7 @@ const CooperativeExportPage = () => {
         />
       )}
     </div>
+    </PremiumGate>
   );
 };
 
