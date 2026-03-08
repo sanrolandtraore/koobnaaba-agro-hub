@@ -1269,6 +1269,62 @@ export type Database = {
         }
         Relationships: []
       }
+      service_requests: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_cost: number | null
+          expert_notes: string | null
+          farm_id: string | null
+          id: string
+          location: string | null
+          phone: string | null
+          preferred_date: string | null
+          service_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_cost?: number | null
+          expert_notes?: string | null
+          farm_id?: string | null
+          id?: string
+          location?: string | null
+          phone?: string | null
+          preferred_date?: string | null
+          service_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_cost?: number | null
+          expert_notes?: string | null
+          farm_id?: string | null
+          id?: string
+          location?: string | null
+          phone?: string | null
+          preferred_date?: string | null
+          service_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
