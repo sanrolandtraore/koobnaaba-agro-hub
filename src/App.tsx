@@ -80,8 +80,7 @@ const App = () => (
               <Route path="harvests" element={<HarvestsPage />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
-              <Route path="marketplace" element={<MarketplacePage />} />
-              <Route path="service-marketplace" element={<ServiceMarketplacePage />} />
+              <Route path="marketplace" element={<ServiceMarketplacePage />} />
               <Route path="export" element={<AgriculteurExportPage />} />
               <Route path="export-eleveur" element={<EleveurExportPage />} />
               <Route path="export-agent" element={<AgentExportPage />} />
