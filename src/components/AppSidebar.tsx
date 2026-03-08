@@ -25,8 +25,8 @@ const navItems = [
 ];
 
 const livestockItems = [
-  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Bug },
-  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Bug },
+  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Beef },
+  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Beef },
   { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
   { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
   { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },

@@ -90,7 +90,7 @@ export const roleLabels: Record<string, string> = {
 
 export const roleIcons: Record<string, React.ElementType> = {
   agriculteur: Wheat,
-  eleveur: Bug,
+  eleveur: Beef,
   cooperative: Building2,
   agent_technique: Compass,
   partenaire: Handshake,
