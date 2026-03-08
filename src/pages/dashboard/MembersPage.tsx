@@ -173,10 +173,21 @@ const MembersPage = () => {
           <h1 className="text-2xl font-heading font-bold">Gestion des membres</h1>
           <p className="text-muted-foreground mt-1">Gérez les membres de votre coopérative</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button><UserPlus className="h-4 w-4 mr-2" />Nouveau membre</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          {isCoopOwner && (
+            <Button variant="outline" onClick={inviteCode ? copyInviteCode : generateInviteCode}>
+              {inviteCode ? (
+                <><Copy className="h-4 w-4 mr-2" />{inviteCode}</>
+              ) : (
+                <><Link2 className="h-4 w-4 mr-2" />Générer un code</>
+              )}
+            </Button>
+          )}
+          {canEdit && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button><UserPlus className="h-4 w-4 mr-2" />Nouveau membre</Button>
+              </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Ajouter un membre</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
