@@ -233,9 +233,11 @@ const CollectesPage = () => {
                       {collecteStatuses.find(s => s.value === c.status)?.label || c.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
