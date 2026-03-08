@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download,
-  Bug, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
+  Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,8 @@ export const agriculteurNav: NavItem[] = [
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
-  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Bug },
-  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Bug },
+  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Beef },
+  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Beef },
   { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
   { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
   { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
@@ -90,7 +90,7 @@ export const roleLabels: Record<string, string> = {
 
 export const roleIcons: Record<string, React.ElementType> = {
   agriculteur: Wheat,
-  eleveur: Bug,
+  eleveur: Beef,
   cooperative: Building2,
   agent_technique: Compass,
   partenaire: Handshake,

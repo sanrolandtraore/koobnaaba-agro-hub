@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download,
-  Bug, Heart, Baby, Utensils, Wallet,
+  Beef, Heart, Baby, Utensils, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -25,8 +25,8 @@ const navItems = [
 ];
 
 const livestockItems = [
-  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Bug },
-  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Bug },
+  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Beef },
+  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Beef },
   { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
   { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
   { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
