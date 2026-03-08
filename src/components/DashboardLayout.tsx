@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import logo from "@/assets/logo.png";
+import VoiceAssistant from "@/components/VoiceAssistant";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
@@ -34,10 +35,12 @@ const DashboardLayout = () => {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="container max-w-6xl py-4 px-4 md:py-6 md:px-8">
-            <Outlet />
+          <Outlet />
           </div>
         </main>
       </div>
+
+      <VoiceAssistant />
     </div>
   );
 };
