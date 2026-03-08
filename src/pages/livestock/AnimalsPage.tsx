@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Filter } from "lucide-react";
+import { Plus, Trash2, Filter, WifiOff } from "lucide-react";
+import { useOfflineData } from "@/hooks/useOfflineData";
 
 const speciesOptions = [
   { value: "bovin", label: "Bovin 🐄" },
@@ -41,19 +41,14 @@ const breedsBySpecies: Record<string, string[]> = {
   pisciculture: ["Tilapia", "Clarias (silure)", "Carpe", "Capitaine", "Autre"],
 };
 
-const acquisitionModes = [
-  { value: "achat", label: "Achat" },
-  { value: "naissance", label: "Naissance sur place" },
-  { value: "don", label: "Don" },
-  { value: "echange", label: "Échange" },
-  { value: "heritage", label: "Héritage" },
-];
-
 const AnimalsPage = () => {
   const { user } = useAuth();
-  const [animals, setAnimals] = useState<any[]>([]);
-  const [farms, setFarms] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: animals, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+    table: 'animals',
+    select: '*, farms(name)',
+  });
+  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
+
   const [open, setOpen] = useState(false);
   const [filterSpecies, setFilterSpecies] = useState<string>("all");
   const [form, setForm] = useState({
@@ -62,56 +57,44 @@ const AnimalsPage = () => {
     acquisition_cost: "", weight_kg: "", notes: "",
   });
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const [farmsRes, animalsRes] = await Promise.all([
-      supabase.from("farms").select("id, name"),
-      supabase.from("animals").select("*, farms(name)").order("created_at", { ascending: false }),
-    ]);
-    setFarms(farmsRes.data || []);
-    setAnimals(animalsRes.data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => { if (user) fetchAll(); }, [user]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("animals").insert({
+    const result = await insertRow({
       farm_id: form.farm_id,
-      species: form.species as any,
+      species: form.species,
       name: form.name || null,
       identification_number: form.identification_number || null,
       breed: form.breed || null,
-      sex: form.sex as any,
+      sex: form.sex,
       birth_date: form.birth_date || null,
       acquisition_date: form.acquisition_date,
       acquisition_cost: form.acquisition_cost ? Number(form.acquisition_cost) : 0,
       weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
       notes: form.notes || null,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Animal ajouté ✓");
-    setOpen(false);
-    setForm({ farm_id: "", species: "bovin", name: "", identification_number: "", breed: "", sex: "inconnu", birth_date: "", acquisition_date: new Date().toISOString().split("T")[0], acquisition_cost: "", weight_kg: "", notes: "" });
-    fetchAll();
+    if (result) {
+      toast.success("Animal ajouté ✓");
+      setOpen(false);
+      setForm({ farm_id: "", species: "bovin", name: "", identification_number: "", breed: "", sex: "inconnu", birth_date: "", acquisition_date: new Date().toISOString().split("T")[0], acquisition_cost: "", weight_kg: "", notes: "" });
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cet animal ?")) return;
-    const { error } = await supabase.from("animals").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Animal supprimé");
-    fetchAll();
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Animal supprimé");
   };
 
-  const filtered = filterSpecies === "all" ? animals : animals.filter((a) => a.species === filterSpecies);
+  const filtered = filterSpecies === "all" ? animals : animals.filter((a: any) => a.species === filterSpecies);
   const currentBreeds = breedsBySpecies[form.species] || [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-heading font-bold">Registre des animaux</h1>
+        <div>
+          <h1 className="text-2xl font-heading font-bold">Registre des animaux</h1>
+          {isOffline && <Badge variant="outline" className="mt-1 text-xs"><WifiOff className="h-3 w-3 mr-1" />Mode hors-ligne</Badge>}
+        </div>
         <div className="flex gap-2">
           <Select value={filterSpecies} onValueChange={setFilterSpecies}>
             <SelectTrigger className="w-44"><Filter className="h-4 w-4 mr-1" /><SelectValue /></SelectTrigger>
@@ -129,7 +112,7 @@ const AnimalsPage = () => {
                   <Label>Exploitation *</Label>
                   <Select value={form.farm_id} onValueChange={(v) => setForm({ ...form, farm_id: v })}>
                     <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                    <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                    <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -184,13 +167,16 @@ const AnimalsPage = () => {
         <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun animal enregistré</CardContent></Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((a) => (
-            <Card key={a.id}>
+          {filtered.map((a: any) => (
+            <Card key={a.id} className={a._offline ? 'border-dashed border-amber-400' : ''}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-semibold">{a.name || a.identification_number || "Sans nom"}</p>
-                    <p className="text-sm text-muted-foreground">{(a as any).farms?.name}</p>
+                    <p className="font-semibold">
+                      {a.name || a.identification_number || "Sans nom"}
+                      {a._offline && <Badge variant="outline" className="ml-2 text-xs">En attente</Badge>}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{a.farms?.name}</p>
                   </div>
                   <div className="flex gap-1">
                     <Badge variant="outline">{speciesOptions.find((s) => s.value === a.species)?.label}</Badge>

@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, MapPin, Trash2, Edit, Navigation } from "lucide-react";
+import { Plus, MapPin, Trash2, Edit, Navigation, WifiOff } from "lucide-react";
+import { useOfflineData } from "@/hooks/useOfflineData";
 
-// Predefined locations (Burkina Faso regions + common)
 const regions = [
   "Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora", "Ouahigouya",
   "Kaya", "Tenkodogo", "Fada N'Gourma", "Dédougou", "Ziniaré",
@@ -21,28 +22,17 @@ const regions = [
 
 const FarmsPage = () => {
   const { user } = useAuth();
-  const [farms, setFarms] = useState<any[]>([]);
-  const [climateZones, setClimateZones] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: farms, loading, isOffline, refetch, insertRow, updateRow, deleteRow } = useOfflineData({
+    table: 'farms',
+    select: '*, climate_zones(name)',
+  });
+  const { data: climateZones } = useOfflineData({ table: 'climate_zones' });
+
   const [open, setOpen] = useState(false);
   const [editingFarm, setEditingFarm] = useState<any>(null);
   const [form, setForm] = useState({ name: "", location_name: "", total_area_ha: "", climate_zone_id: "" });
   const [autoLocating, setAutoLocating] = useState(false);
   const [detectedCoords, setDetectedCoords] = useState<{ lat: number; lng: number } | null>(null);
-
-  const fetchFarms = async () => {
-    const { data, error } = await supabase.from("farms").select("*, climate_zones(name)").order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    else setFarms(data || []);
-    setLoading(false);
-  };
-
-  const fetchZones = async () => {
-    const { data } = await supabase.from("climate_zones").select("*");
-    setClimateZones(data || []);
-  };
-
-  useEffect(() => { fetchFarms(); fetchZones(); }, []);
 
   const resetForm = () => {
     setForm({ name: "", location_name: "", total_area_ha: "", climate_zone_id: "" });
@@ -78,15 +68,13 @@ const FarmsPage = () => {
     };
 
     if (editingFarm) {
-      const { error } = await supabase.from("farms").update(payload).eq("id", editingFarm.id);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Exploitation mise à jour !");
+      const ok = await updateRow(editingFarm.id, payload);
+      if (ok) toast.success("Exploitation mise à jour !");
     } else {
-      const { error } = await supabase.from("farms").insert(payload);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Exploitation créée !");
+      const result = await insertRow(payload);
+      if (result) toast.success("Exploitation créée !");
     }
-    resetForm(); setOpen(false); fetchFarms();
+    resetForm(); setOpen(false);
   };
 
   const handleEdit = (farm: any) => {
@@ -103,9 +91,8 @@ const FarmsPage = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette exploitation et toutes ses parcelles ?")) return;
-    const { error } = await supabase.from("farms").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Exploitation supprimée"); fetchFarms(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Exploitation supprimée");
   };
 
   return (
@@ -113,7 +100,10 @@ const FarmsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Exploitations</h1>
-          <p className="text-muted-foreground mt-1">Gérez vos exploitations agricoles</p>
+          <p className="text-muted-foreground mt-1">
+            Gérez vos exploitations agricoles
+            {isOffline && <Badge variant="outline" className="ml-2 text-xs"><WifiOff className="h-3 w-3 mr-1" />Hors-ligne</Badge>}
+          </p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
@@ -133,8 +123,6 @@ const FarmsPage = () => {
                   <SelectContent>{regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-
-              {/* GPS Auto-locate */}
               <div className="rounded-lg border p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Position GPS</span>
@@ -144,12 +132,9 @@ const FarmsPage = () => {
                   </Button>
                 </div>
                 {detectedCoords && (
-                  <p className="text-sm font-mono text-muted-foreground">
-                    📍 {detectedCoords.lat}, {detectedCoords.lng}
-                  </p>
+                  <p className="text-sm font-mono text-muted-foreground">📍 {detectedCoords.lat}, {detectedCoords.lng}</p>
                 )}
               </div>
-
               <div className="space-y-2">
                 <Label>Superficie totale (ha)</Label>
                 <Input type="number" step="any" value={form.total_area_ha} onChange={(e) => setForm({ ...form, total_area_ha: e.target.value })} placeholder="5" />
@@ -158,7 +143,7 @@ const FarmsPage = () => {
                 <Label>Zone climatique</Label>
                 <Select value={form.climate_zone_id} onValueChange={(v) => setForm({ ...form, climate_zone_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-                  <SelectContent>{climateZones.map((z) => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{climateZones.map((z: any) => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <Button type="submit" className="w-full gradient-primary text-primary-foreground">
@@ -182,11 +167,14 @@ const FarmsPage = () => {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {farms.map((farm) => (
-            <Card key={farm.id} className="shadow-sm hover:shadow-warm transition-shadow">
+          {farms.map((farm: any) => (
+            <Card key={farm.id} className={`shadow-sm hover:shadow-warm transition-shadow ${farm._offline ? 'border-dashed border-amber-400' : ''}`}>
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
-                  <CardTitle className="text-lg">{farm.name}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {farm.name}
+                    {farm._offline && <Badge variant="outline" className="ml-2 text-xs">En attente</Badge>}
+                  </CardTitle>
                   {farm.location_name && <p className="text-sm text-muted-foreground mt-1">📍 {farm.location_name}</p>}
                 </div>
                 <div className="flex gap-1">
@@ -198,9 +186,7 @@ const FarmsPage = () => {
                 {farm.total_area_ha && <p className="text-sm"><span className="text-muted-foreground">Superficie:</span> {farm.total_area_ha} ha</p>}
                 {farm.climate_zones && <p className="text-sm"><span className="text-muted-foreground">Zone:</span> {farm.climate_zones.name}</p>}
                 {farm.latitude && (
-                  <p className="text-xs text-muted-foreground font-mono">
-                    GPS: {farm.latitude}, {farm.longitude}
-                  </p>
+                  <p className="text-xs text-muted-foreground font-mono">GPS: {farm.latitude}, {farm.longitude}</p>
                 )}
               </CardContent>
             </Card>
