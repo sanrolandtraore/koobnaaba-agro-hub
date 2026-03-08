@@ -110,7 +110,7 @@ const MembersPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!effectiveUserId) return;
     const { error } = await supabase.from("cooperative_members").insert({
       cooperative_user_id: user.id,
       full_name: form.full_name,
