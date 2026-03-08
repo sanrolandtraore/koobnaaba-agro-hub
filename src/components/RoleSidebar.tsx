@@ -186,12 +186,16 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3 mb-3">
+        <Link
+          to="/dashboard/profile"
+          onClick={onNavigate}
+          className="flex items-center gap-3 mb-3 rounded-lg px-2 py-2 hover:bg-sidebar-accent transition-colors"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent shrink-0">
             <User className="h-4 w-4 text-sidebar-accent-foreground" />
           </div>
           <span className="text-sm font-medium truncate">{profile?.full_name || "Utilisateur"}</span>
-        </div>
+        </Link>
         <Button
           variant="ghost"
           size="sm"
