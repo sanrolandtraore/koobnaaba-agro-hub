@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit, Map, Navigation } from "lucide-react";
+import { Plus, Trash2, Edit, Map, Navigation, Eye, EyeOff } from "lucide-react";
 import { GPSPolygonCapture, coordsToGeoJSON } from "@/components/GPSPolygonCapture";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const ParcelMapPreview = lazy(() => import("@/components/ParcelMapPreview"));
+
+// Selection lists
+const soilTypes = [
+  "Argileux", "Sableux", "Limoneux", "Argilo-sableux", "Argilo-limoneux",
+  "Sablo-limoneux", "Latéritique", "Gravillonnaire", "Alluvial", "Vertisol",
+];
+const irrigationTypes = [
+  "Pluviale", "Goutte-à-goutte", "Aspersion", "Gravitaire", "Pompage",
+  "Bas-fond", "Submersion", "Aucune",
+];
+const parcelStatuses = [
+  { value: "active", label: "Active" },
+  { value: "jachère", label: "En jachère" },
+  { value: "préparation", label: "En préparation" },
+  { value: "inactive", label: "Inactive" },
+];
 
 const ParcelsPage = () => {
   const [parcels, setParcels] = useState<any[]>([]);
@@ -16,8 +36,12 @@ const ParcelsPage = () => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", latitude: "", longitude: "" });
+  const [form, setForm] = useState({
+    name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", status: "active",
+  });
   const [gpsPoints, setGpsPoints] = useState<{ lat: number; lng: number }[]>([]);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
+  const [showMap, setShowMap] = useState<string | null>(null);
 
   const fetchParcels = async () => {
     const { data, error } = await supabase.from("parcels").select("*, farms(name)").order("created_at", { ascending: false });
@@ -33,7 +57,12 @@ const ParcelsPage = () => {
 
   useEffect(() => { fetchParcels(); fetchFarms(); }, []);
 
-  const resetForm = () => { setForm({ name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", latitude: "", longitude: "" }); setEditing(null); setGpsPoints([]); };
+  const resetForm = () => {
+    setForm({ name: "", farm_id: "", area_ha: "", soil_type: "", irrigation_type: "", status: "active" });
+    setEditing(null);
+    setGpsPoints([]);
+    setMapCenter(undefined);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,10 +73,14 @@ const ParcelsPage = () => {
       area_ha: parseFloat(form.area_ha) || 0,
       soil_type: form.soil_type || null,
       irrigation_type: form.irrigation_type || null,
-      latitude: form.latitude ? parseFloat(form.latitude) : null,
-      longitude: form.longitude ? parseFloat(form.longitude) : null,
+      status: form.status,
     };
 
+    // Set lat/lng from first GPS point or polygon centroid
+    if (gpsPoints.length > 0) {
+      payload.latitude = gpsPoints.reduce((s, c) => s + c.lat, 0) / gpsPoints.length;
+      payload.longitude = gpsPoints.reduce((s, c) => s + c.lng, 0) / gpsPoints.length;
+    }
     if (geometry) {
       payload.geometry = geometry;
     }
@@ -66,7 +99,7 @@ const ParcelsPage = () => {
       toast.success("Parcelle créée !");
     }
 
-    // If GPS polygon, trigger backend calculation for area
+    // Trigger backend area calculation
     if (geometry && parcelId) {
       try {
         await supabase.functions.invoke("calculate-crop-cycle", {
@@ -75,19 +108,28 @@ const ParcelsPage = () => {
       } catch (_) { /* silent */ }
     }
 
-    resetForm(); setOpen(false); fetchParcels();
+    resetForm();
+    setOpen(false);
+    fetchParcels();
   };
 
   const handleEdit = (p: any) => {
     setEditing(p);
-    setForm({ name: p.name, farm_id: p.farm_id, area_ha: p.area_ha?.toString() || "", soil_type: p.soil_type || "", irrigation_type: p.irrigation_type || "", latitude: p.latitude?.toString() || "", longitude: p.longitude?.toString() || "" });
-    // Restore GPS points from geometry
+    setForm({
+      name: p.name,
+      farm_id: p.farm_id,
+      area_ha: p.area_ha?.toString() || "",
+      soil_type: p.soil_type || "",
+      irrigation_type: p.irrigation_type || "",
+      status: p.status || "active",
+    });
     if (p.geometry?.coordinates?.[0]) {
-      const coords = p.geometry.coordinates[0].slice(0, -1); // remove closing point
+      const coords = p.geometry.coordinates[0].slice(0, -1);
       setGpsPoints(coords.map((c: number[]) => ({ lat: c[1], lng: c[0] })));
     } else {
       setGpsPoints([]);
     }
+    if (p.latitude) setMapCenter({ lat: p.latitude, lng: p.longitude });
     setOpen(true);
   };
 
@@ -98,12 +140,31 @@ const ParcelsPage = () => {
     else { toast.success("Parcelle supprimée"); fetchParcels(); }
   };
 
+  const getParcelCoords = (p: any): { lat: number; lng: number }[] => {
+    if (p.geometry?.coordinates?.[0]) {
+      return p.geometry.coordinates[0].slice(0, -1).map((c: number[]) => ({ lat: c[1], lng: c[0] }));
+    }
+    return [];
+  };
+
+  const statusBadge = (status: string) => {
+    const s = parcelStatuses.find(ps => ps.value === status);
+    const variant = status === "active" ? "default" : status === "jachère" ? "secondary" : "outline";
+    return <Badge variant={variant}>{s?.label || status}</Badge>;
+  };
+
+  // Stats
+  const totalArea = parcels.reduce((s, p) => s + Number(p.calculated_area_ha || p.area_ha || 0), 0);
+  const gpsCount = parcels.filter(p => p.geometry).length;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold">Parcelles</h1>
-          <p className="text-muted-foreground mt-1">Gérez vos parcelles avec mesure GPS</p>
+          <p className="text-muted-foreground mt-1">
+            {parcels.length} parcelle{parcels.length !== 1 ? "s" : ""} · {Math.round(totalArea * 100) / 100} ha · {gpsCount} cartographiée{gpsCount !== 1 ? "s" : ""}
+          </p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
@@ -111,56 +172,82 @@ const ParcelsPage = () => {
               <Plus className="h-4 w-4 mr-2" />Nouvelle parcelle
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader><DialogTitle>{editing ? "Modifier" : "Nouvelle"} parcelle</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label>Exploitation *</Label>
                 <Select value={form.farm_id} onValueChange={(v) => setForm({ ...form, farm_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Choisir l'exploitation" /></SelectTrigger>
                   <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Nom *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Parcelle A" />
-              </div>
-              <div className="space-y-2">
-                <Label>Superficie manuelle (ha)</Label>
-                <Input type="number" step="any" value={form.area_ha} onChange={(e) => setForm({ ...form, area_ha: e.target.value })} placeholder="2.5" />
-                <p className="text-xs text-muted-foreground">Sera remplacée par le calcul GPS si polygone capturé</p>
-              </div>
 
-              {/* GPS Polygon Capture */}
-              <div className="rounded-lg border p-3 space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Navigation className="h-4 w-4 text-primary" />
-                  Mesure GPS du contour
-                </div>
-                <GPSPolygonCapture value={gpsPoints} onChange={setGpsPoints} />
+              <div className="space-y-2">
+                <Label>Nom de la parcelle *</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Parcelle A" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Type de sol</Label>
-                  <Input value={form.soil_type} onChange={(e) => setForm({ ...form, soil_type: e.target.value })} placeholder="Argileux" />
+                  <Select value={form.soil_type} onValueChange={(v) => setForm({ ...form, soil_type: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                    <SelectContent>{soilTypes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Irrigation</Label>
-                  <Input value={form.irrigation_type} onChange={(e) => setForm({ ...form, irrigation_type: e.target.value })} placeholder="Pluviale" />
+                  <Select value={form.irrigation_type} onValueChange={(v) => setForm({ ...form, irrigation_type: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                    <SelectContent>{irrigationTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Latitude</Label><Input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Longitude</Label><Input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} /></div>
+                <div className="space-y-2">
+                  <Label>Superficie manuelle (ha)</Label>
+                  <Input type="number" step="any" value={form.area_ha} onChange={(e) => setForm({ ...form, area_ha: e.target.value })} placeholder="2.5" />
+                  <p className="text-xs text-muted-foreground">Remplacée par le calcul GPS</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Statut</Label>
+                  <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{parcelStatuses.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
               </div>
-              <Button type="submit" className="w-full gradient-primary text-primary-foreground">{editing ? "Mettre à jour" : "Créer"}</Button>
+
+              {/* GPS Capture */}
+              <div className="rounded-lg border p-3 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Navigation className="h-4 w-4 text-primary" />
+                  Cartographie GPS du contour
+                </div>
+                <GPSPolygonCapture
+                  value={gpsPoints}
+                  onChange={setGpsPoints}
+                  onCenterDetected={(lat, lng) => setMapCenter({ lat, lng })}
+                />
+                {gpsPoints.length >= 2 && (
+                  <Suspense fallback={<Skeleton className="h-[200px] w-full rounded-lg" />}>
+                    <ParcelMapPreview coordinates={gpsPoints} height="200px" center={mapCenter} />
+                  </Suspense>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full gradient-primary text-primary-foreground">
+                {editing ? "Mettre à jour" : "Créer la parcelle"}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
+
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{[1,2,3].map(i => <Card key={i} className="animate-pulse"><CardContent className="h-32" /></Card>)}</div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48" />)}</div>
       ) : parcels.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -170,30 +257,53 @@ const ParcelsPage = () => {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {parcels.map((p) => (
-            <Card key={p.id} className="shadow-sm hover:shadow-warm transition-shadow">
-              <CardHeader className="flex flex-row items-start justify-between pb-2">
-                <div>
-                  <CardTitle className="text-lg">{p.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">{p.farms?.name}</p>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(p)}><Edit className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                <p className="text-sm"><span className="text-muted-foreground">Superficie:</span> {p.calculated_area_ha || p.area_ha} ha</p>
-                {p.calculated_area_ha && <p className="text-xs text-success flex items-center gap-1"><Navigation className="h-3 w-3" /> Mesuré par GPS</p>}
-                {p.perimeter_m && <p className="text-sm"><span className="text-muted-foreground">Périmètre:</span> {Math.round(p.perimeter_m)} m</p>}
-                {p.soil_type && <p className="text-sm"><span className="text-muted-foreground">Sol:</span> {p.soil_type}</p>}
-                {p.irrigation_type && <p className="text-sm"><span className="text-muted-foreground">Irrigation:</span> {p.irrigation_type}</p>}
-                {p.geometry && (
-                  <p className="text-xs text-muted-foreground">{p.geometry.coordinates?.[0]?.length - 1} points GPS enregistrés</p>
+          {parcels.map((p) => {
+            const coords = getParcelCoords(p);
+            return (
+              <Card key={p.id} className="shadow-sm hover:shadow-warm transition-shadow overflow-hidden">
+                {/* Map preview toggle */}
+                {coords.length >= 3 && showMap === p.id && (
+                  <Suspense fallback={<Skeleton className="h-[180px] w-full" />}>
+                    <ParcelMapPreview coordinates={coords} height="180px" />
+                  </Suspense>
                 )}
-              </CardContent>
-            </Card>
-          ))}
+                <CardHeader className="flex flex-row items-start justify-between pb-2">
+                  <div>
+                    <CardTitle className="text-lg">{p.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">{p.farms?.name}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    {coords.length >= 3 && (
+                      <Button variant="ghost" size="icon" onClick={() => setShowMap(showMap === p.id ? null : p.id)} title="Carte">
+                        {showMap === p.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(p)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {statusBadge(p.status)}
+                    {p.geometry && (
+                      <Badge variant="outline" className="text-primary border-primary/30">
+                        <Navigation className="h-3 w-3 mr-1" />GPS
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 text-sm">
+                    <p><span className="text-muted-foreground">Superficie:</span> <strong>{p.calculated_area_ha || p.area_ha}</strong> ha</p>
+                    {p.perimeter_m && <p><span className="text-muted-foreground">Périmètre:</span> {Math.round(p.perimeter_m)} m</p>}
+                    {p.soil_type && <p><span className="text-muted-foreground">Sol:</span> {p.soil_type}</p>}
+                    {p.irrigation_type && <p><span className="text-muted-foreground">Irrigation:</span> {p.irrigation_type}</p>}
+                  </div>
+                  {p.geometry && (
+                    <p className="text-xs text-muted-foreground">{coords.length} points GPS enregistrés</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

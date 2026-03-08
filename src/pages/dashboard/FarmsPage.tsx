@@ -8,7 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, MapPin, Trash2, Edit } from "lucide-react";
+import { Plus, MapPin, Trash2, Edit, Navigation } from "lucide-react";
+
+// Predefined locations (Burkina Faso regions + common)
+const regions = [
+  "Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora", "Ouahigouya",
+  "Kaya", "Tenkodogo", "Fada N'Gourma", "Dédougou", "Ziniaré",
+  "Manga", "Dori", "Gaoua", "Djibo", "Léo", "Kongoussi",
+  "Réo", "Yako", "Nouna", "Tougan", "Diébougou", "Pô",
+  "Boromo", "Houndé", "Orodara", "Solenzo",
+];
 
 const FarmsPage = () => {
   const { user } = useAuth();
@@ -17,7 +26,9 @@ const FarmsPage = () => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingFarm, setEditingFarm] = useState<any>(null);
-  const [form, setForm] = useState({ name: "", location_name: "", latitude: "", longitude: "", total_area_ha: "", climate_zone_id: "" });
+  const [form, setForm] = useState({ name: "", location_name: "", total_area_ha: "", climate_zone_id: "" });
+  const [autoLocating, setAutoLocating] = useState(false);
+  const [detectedCoords, setDetectedCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const fetchFarms = async () => {
     const { data, error } = await supabase.from("farms").select("*, climate_zones(name)").order("created_at", { ascending: false });
@@ -34,8 +45,23 @@ const FarmsPage = () => {
   useEffect(() => { fetchFarms(); fetchZones(); }, []);
 
   const resetForm = () => {
-    setForm({ name: "", location_name: "", latitude: "", longitude: "", total_area_ha: "", climate_zone_id: "" });
+    setForm({ name: "", location_name: "", total_area_ha: "", climate_zone_id: "" });
     setEditingFarm(null);
+    setDetectedCoords(null);
+  };
+
+  const autoLocate = () => {
+    if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
+    setAutoLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setDetectedCoords({ lat: Math.round(pos.coords.latitude * 1000000) / 1000000, lng: Math.round(pos.coords.longitude * 1000000) / 1000000 });
+        toast.success("Position détectée");
+        setAutoLocating(false);
+      },
+      () => { toast.error("Erreur GPS"); setAutoLocating(false); },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,8 +70,8 @@ const FarmsPage = () => {
     const payload = {
       name: form.name,
       location_name: form.location_name || null,
-      latitude: form.latitude ? parseFloat(form.latitude) : null,
-      longitude: form.longitude ? parseFloat(form.longitude) : null,
+      latitude: detectedCoords?.lat || null,
+      longitude: detectedCoords?.lng || null,
       total_area_ha: form.total_area_ha ? parseFloat(form.total_area_ha) : null,
       climate_zone_id: form.climate_zone_id || null,
       user_id: user.id,
@@ -60,9 +86,7 @@ const FarmsPage = () => {
       if (error) { toast.error(error.message); return; }
       toast.success("Exploitation créée !");
     }
-    resetForm();
-    setOpen(false);
-    fetchFarms();
+    resetForm(); setOpen(false); fetchFarms();
   };
 
   const handleEdit = (farm: any) => {
@@ -70,11 +94,10 @@ const FarmsPage = () => {
     setForm({
       name: farm.name,
       location_name: farm.location_name || "",
-      latitude: farm.latitude?.toString() || "",
-      longitude: farm.longitude?.toString() || "",
       total_area_ha: farm.total_area_ha?.toString() || "",
       climate_zone_id: farm.climate_zone_id || "",
     });
+    if (farm.latitude) setDetectedCoords({ lat: farm.latitude, lng: farm.longitude });
     setOpen(true);
   };
 
@@ -97,9 +120,7 @@ const FarmsPage = () => {
             <Button className="gradient-primary text-primary-foreground"><Plus className="h-4 w-4 mr-2" />Nouvelle exploitation</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingFarm ? "Modifier" : "Nouvelle"} exploitation</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>{editingFarm ? "Modifier" : "Nouvelle"} exploitation</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label>Nom *</Label>
@@ -107,29 +128,37 @@ const FarmsPage = () => {
               </div>
               <div className="space-y-2">
                 <Label>Localité</Label>
-                <Input value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} placeholder="Ouagadougou" />
+                <Select value={form.location_name} onValueChange={(v) => setForm({ ...form, location_name: v })}>
+                  <SelectTrigger><SelectValue placeholder="Choisir la région" /></SelectTrigger>
+                  <SelectContent>{regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Latitude</Label>
-                  <Input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="12.37" />
+
+              {/* GPS Auto-locate */}
+              <div className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Position GPS</span>
+                  <Button type="button" variant="outline" size="sm" onClick={autoLocate} disabled={autoLocating}>
+                    <Navigation className={`h-4 w-4 mr-1 ${autoLocating ? "animate-pulse" : ""}`} />
+                    {autoLocating ? "Détection..." : "Localiser"}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>Longitude</Label>
-                  <Input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="-1.52" />
-                </div>
+                {detectedCoords && (
+                  <p className="text-sm font-mono text-muted-foreground">
+                    📍 {detectedCoords.lat}, {detectedCoords.lng}
+                  </p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label>Superficie (ha)</Label>
+                <Label>Superficie totale (ha)</Label>
                 <Input type="number" step="any" value={form.total_area_ha} onChange={(e) => setForm({ ...form, total_area_ha: e.target.value })} placeholder="5" />
               </div>
               <div className="space-y-2">
                 <Label>Zone climatique</Label>
                 <Select value={form.climate_zone_id} onValueChange={(v) => setForm({ ...form, climate_zone_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
-                  <SelectContent>
-                    {climateZones.map((z) => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
-                  </SelectContent>
+                  <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                  <SelectContent>{climateZones.map((z) => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <Button type="submit" className="w-full gradient-primary text-primary-foreground">
@@ -139,6 +168,7 @@ const FarmsPage = () => {
           </DialogContent>
         </Dialog>
       </div>
+
       {loading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(i => <Card key={i} className="animate-pulse"><CardContent className="h-32" /></Card>)}
@@ -157,7 +187,7 @@ const FarmsPage = () => {
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
                   <CardTitle className="text-lg">{farm.name}</CardTitle>
-                  {farm.location_name && <p className="text-sm text-muted-foreground mt-1">{farm.location_name}</p>}
+                  {farm.location_name && <p className="text-sm text-muted-foreground mt-1">📍 {farm.location_name}</p>}
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(farm)}><Edit className="h-4 w-4" /></Button>
@@ -167,7 +197,11 @@ const FarmsPage = () => {
               <CardContent className="space-y-2">
                 {farm.total_area_ha && <p className="text-sm"><span className="text-muted-foreground">Superficie:</span> {farm.total_area_ha} ha</p>}
                 {farm.climate_zones && <p className="text-sm"><span className="text-muted-foreground">Zone:</span> {farm.climate_zones.name}</p>}
-                {farm.latitude && <p className="text-sm text-muted-foreground">GPS: {farm.latitude}, {farm.longitude}</p>}
+                {farm.latitude && (
+                  <p className="text-xs text-muted-foreground font-mono">
+                    GPS: {farm.latitude}, {farm.longitude}
+                  </p>
+                )}
               </CardContent>
             </Card>
           ))}
