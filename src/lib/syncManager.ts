@@ -34,7 +34,7 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
       switch (item.operation) {
         case 'insert': {
           const { id: _tempId, _offline, ...insertData } = item.data;
-          const res = await (supabase.from(item.table) as any).insert(insertData);
+          const res = await (supabase.from(item.table as any) as any).insert(insertData);
           error = res.error;
           break;
         }
