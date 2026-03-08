@@ -112,7 +112,7 @@ const MembersPage = () => {
     e.preventDefault();
     if (!effectiveUserId) return;
     const { error } = await supabase.from("cooperative_members").insert({
-      cooperative_user_id: user.id,
+      cooperative_user_id: effectiveUserId,
       full_name: form.full_name,
       phone: form.phone || null,
       location: form.location || null,
