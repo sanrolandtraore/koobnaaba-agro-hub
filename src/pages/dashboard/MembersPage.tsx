@@ -71,7 +71,8 @@ const MembersPage = () => {
   const { user } = useAuth();
   const { isCoopOwner, isCoopAdmin, isReadOnly, cooperativeUserId } = useCooperativeRole();
   const canEdit = isCoopOwner || isCoopAdmin;
-  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
