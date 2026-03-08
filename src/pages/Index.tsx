@@ -1,5 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
+import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Wheat, BarChart3, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -47,13 +48,44 @@ function useCarousel(length: number, interval = 4000) {
 
 const Index = () => {
   const navigate = useNavigate();
+  const [lang, setLang] = useState<'fr' | 'en'>('fr');
+  const [langOpen, setLangOpen] = useState(false);
   const partnerCarousel = useCarousel(partners.length, 3000);
   const galleryCarousel = useCarousel(galleryItems.length, 5000);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        {/* Language Selector */}
+        <div className="relative">
+          <button
+            onClick={() => setLangOpen(o => !o)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background/20 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground hover:bg-background/30 transition-colors text-sm font-medium"
+          >
+            <span className="text-base leading-none">{lang === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
+            <span className="hidden sm:inline">{lang === 'fr' ? 'FR' : 'EN'}</span>
+            <Globe className="h-3.5 w-3.5 opacity-70" />
+          </button>
+          {langOpen && (
+            <div className="absolute right-0 top-full mt-1.5 bg-card border border-border rounded-lg shadow-lg overflow-hidden min-w-[140px] animate-fade-in">
+              <button
+                onClick={() => { setLang('fr'); setLangOpen(false); }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-accent transition-colors ${lang === 'fr' ? 'bg-accent font-semibold' : ''}`}
+              >
+                <span className="text-base">🇫🇷</span>
+                <span className="text-foreground">Français</span>
+              </button>
+              <button
+                onClick={() => { setLang('en'); setLangOpen(false); }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-accent transition-colors ${lang === 'en' ? 'bg-accent font-semibold' : ''}`}
+              >
+                <span className="text-base">🇬🇧</span>
+                <span className="text-foreground">English</span>
+              </button>
+            </div>
+          )}
+        </div>
         <ThemeToggle />
       </div>
 
