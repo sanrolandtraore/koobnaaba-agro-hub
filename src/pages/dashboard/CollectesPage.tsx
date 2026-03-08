@@ -55,6 +55,8 @@ type Collecte = {
 
 const CollectesPage = () => {
   const { user } = useAuth();
+  const { isCoopOwner, isCoopAdmin, cooperativeUserId } = useCooperativeRole();
+  const canEdit = isCoopOwner || isCoopAdmin;
   const [collectes, setCollectes] = useState<Collecte[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
