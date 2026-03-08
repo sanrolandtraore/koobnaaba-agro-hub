@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -58,6 +59,7 @@ const LivestockServicesPage = lazy(() => import("./pages/livestock/LivestockServ
 const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
 const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
 const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
+const UserProfilePage = lazy(() => import("./pages/dashboard/UserProfilePage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -77,69 +79,67 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <OfflineIndicator />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/mentions-legales" element={<MentionsLegales />} />
-            <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
-            <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-              <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
-              <Route path="farms" element={<Suspense fallback={<PageLoader />}><FarmsPage /></Suspense>} />
-              <Route path="parcels" element={<Suspense fallback={<PageLoader />}><ParcelsPage /></Suspense>} />
-              <Route path="cycles" element={<Suspense fallback={<PageLoader />}><CropCyclesPage /></Suspense>} />
-              <Route path="planning" element={<Suspense fallback={<PageLoader />}><CropPlanningPage /></Suspense>} />
-              <Route path="activities" element={<Suspense fallback={<PageLoader />}><ActivitiesPage /></Suspense>} />
-              <Route path="costs" element={<Suspense fallback={<PageLoader />}><CostsPage /></Suspense>} />
-              <Route path="investment" element={<Suspense fallback={<PageLoader />}><InvestmentPlanPage /></Suspense>} />
-              <Route path="workers" element={<Suspense fallback={<PageLoader />}><WorkersPage /></Suspense>} />
-              <Route path="equipment" element={<Suspense fallback={<PageLoader />}><EquipmentPage /></Suspense>} />
-              <Route path="harvests" element={<Suspense fallback={<PageLoader />}><HarvestsPage /></Suspense>} />
-              <Route path="calendar" element={<Suspense fallback={<PageLoader />}><CalendarPage /></Suspense>} />
-              <Route path="analytics" element={<Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense>} />
-              <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
-              <Route path="export" element={<Suspense fallback={<PageLoader />}><AgriculteurExportPage /></Suspense>} />
-              <Route path="export-eleveur" element={<Suspense fallback={<PageLoader />}><EleveurExportPage /></Suspense>} />
-              <Route path="export-agent" element={<Suspense fallback={<PageLoader />}><AgentExportPage /></Suspense>} />
-              <Route path="export-partenaire" element={<Suspense fallback={<PageLoader />}><PartenaireExportPage /></Suspense>} />
-              <Route path="members" element={<Suspense fallback={<PageLoader />}><MembersPage /></Suspense>} />
-              <Route path="collectes" element={<Suspense fallback={<PageLoader />}><CollectesPage /></Suspense>} />
-              <Route path="cooperative-export" element={<Suspense fallback={<PageLoader />}><CooperativeExportPage /></Suspense>} />
-              <Route path="cooperative-finance" element={<Suspense fallback={<PageLoader />}><CooperativeFinancePage /></Suspense>} />
-              <Route path="cooperative-profile" element={<Suspense fallback={<PageLoader />}><CooperativeProfilePage /></Suspense>} />
-              <Route path="cooperative-cotisations" element={<Suspense fallback={<PageLoader />}><CooperativeCotisationsPage /></Suspense>} />
-              <Route path="cooperative-parcels" element={<Suspense fallback={<PageLoader />}><CooperativeParcelsPage /></Suspense>} />
-              <Route path="cooperative-equipment" element={<Suspense fallback={<PageLoader />}><CooperativeEquipmentPage /></Suspense>} />
-              <Route path="cooperative-documents" element={<Suspense fallback={<PageLoader />}><CooperativeDocumentsPage /></Suspense>} />
-              <Route path="cooperative-score" element={<Suspense fallback={<PageLoader />}><CooperativeScorePage /></Suspense>} />
-              <Route path="services" element={<Suspense fallback={<PageLoader />}><ServicesPage /></Suspense>} />
-              <Route path="settings" element={<Suspense fallback={<PageLoader />}><RoleSettingsRouter /></Suspense>} />
-              <Route path="partner-profile" element={<Suspense fallback={<PageLoader />}><PartnerProfilePage /></Suspense>} />
-              <Route path="partner-requests" element={<Suspense fallback={<PageLoader />}><PartnerRequestsPage /></Suspense>} />
-              <Route path="expert/requests" element={<Suspense fallback={<PageLoader />}><AgentDashboard /></Suspense>} />
-              <Route path="livestock" element={<Suspense fallback={<PageLoader />}><LivestockDashboardPage /></Suspense>} />
-              <Route path="livestock/animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
-              <Route path="livestock/health" element={<Suspense fallback={<PageLoader />}><AnimalHealthPage /></Suspense>} />
-              <Route path="livestock/reproduction" element={<Suspense fallback={<PageLoader />}><AnimalReproductionPage /></Suspense>} />
-              <Route path="livestock/feeding" element={<Suspense fallback={<PageLoader />}><AnimalFeedingPage /></Suspense>} />
-              <Route path="livestock/finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
-              <Route path="livestock/services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
-              <Route path="pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
-              <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <OfflineIndicator />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/mentions-legales" element={<MentionsLegales />} />
+              <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
+              <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
+                <Route path="farms" element={<Suspense fallback={<PageLoader />}><FarmsPage /></Suspense>} />
+                <Route path="parcels" element={<Suspense fallback={<PageLoader />}><ParcelsPage /></Suspense>} />
+                <Route path="crop-cycles" element={<Suspense fallback={<PageLoader />}><CropCyclesPage /></Suspense>} />
+                <Route path="activities" element={<Suspense fallback={<PageLoader />}><ActivitiesPage /></Suspense>} />
+                <Route path="costs" element={<Suspense fallback={<PageLoader />}><CostsPage /></Suspense>} />
+                <Route path="investment" element={<Suspense fallback={<PageLoader />}><InvestmentPlanPage /></Suspense>} />
+                <Route path="workers" element={<Suspense fallback={<PageLoader />}><WorkersPage /></Suspense>} />
+                <Route path="equipment" element={<Suspense fallback={<PageLoader />}><EquipmentPage /></Suspense>} />
+                <Route path="harvests" element={<Suspense fallback={<PageLoader />}><HarvestsPage /></Suspense>} />
+                <Route path="calendar" element={<Suspense fallback={<PageLoader />}><CalendarPage /></Suspense>} />
+                <Route path="analytics" element={<Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense>} />
+                <Route path="profile" element={<Suspense fallback={<PageLoader />}><UserProfilePage /></Suspense>} />
+                <Route path="crop-planning" element={<Suspense fallback={<PageLoader />}><CropPlanningPage /></Suspense>} />
+                <Route path="services" element={<Suspense fallback={<PageLoader />}><ServicesPage /></Suspense>} />
+                <Route path="settings" element={<Suspense fallback={<PageLoader />}><RoleSettingsRouter /></Suspense>} />
+                <Route path="pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
+                <Route path="members" element={<Suspense fallback={<PageLoader />}><MembersPage /></Suspense>} />
+                <Route path="collectes" element={<Suspense fallback={<PageLoader />}><CollectesPage /></Suspense>} />
+                <Route path="cooperative-profile" element={<Suspense fallback={<PageLoader />}><CooperativeProfilePage /></Suspense>} />
+                <Route path="cooperative-finance" element={<Suspense fallback={<PageLoader />}><CooperativeFinancePage /></Suspense>} />
+                <Route path="cooperative-parcels" element={<Suspense fallback={<PageLoader />}><CooperativeParcelsPage /></Suspense>} />
+                <Route path="cooperative-equipment" element={<Suspense fallback={<PageLoader />}><CooperativeEquipmentPage /></Suspense>} />
+                <Route path="cooperative-documents" element={<Suspense fallback={<PageLoader />}><CooperativeDocumentsPage /></Suspense>} />
+                <Route path="cooperative-cotisations" element={<Suspense fallback={<PageLoader />}><CooperativeCotisationsPage /></Suspense>} />
+                <Route path="cooperative-score" element={<Suspense fallback={<PageLoader />}><CooperativeScorePage /></Suspense>} />
+                <Route path="export" element={<Suspense fallback={<PageLoader />}><AgriculteurExportPage /></Suspense>} />
+                <Route path="animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
+                <Route path="animal-health" element={<Suspense fallback={<PageLoader />}><AnimalHealthPage /></Suspense>} />
+                <Route path="animal-feeding" element={<Suspense fallback={<PageLoader />}><AnimalFeedingPage /></Suspense>} />
+                <Route path="animal-reproduction" element={<Suspense fallback={<PageLoader />}><AnimalReproductionPage /></Suspense>} />
+                <Route path="livestock-dashboard" element={<Suspense fallback={<PageLoader />}><LivestockDashboardPage /></Suspense>} />
+                <Route path="livestock-finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
+                <Route path="livestock-services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
+                <Route path="partner-profile" element={<Suspense fallback={<PageLoader />}><PartnerProfilePage /></Suspense>} />
+                <Route path="partner-requests" element={<Suspense fallback={<PageLoader />}><PartnerRequestsPage /></Suspense>} />
+                <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
+                <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
