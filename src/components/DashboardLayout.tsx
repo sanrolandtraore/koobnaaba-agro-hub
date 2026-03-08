@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import logo from "@/assets/logo.png";
+import VoiceAssistant from "@/components/VoiceAssistant";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
