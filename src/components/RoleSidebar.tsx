@@ -6,9 +6,11 @@ import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
-  FolderOpen, Layers, Award, Store,
+  FolderOpen, Layers, Award, Store, Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useCooperativeRole } from "@/hooks/useCooperativeRole";
 
 export type NavItem = { to: string; label: string; icon: React.ElementType };
 
