@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
+import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
