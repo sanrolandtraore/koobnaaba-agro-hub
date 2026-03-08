@@ -666,6 +666,7 @@ export type Database = {
           full_name: string
           id: string
           joined_date: string
+          linked_user_id: string | null
           livestock_type: string | null
           location: string | null
           member_type: string
@@ -683,6 +684,7 @@ export type Database = {
           full_name: string
           id?: string
           joined_date?: string
+          linked_user_id?: string | null
           livestock_type?: string | null
           location?: string | null
           member_type?: string
@@ -700,6 +702,7 @@ export type Database = {
           full_name?: string
           id?: string
           joined_date?: string
+          linked_user_id?: string | null
           livestock_type?: string | null
           location?: string | null
           member_type?: string
@@ -761,6 +764,7 @@ export type Database = {
           description: string | null
           email: string | null
           id: string
+          invite_code: string | null
           legal_status: string | null
           logo_url: string | null
           name: string
@@ -777,6 +781,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           id?: string
+          invite_code?: string | null
           legal_status?: string | null
           logo_url?: string | null
           name?: string
@@ -793,6 +798,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           id?: string
+          invite_code?: string | null
           legal_status?: string | null
           logo_url?: string | null
           name?: string
@@ -2080,6 +2086,11 @@ export type Database = {
         Args: { _resource: string; _user_id: string }
         Returns: undefined
       }
+      generate_cooperative_invite_code: { Args: never; Returns: string }
+      get_cooperative_owner_for_member: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       get_farm_owner_from_animal: {
         Args: { _animal_id: string }
         Returns: string
@@ -2099,6 +2110,11 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_cooperative_admin: { Args: { _user_id: string }; Returns: boolean }
+      join_cooperative_by_code: {
+        Args: { _invite_code: string }
+        Returns: Json
       }
     }
     Enums: {
