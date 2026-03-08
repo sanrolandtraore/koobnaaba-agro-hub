@@ -14,19 +14,85 @@ import { toast } from "sonner";
 import {
   Plus, Microscope, Bug, Droplets, Tractor, Fish, Egg,
   ClipboardList, MapPin, GraduationCap, Trash2, Clock, CheckCircle, XCircle, Loader2,
+  Sprout, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby, Waves, Mountain, Sun, Home,
+  FileSearch, FileText, Award, Warehouse, Factory, ShoppingBag, QrCode, Users, Salad,
 } from "lucide-react";
 
-const SERVICE_TYPES = [
-  { value: "diagnostic_sol", label: "Diagnostic sol et aménagement", icon: Microscope, desc: "Analyse de la qualité du sol, recommandations d'amendement et plan d'aménagement foncier." },
-  { value: "diagnostic_maladie", label: "Diagnostic maladie et traitement", icon: Bug, desc: "Identification des maladies et ravageurs, prescription de traitements phytosanitaires adaptés." },
-  { value: "irrigation", label: "Installation système d'irrigation", icon: Droplets, desc: "Conception et mise en place de systèmes d'irrigation (goutte-à-goutte, aspersion, gravitaire)." },
-  { value: "ferme_agricole", label: "Mise en place ferme agricole", icon: Tractor, desc: "Accompagnement complet : choix du site, préparation terrain, plan cultural et calendrier." },
-  { value: "etang_piscicole", label: "Mise en place d'étangs piscicoles", icon: Fish, desc: "Conception d'étangs, aménagement hydraulique et conseil en espèces adaptées." },
-  { value: "ferme_volaille", label: "Mise en place ferme volaille", icon: Egg, desc: "Conception du poulailler, choix des races, plan sanitaire et alimentation." },
-  { value: "suivi_exploitation", label: "Planification et suivi d'exploitation", icon: ClipboardList, desc: "Suivi régulier de vos cultures/élevages avec rapports et recommandations." },
-  { value: "cartographie_gps", label: "Mesure et cartographie GPS", icon: MapPin, desc: "Relevés GPS précis de vos parcelles, calcul de superficie et cartographie SIG." },
-  { value: "formation", label: "Formations et conseils", icon: GraduationCap, desc: "Sessions de formation sur les bonnes pratiques agricoles et techniques modernes." },
-] as const;
+const SERVICE_CATEGORIES = [
+  {
+    category: "🌱 Productions végétales",
+    services: [
+      { value: "diagnostic_sol", label: "Diagnostic sol et aménagement", icon: Microscope, desc: "Analyse de la qualité du sol, recommandations d'amendement et plan d'aménagement foncier." },
+      { value: "diagnostic_maladie", label: "Diagnostic maladie et traitement", icon: Bug, desc: "Identification des maladies et ravageurs, prescription de traitements phytosanitaires adaptés." },
+      { value: "lutte_biologique", label: "Lutte biologique intégrée", icon: Bug, desc: "Utilisation d'auxiliaires naturels et méthodes biologiques pour la protection des cultures." },
+      { value: "semences", label: "Sélection et certification semences", icon: Sprout, desc: "Conseil sur le choix variétal, semences améliorées et certification des lots de semences." },
+      { value: "fertilisation", label: "Plan de fertilisation", icon: Sprout, desc: "Élaboration de plans de fertilisation organique et minérale adaptés à vos sols et cultures." },
+      { value: "compostage", label: "Compostage et fumure organique", icon: Leaf, desc: "Techniques de compostage, lombricompostage et valorisation des résidus agricoles." },
+      { value: "maraichage", label: "Maraîchage et cultures horticoles", icon: Salad, desc: "Accompagnement technique en cultures maraîchères : planification, rotations et itinéraires techniques." },
+      { value: "culture_bio", label: "Agriculture biologique", icon: Leaf, desc: "Conversion et conduite de l'agriculture biologique, cahier des charges et bonnes pratiques." },
+      { value: "pepiniere", label: "Pépinière et production de plants", icon: TreePine, desc: "Création de pépinières, multiplication végétative, greffage et production de plants certifiés." },
+      { value: "agroforesterie", label: "Agroforesterie", icon: TreePine, desc: "Association arbres-cultures, haies vives, brise-vents et régénération naturelle assistée." },
+      { value: "protection_cultures", label: "Protection phytosanitaire", icon: Shield, desc: "Programmes de traitement préventif et curatif, gestion intégrée des nuisibles et résistances." },
+    ],
+  },
+  {
+    category: "🐄 Productions animales",
+    services: [
+      { value: "ferme_volaille", label: "Aviculture et ferme volaille", icon: Egg, desc: "Conception du poulailler, choix des races, plan sanitaire et alimentation." },
+      { value: "elevage_bovin", label: "Élevage bovin", icon: Beef, desc: "Conseil en conduite d'élevage bovin : alimentation, reproduction, santé et amélioration génétique." },
+      { value: "elevage_caprin", label: "Élevage caprin et ovin", icon: Beef, desc: "Accompagnement technique pour l'élevage de petits ruminants : embouche, lait et viande." },
+      { value: "nutrition_animale", label: "Nutrition et alimentation animale", icon: Utensils, desc: "Formulation de rations alimentaires équilibrées et gestion des stocks fourragers." },
+      { value: "sante_animale", label: "Santé animale et prophylaxie", icon: Heart, desc: "Plans de vaccination, déparasitage, surveillance épidémiologique et biosécurité." },
+      { value: "insemination", label: "Insémination artificielle", icon: Baby, desc: "Service d'insémination artificielle pour l'amélioration génétique du cheptel." },
+      { value: "etang_piscicole", label: "Pisciculture et aquaculture", icon: Fish, desc: "Conception d'étangs, aménagement hydraulique, choix des espèces et techniques d'élevage." },
+      { value: "apiculture", label: "Apiculture", icon: Bug, desc: "Installation de ruchers, techniques apicoles modernes, récolte et transformation du miel." },
+    ],
+  },
+  {
+    category: "🚜 Aménagement et infrastructure",
+    services: [
+      { value: "ferme_agricole", label: "Mise en place ferme agricole", icon: Tractor, desc: "Accompagnement complet : choix du site, préparation terrain, plan cultural et calendrier." },
+      { value: "irrigation", label: "Système d'irrigation", icon: Droplets, desc: "Conception et mise en place de systèmes d'irrigation (goutte-à-goutte, aspersion, gravitaire)." },
+      { value: "forage", label: "Forage et adduction d'eau", icon: Droplets, desc: "Étude hydrogéologique, forage de puits, adduction et stockage d'eau pour l'exploitation." },
+      { value: "amenagement_bas_fonds", label: "Aménagement de bas-fonds", icon: Waves, desc: "Études topographiques et aménagement de bas-fonds pour la riziculture et le maraîchage." },
+      { value: "conservation_sol", label: "Conservation des sols et eaux", icon: Mountain, desc: "Techniques anti-érosives : zaï, demi-lunes, cordons pierreux, terrasses et diguettes." },
+      { value: "mecanisation", label: "Mécanisation agricole", icon: Tractor, desc: "Conseil en équipements agricoles, motorisation, entretien et réparation du matériel." },
+      { value: "energie_solaire", label: "Énergie solaire agricole", icon: Sun, desc: "Pompage solaire, électrification de fermes et séchage solaire des récoltes." },
+      { value: "serre", label: "Serres et tunnels agricoles", icon: Home, desc: "Conception et installation de serres pour les cultures sous abri et hors-sol." },
+    ],
+  },
+  {
+    category: "📊 Gestion et accompagnement",
+    services: [
+      { value: "suivi_exploitation", label: "Planification et suivi d'exploitation", icon: ClipboardList, desc: "Suivi régulier de vos cultures/élevages avec rapports et recommandations." },
+      { value: "cartographie_gps", label: "Mesure et cartographie GPS", icon: MapPin, desc: "Relevés GPS précis de vos parcelles, calcul de superficie et cartographie SIG." },
+      { value: "audit_exploitation", label: "Audit d'exploitation agricole", icon: FileSearch, desc: "Diagnostic complet de votre exploitation : forces, faiblesses et plan d'amélioration." },
+      { value: "plan_affaires", label: "Business plan agricole", icon: FileText, desc: "Élaboration de plans d'affaires et dossiers de financement pour projets agricoles." },
+      { value: "certification", label: "Certification et labels", icon: Award, desc: "Accompagnement pour l'obtention de certifications bio, commerce équitable et labels qualité." },
+      { value: "analyse_eau", label: "Analyse de la qualité de l'eau", icon: Droplets, desc: "Prélèvement et analyse physico-chimique et bactériologique de l'eau d'irrigation." },
+    ],
+  },
+  {
+    category: "📦 Post-récolte et commercialisation",
+    services: [
+      { value: "stockage", label: "Stockage et conservation", icon: Warehouse, desc: "Techniques de stockage : magasins, silos, sacs hermétiques et lutte contre les ravageurs de stocks." },
+      { value: "transformation", label: "Transformation agroalimentaire", icon: Factory, desc: "Techniques de transformation des produits : séchage, décorticage, mouture, conditionnement." },
+      { value: "commercialisation", label: "Commercialisation et marchés", icon: ShoppingBag, desc: "Stratégies de vente, accès aux marchés, négociation des prix et mise en réseau." },
+      { value: "tracabilite", label: "Traçabilité des produits", icon: QrCode, desc: "Mise en place de systèmes de traçabilité du champ à l'assiette : lots, codes et registres." },
+    ],
+  },
+  {
+    category: "🎓 Formation et renforcement",
+    services: [
+      { value: "formation", label: "Formations techniques", icon: GraduationCap, desc: "Sessions de formation sur les bonnes pratiques agricoles et techniques modernes." },
+      { value: "formation_gestion", label: "Formation en gestion", icon: GraduationCap, desc: "Comptabilité simplifiée, gestion financière de l'exploitation et tenue de cahiers." },
+      { value: "conseil_cooperatif", label: "Conseil aux coopératives", icon: Users, desc: "Structuration, gouvernance, gestion coopérative et mobilisation des membres." },
+      { value: "champ_ecole", label: "Champ école paysan (CEP)", icon: GraduationCap, desc: "Animation de champs écoles pour l'apprentissage pratique en groupe des innovations agricoles." },
+    ],
+  },
+];
+
+const SERVICE_TYPES = SERVICE_CATEGORIES.flatMap(cat => cat.services);
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
   en_attente: { label: "En attente", variant: "secondary", icon: Clock },
@@ -137,28 +203,33 @@ const ServicesPage = () => {
               <DialogTitle className="font-heading">Demander un service technique</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+               <div className="space-y-3">
                 <Label className="font-semibold">Type de service *</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {SERVICE_TYPES.map(({ value, label, icon: Icon, desc }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, service_type: value }))}
-                      className={`flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-all ${
-                        form.service_type === value
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/40 hover:bg-muted/50"
-                      }`}
-                    >
-                      <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${form.service_type === value ? "text-primary" : "text-muted-foreground"}`} />
-                      <div>
-                        <span className="text-sm font-semibold leading-tight block">{label}</span>
-                        <span className="text-[11px] text-muted-foreground leading-tight">{desc}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                {SERVICE_CATEGORIES.map(({ category, services }) => (
+                  <div key={category}>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1.5">{category}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                      {services.map(({ value, label, icon: Icon, desc }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, service_type: value }))}
+                          className={`flex items-start gap-3 rounded-xl border-2 p-2.5 text-left transition-all ${
+                            form.service_type === value
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/40 hover:bg-muted/50"
+                          }`}
+                        >
+                          <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${form.service_type === value ? "text-primary" : "text-muted-foreground"}`} />
+                          <div>
+                            <span className="text-xs font-semibold leading-tight block">{label}</span>
+                            <span className="text-[10px] text-muted-foreground leading-tight">{desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -201,19 +272,26 @@ const ServicesPage = () => {
       {/* Catalogue des services */}
       <div>
         <h2 className="text-lg font-heading font-semibold mb-3">Nos prestations</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SERVICE_TYPES.map(({ value, label, icon: Icon, desc }) => (
-            <Card key={value} className="shadow-sm hover:shadow-warm transition-shadow cursor-pointer" onClick={() => { setForm(f => ({ ...f, service_type: value })); setOpen(true); }}>
-              <CardContent className="flex items-start gap-3 pt-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">{label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="space-y-6">
+          {SERVICE_CATEGORIES.map(({ category, services }) => (
+            <div key={category}>
+              <h3 className="text-base font-heading font-semibold mb-2">{category}</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {services.map(({ value, label, icon: Icon, desc }) => (
+                  <Card key={value} className="shadow-sm hover:shadow-warm transition-shadow cursor-pointer" onClick={() => { setForm(f => ({ ...f, service_type: value })); setOpen(true); }}>
+                    <CardContent className="flex items-start gap-3 pt-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
