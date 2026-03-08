@@ -291,9 +291,11 @@ const MembersPage = () => {
                       {statuses.find(s => s.value === m.status)?.label || m.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
