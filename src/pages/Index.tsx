@@ -61,6 +61,41 @@ const Index = () => {
         </div>
       </section>
 
+      {/* À propos */}
+      <section className="py-20 bg-muted/50">
+        <div className="container max-w-5xl mx-auto px-4">
+          <h2 className="text-3xl font-heading font-bold text-center mb-12">
+            À propos de <span className="text-gradient-warm">KoobNaaba</span>
+          </h2>
+          <div className="grid gap-8 md:grid-cols-2 items-center">
+            <div className="space-y-4">
+              <p className="text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">KoobNaaba</strong> est une startup agritech basée à <strong className="text-foreground">Ouagadougou, Burkina Faso</strong>, dédiée à la modernisation de l'agriculture en Afrique de l'Ouest.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                Notre mission : fournir aux agriculteurs, éleveurs et coopératives des outils numériques simples et accessibles pour gérer leurs exploitations, optimiser leurs rendements et améliorer leurs revenus.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                Fondée par des passionnés du monde rural, notre équipe combine expertise agricole locale et innovation technologique pour répondre aux défis concrets du terrain.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { value: "🌍", label: "Conçu en Afrique, pour l'Afrique" },
+                { value: "📱", label: "Accessible hors connexion" },
+                { value: "🤝", label: "Support coopératives & éleveurs" },
+                { value: "🔒", label: "Données sécurisées" },
+              ].map(({ value, label }) => (
+                <div key={label} className="bg-card rounded-xl p-4 border border-border text-center shadow-sm">
+                  <div className="text-3xl mb-2">{value}</div>
+                  <p className="text-sm font-medium text-foreground">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border bg-muted">
         <div className="container max-w-5xl mx-auto px-4 py-12">
