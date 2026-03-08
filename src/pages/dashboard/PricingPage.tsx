@@ -179,10 +179,10 @@ const PricingPage = () => {
       )}
 
       {submitted && (
-        <Card className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
+        <Card className="border-primary/50 bg-primary/5">
           <CardContent className="py-6 text-center">
-            <Check className="h-10 w-10 text-green-600 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-green-700 dark:text-green-400">Abonnement Premium activé !</h3>
+            <Check className="h-10 w-10 text-primary mx-auto mb-3" />
+            <h3 className="text-lg font-bold text-foreground">Abonnement Premium activé !</h3>
             <p className="text-sm text-muted-foreground mt-1">Rechargez la page pour accéder à toutes les fonctionnalités.</p>
           </CardContent>
         </Card>
