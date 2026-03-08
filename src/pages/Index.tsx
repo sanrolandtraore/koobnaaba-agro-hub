@@ -48,6 +48,8 @@ function useCarousel(length: number, interval = 4000) {
 
 const Index = () => {
   const navigate = useNavigate();
+  const [lang, setLang] = useState<'fr' | 'en'>('fr');
+  const [langOpen, setLangOpen] = useState(false);
   const partnerCarousel = useCarousel(partners.length, 3000);
   const galleryCarousel = useCarousel(galleryItems.length, 5000);
 
