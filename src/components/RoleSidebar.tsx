@@ -33,15 +33,12 @@ export const agriculteurNav: NavItem[] = [
 
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
   { to: "/dashboard/livestock", label: "Tableau élevage", icon: Beef },
   { to: "/dashboard/livestock/animals", label: "Animaux", icon: Beef },
   { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
   { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
   { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
   { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
-  { to: "/dashboard/workers", label: "Main d'œuvre", icon: Users },
-  { to: "/dashboard/equipment", label: "Équipements", icon: Wrench },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
   { to: "/dashboard/profile", label: "Mon Profil", icon: User },
