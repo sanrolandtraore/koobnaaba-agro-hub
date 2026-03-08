@@ -1,15 +1,47 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import { RoleSidebar } from "@/components/RoleSidebar";
+import { RoleSidebar, SidebarNavContent } from "@/components/RoleSidebar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Menu, Sprout } from "lucide-react";
 
 const DashboardLayout = () => {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      {/* Desktop sidebar */}
       <RoleSidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="container max-w-6xl py-6 px-4 md:px-8">
-          <Outlet />
-        </div>
-      </main>
+
+      <div className="flex flex-1 flex-col min-w-0">
+        {/* Mobile header */}
+        <header className="flex md:hidden items-center gap-3 border-b border-border px-4 py-3 bg-sidebar">
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0 text-sidebar-foreground">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0 border-r border-sidebar-border">
+              <SidebarNavContent onNavigate={() => setOpen(false)} />
+            </SheetContent>
+          </Sheet>
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg gradient-warm">
+              <Sprout className="h-4 w-4 text-sidebar-primary-foreground" />
+            </div>
+            <span className="text-base font-heading font-bold text-sidebar-foreground">Koobnaaba</span>
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="container max-w-6xl py-4 px-4 md:py-6 md:px-8">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
