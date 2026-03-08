@@ -3,7 +3,8 @@ import { Outlet } from "react-router-dom";
 import { RoleSidebar, SidebarNavContent } from "@/components/RoleSidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Sprout } from "lucide-react";
+import { Menu } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
