@@ -16,12 +16,10 @@ const Index = () => {
         </div>
         <div className="container max-w-5xl mx-auto px-4 py-20 relative z-10">
           <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl gradient-warm shadow-warm">
-              <Sprout className="h-8 w-8 text-accent-foreground" />
-            </div>
+            <img src={logo} alt="KoobNaaba" className="h-20 w-auto" />
             <h1 className="text-4xl md:text-6xl font-heading font-bold text-primary-foreground leading-tight">
-              Bienvenue sur{" "}
-              <span className="text-gradient-warm">Koobnaaba</span>
+              La gestion agricole,{" "}
+              <span className="text-gradient-warm">enfin facile.</span>
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl">
               La plateforme de gestion agricole intelligente conçue pour les agriculteurs du Burkina Faso. 
