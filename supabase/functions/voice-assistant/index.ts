@@ -36,6 +36,25 @@ serve(async (req) => {
       });
     }
 
+    // Check subscription - AI is premium-only
+    const userId = claimsData.claims.sub as string;
+    const { data: subData } = await supabase
+      .from("user_subscriptions")
+      .select("plan, status, expires_at")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    const isPremium = subData?.plan === "premium" && 
+      (!subData.expires_at || new Date(subData.expires_at) > new Date());
+
+    if (!isPremium) {
+      return new Response(JSON.stringify({ error: "Cette fonctionnalité nécessite un abonnement Premium." }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { transcript, context } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
