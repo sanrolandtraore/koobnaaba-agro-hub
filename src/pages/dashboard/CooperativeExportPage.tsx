@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PremiumGate from "@/components/PremiumGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
