@@ -27,6 +27,7 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/investment", label: "Investissement", icon: Calculator },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
+  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
