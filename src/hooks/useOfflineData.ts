@@ -128,7 +128,7 @@ export function useOfflineData<T = any>({
 
   const deleteRow = useCallback(async (id: string) => {
     if (navigator.onLine) {
-      const { error } = await (supabase.from(table) as any).delete().eq('id', id);
+      const { error } = await (supabase.from(table as any) as any).delete().eq('id', id);
       if (error) {
         toast.error(error.message);
         return false;

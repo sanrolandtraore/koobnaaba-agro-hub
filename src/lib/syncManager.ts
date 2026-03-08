@@ -45,7 +45,7 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
           break;
         }
         case 'delete': {
-          const res = await (supabase.from(item.table) as any).delete().eq('id', item.data.id);
+          const res = await (supabase.from(item.table as any) as any).delete().eq('id', item.data.id);
           error = res.error;
           break;
         }
