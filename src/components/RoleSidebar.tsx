@@ -40,6 +40,7 @@ const eleveurNav: NavItem[] = [
   { to: "/dashboard/workers", label: "Main d'œuvre", icon: Users },
   { to: "/dashboard/equipment", label: "Équipements", icon: Wrench },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
+  { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
