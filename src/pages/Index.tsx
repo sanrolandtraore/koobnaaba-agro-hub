@@ -64,11 +64,8 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border py-8 bg-muted">
         <div className="container max-w-5xl mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sprout className="h-5 w-5 text-primary" />
-            <span className="font-heading font-semibold">Koobnaaba</span>
-          </div>
-          <p className="text-sm text-muted-foreground">© 2026 Koobnaaba. Pour l'agriculture burkinabè.</p>
+          <img src={logo} alt="KoobNaaba" className="h-8 w-auto" />
+          <p className="text-sm text-muted-foreground">© 2026 KoobNaaba. Pour l'agriculture burkinabè.</p>
         </div>
       </footer>
     </div>
