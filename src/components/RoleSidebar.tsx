@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download,
-  Bug, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake,
+  Bug, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +24,7 @@ const agriculteurNav: NavItem[] = [
   { to: "/dashboard/costs", label: "Coûts", icon: DollarSign },
   { to: "/dashboard/investment", label: "Investissement", icon: Calculator },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
+  { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
@@ -39,6 +40,7 @@ const eleveurNav: NavItem[] = [
   { to: "/dashboard/workers", label: "Main d'œuvre", icon: Users },
   { to: "/dashboard/equipment", label: "Équipements", icon: Wrench },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
+  { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
@@ -52,11 +54,7 @@ const cooperativeNav: NavItem[] = [
 
 const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/farms", label: "Exploitations suivies", icon: MapPin },
-  { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin },
-  { to: "/dashboard/cycles", label: "Cycles culturaux", icon: Wheat },
-  { to: "/dashboard/livestock", label: "Élevage", icon: Bug },
-  { to: "/dashboard/calendar", label: "Calendrier", icon: CalendarDays },
+  { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
