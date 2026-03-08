@@ -117,6 +117,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
         full_name: profileForm.full_name,
         phone: profileForm.phone || null,
         country: profileForm.country || null,
+        email: newEmail || null,
       } as any)
       .eq("user_id", user.id);
     setSavingProfile(false);
