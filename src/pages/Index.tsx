@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sprout, MapPin, Wheat, BarChart3, ArrowRight } from "lucide-react";
+import { MapPin, Wheat, BarChart3, ArrowRight } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
