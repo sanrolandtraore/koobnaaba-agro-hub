@@ -110,7 +110,7 @@ export function useOfflineData<T = any>({
 
   const updateRow = useCallback(async (id: string, updates: any) => {
     if (navigator.onLine) {
-      const { error } = await (supabase.from(table) as any).update(updates).eq('id', id);
+      const { error } = await (supabase.from(table as any) as any).update(updates).eq('id', id);
       if (error) {
         toast.error(error.message);
         return false;
