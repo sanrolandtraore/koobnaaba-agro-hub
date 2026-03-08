@@ -11,6 +11,9 @@ import galleryCooperative from "@/assets/gallery/cooperative.jpg";
 import galleryHarvest from "@/assets/gallery/harvest.jpg";
 import galleryDigital from "@/assets/gallery/digital-farming.jpg";
 import galleryIrrigation from "@/assets/gallery/irrigation.jpg";
+import videoHarvest from "@/assets/gallery/harvest-video.mp4";
+import videoLivestock from "@/assets/gallery/livestock-video.mp4";
+import videoIrrigation from "@/assets/gallery/irrigation-video.mp4";
 
 // ── Partner data ──
 const partners = [
@@ -25,13 +28,16 @@ const partners = [
 ];
 
 // ── Gallery data ──
-const galleryItems = [
-  { src: galleryFarmField, title: "Champs de mil au coucher du soleil", desc: "Récolte traditionnelle dans la savane" },
-  { src: galleryLivestock, title: "Élevage bovin au Sahel", desc: "Troupeau en pâturage naturel" },
-  { src: galleryCooperative, title: "Réunion de coopérative", desc: "Producteurs échangeant sur la récolte" },
-  { src: galleryHarvest, title: "Marché de produits frais", desc: "Diversité des cultures locales" },
-  { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain" },
-  { src: galleryIrrigation, title: "Systèmes d'irrigation", desc: "Modernisation des pratiques agricoles" },
+const galleryItems: { src: string; title: string; desc: string; type: "image" | "video" }[] = [
+  { src: galleryFarmField, title: "Champs de mil au coucher du soleil", desc: "Récolte traditionnelle dans la savane", type: "image" },
+  { src: videoHarvest, title: "Récolte en action", desc: "Scènes de récolte sous le soleil doré", type: "video" },
+  { src: galleryLivestock, title: "Élevage bovin au Sahel", desc: "Troupeau en pâturage naturel", type: "image" },
+  { src: videoLivestock, title: "Vie pastorale", desc: "Le quotidien de l'élevage en savane", type: "video" },
+  { src: galleryCooperative, title: "Réunion de coopérative", desc: "Producteurs échangeant sur la récolte", type: "image" },
+  { src: galleryHarvest, title: "Marché de produits frais", desc: "Diversité des cultures locales", type: "image" },
+  { src: videoIrrigation, title: "Irrigation moderne", desc: "Systèmes d'arrosage en fonctionnement", type: "video" },
+  { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain", type: "image" },
+  { src: galleryIrrigation, title: "Systèmes d'irrigation", desc: "Modernisation des pratiques agricoles", type: "image" },
 ];
 
 // ── Auto-scroll carousel hook ──
@@ -240,12 +246,23 @@ const Index = () => {
                 {galleryItems.map((item, i) => (
                   <div key={i} className="flex-shrink-0 w-full relative">
                     <div className="aspect-[16/9] overflow-hidden">
-                      <img
-                        src={item.src}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                        loading={i === 0 ? "eager" : "lazy"}
-                      />
+                      {item.type === "video" ? (
+                        <video
+                          src={item.src}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={item.src}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                          loading={i === 0 ? "eager" : "lazy"}
+                        />
+                      )}
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
