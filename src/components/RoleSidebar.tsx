@@ -173,7 +173,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
             onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              location.pathname === to
+              (to === "/dashboard" ? location.pathname === "/dashboard" : location.pathname.startsWith(to))
                 ? "bg-sidebar-accent text-sidebar-primary"
                 : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             )}
