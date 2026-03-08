@@ -42,7 +42,7 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      <VoiceAssistant />
+      {isPremium && <VoiceAssistant />}
     </div>
   );
 };
