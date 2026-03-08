@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download,
-  Bug, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake,
+  Bug, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
