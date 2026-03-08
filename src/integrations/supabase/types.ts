@@ -1738,6 +1738,7 @@ export type Database = {
           id: string
           locale: string | null
           phone: string | null
+          preferences: Json | null
           updated_at: string
           user_id: string
         }
@@ -1749,6 +1750,7 @@ export type Database = {
           id?: string
           locale?: string | null
           phone?: string | null
+          preferences?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -1760,6 +1762,7 @@ export type Database = {
           id?: string
           locale?: string | null
           phone?: string | null
+          preferences?: Json | null
           updated_at?: string
           user_id?: string
         }

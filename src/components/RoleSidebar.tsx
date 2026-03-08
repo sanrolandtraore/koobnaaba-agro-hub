@@ -4,7 +4,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
-  Users, Wrench, Package, CalendarDays, BarChart3, Download,
+  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award,
 } from "lucide-react";
@@ -27,7 +27,7 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/investment", label: "Investissement", icon: Calculator },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
-  { to: "/dashboard/profile", label: "Mon Profil", icon: User },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
@@ -41,7 +41,7 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
-  { to: "/dashboard/profile", label: "Mon Profil", icon: User },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
 ];
 
@@ -56,6 +56,7 @@ export const cooperativeNav: NavItem[] = [
   { to: "/dashboard/cooperative-equipment", label: "Mécanisation", icon: Wrench },
   { to: "/dashboard/cooperative-documents", label: "Documents", icon: FolderOpen },
   { to: "/dashboard/cooperative-score", label: "Score coopérative", icon: Award },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
 ];
 
@@ -63,6 +64,7 @@ export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export-agent", label: "Export", icon: Download },
 ];
 
@@ -72,7 +74,7 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
-  { to: "/dashboard/profile", label: "Mon Compte", icon: User },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export-partenaire", label: "Rapports", icon: Download },
 ];
 

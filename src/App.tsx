@@ -35,12 +35,12 @@ import CooperativeParcelsPage from "./pages/dashboard/CooperativeParcelsPage";
 import CooperativeEquipmentPage from "./pages/dashboard/CooperativeEquipmentPage";
 import CooperativeDocumentsPage from "./pages/dashboard/CooperativeDocumentsPage";
 import CooperativeScorePage from "./pages/dashboard/CooperativeScorePage";
-import UserProfilePage from "./pages/dashboard/UserProfilePage";
 import PartnerProfilePage from "./pages/dashboard/PartnerProfilePage";
 import PartnerRequestsPage from "./pages/dashboard/PartnerRequestsPage";
 import CropPlanningPage from "./pages/dashboard/CropPlanningPage";
 import ServicesPage from "./pages/dashboard/ServicesPage";
 import AgentDashboard from "./pages/dashboard/AgentDashboard";
+import RoleSettingsRouter from "./pages/dashboard/RoleSettingsRouter";
 import LivestockDashboardPage from "./pages/livestock/LivestockDashboardPage";
 import AnimalsPage from "./pages/livestock/AnimalsPage";
 import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
@@ -91,7 +91,7 @@ const App = () => (
               <Route path="cooperative-documents" element={<CooperativeDocumentsPage />} />
               <Route path="cooperative-score" element={<CooperativeScorePage />} />
               <Route path="services" element={<ServicesPage />} />
-              <Route path="profile" element={<UserProfilePage />} />
+              <Route path="settings" element={<RoleSettingsRouter />} />
               <Route path="partner-profile" element={<PartnerProfilePage />} />
               <Route path="partner-requests" element={<PartnerRequestsPage />} />
               <Route path="expert/requests" element={<AgentDashboard />} />
