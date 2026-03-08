@@ -267,19 +267,26 @@ const ServicesPage = () => {
       {/* Catalogue des services */}
       <div>
         <h2 className="text-lg font-heading font-semibold mb-3">Nos prestations</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SERVICE_TYPES.map(({ value, label, icon: Icon, desc }) => (
-            <Card key={value} className="shadow-sm hover:shadow-warm transition-shadow cursor-pointer" onClick={() => { setForm(f => ({ ...f, service_type: value })); setOpen(true); }}>
-              <CardContent className="flex items-start gap-3 pt-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">{label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="space-y-6">
+          {SERVICE_CATEGORIES.map(({ category, services }) => (
+            <div key={category}>
+              <h3 className="text-base font-heading font-semibold mb-2">{category}</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {services.map(({ value, label, icon: Icon, desc }) => (
+                  <Card key={value} className="shadow-sm hover:shadow-warm transition-shadow cursor-pointer" onClick={() => { setForm(f => ({ ...f, service_type: value })); setOpen(true); }}>
+                    <CardContent className="flex items-start gap-3 pt-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

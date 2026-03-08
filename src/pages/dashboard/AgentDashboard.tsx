@@ -14,19 +14,59 @@ import { toast } from "sonner";
 import {
   ClipboardList, Clock, CheckCircle, Loader2, XCircle,
   Microscope, Bug, Droplets, Tractor, Fish, Egg, MapPin, GraduationCap,
-  BarChart3, Users,
+  BarChart3, Users, Sprout, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby,
+  Waves, Mountain, Sun, Home, FileSearch, FileText, Award, Warehouse, Factory,
+  ShoppingBag, QrCode, Salad,
 } from "lucide-react";
 
 const SERVICE_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
+  // Productions végétales
   diagnostic_sol: { label: "Diagnostic sol et aménagement", icon: Microscope },
   diagnostic_maladie: { label: "Diagnostic maladie et traitement", icon: Bug },
-  irrigation: { label: "Installation système d'irrigation", icon: Droplets },
+  lutte_biologique: { label: "Lutte biologique intégrée", icon: Bug },
+  semences: { label: "Sélection et certification semences", icon: Sprout },
+  fertilisation: { label: "Plan de fertilisation", icon: Sprout },
+  compostage: { label: "Compostage et fumure organique", icon: Leaf },
+  maraichage: { label: "Maraîchage et cultures horticoles", icon: Salad },
+  culture_bio: { label: "Agriculture biologique", icon: Leaf },
+  pepiniere: { label: "Pépinière et production de plants", icon: TreePine },
+  agroforesterie: { label: "Agroforesterie", icon: TreePine },
+  protection_cultures: { label: "Protection phytosanitaire", icon: Shield },
+  // Productions animales
+  ferme_volaille: { label: "Aviculture et ferme volaille", icon: Egg },
+  elevage_bovin: { label: "Élevage bovin", icon: Beef },
+  elevage_caprin: { label: "Élevage caprin et ovin", icon: Beef },
+  nutrition_animale: { label: "Nutrition et alimentation animale", icon: Utensils },
+  sante_animale: { label: "Santé animale et prophylaxie", icon: Heart },
+  insemination: { label: "Insémination artificielle", icon: Baby },
+  etang_piscicole: { label: "Pisciculture et aquaculture", icon: Fish },
+  apiculture: { label: "Apiculture", icon: Bug },
+  // Aménagement et infrastructure
   ferme_agricole: { label: "Mise en place ferme agricole", icon: Tractor },
-  etang_piscicole: { label: "Mise en place d'étangs piscicoles", icon: Fish },
-  ferme_volaille: { label: "Mise en place ferme volaille", icon: Egg },
+  irrigation: { label: "Système d'irrigation", icon: Droplets },
+  forage: { label: "Forage et adduction d'eau", icon: Droplets },
+  amenagement_bas_fonds: { label: "Aménagement de bas-fonds", icon: Waves },
+  conservation_sol: { label: "Conservation des sols et eaux", icon: Mountain },
+  mecanisation: { label: "Mécanisation agricole", icon: Tractor },
+  energie_solaire: { label: "Énergie solaire agricole", icon: Sun },
+  serre: { label: "Serres et tunnels agricoles", icon: Home },
+  // Gestion et accompagnement
   suivi_exploitation: { label: "Planification et suivi d'exploitation", icon: ClipboardList },
   cartographie_gps: { label: "Mesure et cartographie GPS", icon: MapPin },
-  formation: { label: "Formations et conseils", icon: GraduationCap },
+  audit_exploitation: { label: "Audit d'exploitation agricole", icon: FileSearch },
+  plan_affaires: { label: "Business plan agricole", icon: FileText },
+  certification: { label: "Certification et labels", icon: Award },
+  analyse_eau: { label: "Analyse de la qualité de l'eau", icon: Droplets },
+  // Post-récolte et commercialisation
+  stockage: { label: "Stockage et conservation", icon: Warehouse },
+  transformation: { label: "Transformation agroalimentaire", icon: Factory },
+  commercialisation: { label: "Commercialisation et marchés", icon: ShoppingBag },
+  tracabilite: { label: "Traçabilité des produits", icon: QrCode },
+  // Formation
+  formation: { label: "Formations techniques", icon: GraduationCap },
+  formation_gestion: { label: "Formation en gestion", icon: GraduationCap },
+  conseil_cooperatif: { label: "Conseil aux coopératives", icon: Users },
+  champ_ecole: { label: "Champ école paysan (CEP)", icon: GraduationCap },
 };
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
