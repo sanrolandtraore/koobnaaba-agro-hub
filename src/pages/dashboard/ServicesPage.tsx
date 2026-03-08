@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   Plus, Microscope, Bug, Droplets, Tractor, Fish, Egg,
   ClipboardList, MapPin, GraduationCap, Trash2, Clock, CheckCircle, XCircle, Loader2,
-  Sprout, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby, Waves, Mountain, Sun, Home,
+  Wheat, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby, Waves, Mountain, Sun, Home,
   FileSearch, FileText, Award, Warehouse, Factory, ShoppingBag, QrCode, Users, Salad,
 } from "lucide-react";
 
