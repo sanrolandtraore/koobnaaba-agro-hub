@@ -122,17 +122,12 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-warm shrink-0">
-          <Sprout className="h-5 w-5 text-sidebar-primary-foreground" />
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-lg font-heading font-bold text-sidebar-foreground leading-tight">Koobnaaba</span>
-          <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
-            <RoleIcon className="h-3 w-3" />
-            {roleLabels[primaryRole || "agriculteur"]}
-          </span>
-        </div>
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-sidebar-border">
+        <img src={logo} alt="KoobNaaba" className="h-10 w-auto shrink-0" />
+        <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
+          <RoleIcon className="h-3 w-3" />
+          {roleLabels[primaryRole || "agriculteur"]}
+        </span>
       </div>
 
       {/* Nav */}
