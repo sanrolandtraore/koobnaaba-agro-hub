@@ -25,6 +25,7 @@ import MembersPage from "./pages/dashboard/MembersPage";
 import CollectesPage from "./pages/dashboard/CollectesPage";
 import CooperativeExportPage from "./pages/dashboard/CooperativeExportPage";
 import CooperativeFinancePage from "./pages/dashboard/CooperativeFinancePage";
+import CropPlanningPage from "./pages/dashboard/CropPlanningPage";
 import LivestockDashboardPage from "./pages/livestock/LivestockDashboardPage";
 import AnimalsPage from "./pages/livestock/AnimalsPage";
 import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="farms" element={<FarmsPage />} />
               <Route path="parcels" element={<ParcelsPage />} />
               <Route path="cycles" element={<CropCyclesPage />} />
+              <Route path="planning" element={<CropPlanningPage />} />
               <Route path="activities" element={<ActivitiesPage />} />
               <Route path="costs" element={<CostsPage />} />
               <Route path="investment" element={<InvestmentPlanPage />} />
