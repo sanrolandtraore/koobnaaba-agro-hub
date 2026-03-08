@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
-  Settings, User, Lock, Bell, Palette, Globe, Trash2, Upload, Save, Camera, Eye, EyeOff,
+  Settings, User, Lock, Bell, Palette, Globe, Trash2, Upload, Save, Camera, Eye, EyeOff, Mail, Loader2,
 } from "lucide-react";
 
 const AFRICAN_COUNTRIES = [
