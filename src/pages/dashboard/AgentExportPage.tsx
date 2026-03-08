@@ -39,6 +39,7 @@ const AgentExportPage = () => {
   };
 
   return (
+    <PremiumGate feature="export">
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold">Export — Expert Agronome</h1>
