@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Lock, User, Wheat, Bug, Users, Compass, Handshake, Phone, ArrowLeft, KeyRound } from "lucide-react";
+import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
@@ -15,7 +15,6 @@ const ROLES = [
   { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Gestion de cultures et parcelles" },
   { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Gestion d'élevage et troupeaux" },
   { value: "cooperative", label: "Coopérative", icon: Users, desc: "Gestion de membres et collectes" },
-  { value: "agent_technique", label: "Expert Agronome", icon: Compass, desc: "Services techniques terrain" },
   { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Financement et accompagnement" },
 ] as const;
 
@@ -106,7 +105,7 @@ const Auth = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetIdentifier.trim() || !resetName.trim()) { toast.error("Veuillez remplir tous les champs"); return; }
-    if (newPassword.length < 6) { toast.error("Le mot de passe doit contenir au moins 6 caractères"); return; }
+    if (newPassword.length < 8) { toast.error("Le mot de passe doit contenir au moins 8 caractères"); return; }
     if (newPassword !== confirmPassword) { toast.error("Les mots de passe ne correspondent pas"); return; }
 
     setLoading(true);
@@ -160,11 +159,11 @@ const Auth = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
-                <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+                <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
-                <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+                <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
               </div>
               <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
                 {loading ? "Chargement..." : "Réinitialiser le mot de passe"}
@@ -237,7 +236,7 @@ const Auth = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Mot de passe</Label>
-                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
                 </div>
 
                 <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>

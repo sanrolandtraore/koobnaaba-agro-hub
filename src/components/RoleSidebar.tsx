@@ -18,8 +18,8 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
   { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin },
-  { to: "/dashboard/planning", label: "Planification", icon: Calculator },
-  { to: "/dashboard/cycles", label: "Cycles culturaux", icon: Wheat },
+  { to: "/dashboard/crop-planning", label: "Planification", icon: Calculator },
+  { to: "/dashboard/crop-cycles", label: "Cycles culturaux", icon: Wheat },
   { to: "/dashboard/activities", label: "Activités", icon: Activity },
   { to: "/dashboard/harvests", label: "Récoltes & Lots", icon: Package },
   { to: "/dashboard/calendar", label: "Calendrier", icon: CalendarDays },
@@ -37,18 +37,18 @@ export const agriculteurNav: NavItem[] = [
 
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/livestock", label: "Tableau élevage", icon: Beef },
-  { to: "/dashboard/livestock/animals", label: "Animaux", icon: Beef },
-  { to: "/dashboard/livestock/health", label: "Santé", icon: Heart },
-  { to: "/dashboard/livestock/reproduction", label: "Reproduction", icon: Baby },
-  { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
-  { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
+  { to: "/dashboard/livestock-dashboard", label: "Tableau élevage", icon: Beef },
+  { to: "/dashboard/animals", label: "Animaux", icon: Beef },
+  { to: "/dashboard/animal-health", label: "Santé", icon: Heart },
+  { to: "/dashboard/animal-reproduction", label: "Reproduction", icon: Baby },
+  { to: "/dashboard/animal-feeding", label: "Alimentation", icon: Utensils },
+  { to: "/dashboard/livestock-finance", label: "Comptabilité", icon: Wallet },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
-  { to: "/dashboard/livestock/services", label: "Services Vétérinaires", icon: ClipboardList },
+  { to: "/dashboard/livestock-services", label: "Services Vétérinaires", icon: ClipboardList },
   { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
+  { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
 export const cooperativeNav: NavItem[] = [
@@ -64,17 +64,17 @@ export const cooperativeNav: NavItem[] = [
   { to: "/dashboard/cooperative-score", label: "Score coopérative", icon: Award },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/cooperative-export", label: "Export PDF/CSV", icon: Download },
+  { to: "/dashboard/export", label: "Export PDF/CSV", icon: Download },
 ];
 
 export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
+  { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export-agent", label: "Export", icon: Download },
+  { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
 export const partenaireNav: NavItem[] = [
@@ -86,7 +86,7 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export-partenaire", label: "Rapports", icon: Download },
+  { to: "/dashboard/export", label: "Rapports", icon: Download },
 ];
 
 const fullNav: NavItem[] = [...agriculteurNav];
@@ -173,7 +173,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
             onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              location.pathname === to
+              (to === "/dashboard" ? location.pathname === "/dashboard" : location.pathname.startsWith(to))
                 ? "bg-sidebar-accent text-sidebar-primary"
                 : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             )}
@@ -186,12 +186,16 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3 mb-3">
+        <Link
+          to="/dashboard/profile"
+          onClick={onNavigate}
+          className="flex items-center gap-3 mb-3 rounded-lg px-2 py-2 hover:bg-sidebar-accent transition-colors"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent shrink-0">
             <User className="h-4 w-4 text-sidebar-accent-foreground" />
           </div>
           <span className="text-sm font-medium truncate">{profile?.full_name || "Utilisateur"}</span>
-        </div>
+        </Link>
         <Button
           variant="ghost"
           size="sm"
