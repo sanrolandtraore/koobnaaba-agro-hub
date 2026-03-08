@@ -40,7 +40,7 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
         }
         case 'update': {
           const { id, ...updateData } = item.data;
-          const res = await (supabase.from(item.table) as any).update(updateData).eq('id', id);
+          const res = await (supabase.from(item.table as any) as any).update(updateData).eq('id', id);
           error = res.error;
           break;
         }
