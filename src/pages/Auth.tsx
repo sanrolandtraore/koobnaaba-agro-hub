@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Lock, User, Wheat, Bug, Users, Compass, Handshake } from "lucide-react";
+import { Mail, Lock, User, Wheat, Bug, Users, Compass, Handshake, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
@@ -18,8 +18,15 @@ const ROLES = [
   { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Financement et accompagnement" },
 ] as const;
 
+/** Convert phone to a synthetic email for Supabase auth */
+const phoneToEmail = (phone: string) => {
+  const cleaned = phone.replace(/[^0-9+]/g, "");
+  return `${cleaned}@koobnaaba.local`;
+};
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -30,12 +37,20 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!phone.trim()) {
+      toast.error("Le numéro de téléphone est requis");
+      return;
+    }
     setLoading(true);
 
+    const authEmail = phoneToEmail(phone);
+
     if (isLogin) {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(authEmail, password);
       if (error) {
-        toast.error(error.message);
+        toast.error(error.message === "Invalid login credentials"
+          ? "Numéro ou mot de passe incorrect"
+          : error.message);
       } else {
         toast.success("Connexion réussie !");
         navigate("/dashboard");
@@ -46,11 +61,16 @@ const Auth = () => {
         setLoading(false);
         return;
       }
-      const { error } = await signUp(email, password, fullName, selectedRole);
+      const { error } = await signUp(authEmail, password, fullName, selectedRole, phone, email);
       if (error) {
-        toast.error(error.message);
+        if (error.message?.includes("already registered")) {
+          toast.error("Ce numéro de téléphone est déjà utilisé pour ce profil. Essayez de vous connecter.");
+        } else {
+          toast.error(error.message);
+        }
       } else {
-        toast.success("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
+        toast.success("Inscription réussie ! Vous pouvez maintenant vous connecter.");
+        setIsLogin(true);
       }
     }
     setLoading(false);
@@ -66,7 +86,7 @@ const Auth = () => {
             <span className="text-gradient-warm">KoobNaaba</span>
           </CardTitle>
           <CardDescription>
-            {isLogin ? "Connectez-vous à votre espace" : "Choisissez votre profil et créez votre compte"}
+            {isLogin ? "Connectez-vous avec votre numéro de téléphone" : "Choisissez votre profil et créez votre compte"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -110,18 +130,32 @@ const Auth = () => {
               </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" /> Email
+              <Label htmlFor="phone" className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone
               </Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre@email.com"
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+226 70 00 00 00"
                 required
               />
             </div>
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" /> Email <span className="text-xs text-muted-foreground">(optionnel)</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="votre@email.com"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password" className="flex items-center gap-2">
                 <Lock className="h-4 w-4 text-muted-foreground" /> Mot de passe

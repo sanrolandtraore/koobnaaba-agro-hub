@@ -6,10 +6,10 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  profile: { full_name: string; phone: string | null; avatar_url: string | null } | null;
+  profile: { full_name: string; phone: string | null; email: string | null; avatar_url: string | null } | null;
   roles: string[];
   primaryRole: string | null;
-  signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
@@ -27,10 +27,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, phone, avatar_url")
+      .select("full_name, phone, email, avatar_url")
       .eq("user_id", userId)
       .single();
-    if (data) setProfile(data);
+    if (data) setProfile(data as any);
   };
 
   const fetchRoles = async (userId: string) => {
@@ -72,12 +72,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, role: role || "agriculteur" },
+        data: {
+          full_name: fullName,
+          role: role || "agriculteur",
+          phone: phone || "",
+          real_email: realEmail || "",
+        },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -99,7 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const hasRole = (role: string) => roles.includes(role);
 
-  // Primary role: first non-legacy role, or first role
   const primaryRole = roles.length > 0 ? roles[0] : null;
 
   return (
