@@ -54,6 +54,7 @@ const LivestockFinancePage = lazy(() => import("./pages/livestock/LivestockFinan
 const LivestockServicesPage = lazy(() => import("./pages/livestock/LivestockServicesPage"));
 const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
 const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
+const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
