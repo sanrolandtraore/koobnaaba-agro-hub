@@ -24,10 +24,10 @@ const DashboardHome = () => {
         supabase.from("farms").select("id", { count: "exact", head: true }),
         supabase.from("parcels").select("id", { count: "exact", head: true }),
         supabase.from("crop_cycles").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("cost_entries").select("amount"),
+        supabase.rpc("get_user_total_costs", { _user_id: user!.id }),
         supabase.from("activity_logs").select("*").order("created_at", { ascending: false }).limit(5),
       ]);
-      const totalCosts = costsRes.data?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+      const totalCosts = typeof costsRes.data === "number" ? costsRes.data : 0;
       setStats({
         farms: farmsRes.count || 0,
         parcels: parcelsRes.count || 0,

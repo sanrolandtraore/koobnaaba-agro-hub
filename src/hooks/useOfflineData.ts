@@ -56,7 +56,7 @@ export function useOfflineData<T = any>({
             query = query.eq(f.column, f.value);
           }
         }
-        query = query.order(orderBy, { ascending });
+        query = query.order(orderBy, { ascending }).limit(limit);
 
         const { data: result, error } = await query;
         if (error) throw error;
