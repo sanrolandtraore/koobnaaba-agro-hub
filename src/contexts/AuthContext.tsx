@@ -73,14 +73,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
-    // Note: role is passed for UI purposes but the DB trigger ignores it
-    // and always assigns 'agriculteur'. Privileged roles are assigned by admins only.
+    // Only safe roles (agriculteur, eleveur, cooperative, partenaire) are accepted
+    // by the DB trigger. Privileged roles (admin, agent_technique) are blocked server-side.
+    const safeRole = role && ['agriculteur', 'eleveur', 'cooperative', 'partenaire'].includes(role) ? role : 'agriculteur';
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          role: safeRole,
           phone: phone || "",
           real_email: realEmail || "",
         },
