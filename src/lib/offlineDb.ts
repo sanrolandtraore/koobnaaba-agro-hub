@@ -111,6 +111,39 @@ export async function getSyncQueueCount(): Promise<number> {
   return db.count('syncQueue');
 }
 
+// ── Offline session ──
+
+const SESSION_KEY = 'offline-session';
+
+export interface OfflineSession {
+  userId: string;
+  email: string;
+  fullName: string;
+  roles: string[];
+  profile: { full_name: string; phone: string | null; email: string | null; avatar_url: string | null };
+  savedAt: number;
+}
+
+export async function saveOfflineSession(session: OfflineSession): Promise<void> {
+  const db = await getDb();
+  await db.put('cachedData', { key: SESSION_KEY, table: '_session', data: [session], cachedAt: Date.now() });
+}
+
+export async function getOfflineSession(): Promise<OfflineSession | null> {
+  const db = await getDb();
+  const entry = await db.get('cachedData', SESSION_KEY);
+  if (!entry?.data?.[0]) return null;
+  const session = entry.data[0] as OfflineSession;
+  // Expire after 30 days
+  if (Date.now() - session.savedAt > 30 * 24 * 60 * 60 * 1000) return null;
+  return session;
+}
+
+export async function clearOfflineSession(): Promise<void> {
+  const db = await getDb();
+  await db.delete('cachedData', SESSION_KEY);
+}
+
 // ── Optimistic local cache update ──
 
 export async function applyOptimisticInsert(table: string, queryKey: string, newRow: any): Promise<void> {

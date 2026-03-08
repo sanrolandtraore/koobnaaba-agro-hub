@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { saveOfflineSession, getOfflineSession, clearOfflineSession } from "@/lib/offlineDb";
 
 interface AuthContextType {
   user: User | null;
@@ -9,6 +10,7 @@ interface AuthContextType {
   profile: { full_name: string; phone: string | null; email: string | null; avatar_url: string | null } | null;
   roles: string[];
   primaryRole: string | null;
+  isOfflineSession: boolean;
   signUp: (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -23,6 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<string[]>([]);
+  const [isOfflineSession, setIsOfflineSession] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -31,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .single();
     if (data) setProfile(data as any);
+    return data;
   };
 
   const fetchRoles = async (userId: string) => {
@@ -38,7 +42,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
-    if (data) setRoles(data.map((r) => r.role));
+    const r = data ? data.map((r) => r.role) : [];
+    if (data) setRoles(r);
+    return r;
+  };
+
+  // Cache session for offline use
+  const cacheSession = async (userId: string, email: string, profileData: any, rolesData: string[]) => {
+    try {
+      await saveOfflineSession({
+        userId,
+        email: email || '',
+        fullName: profileData?.full_name || '',
+        roles: rolesData,
+        profile: profileData || { full_name: '', phone: null, email: null, avatar_url: null },
+        savedAt: Date.now(),
+      });
+    } catch (e) {
+      console.warn('Failed to cache offline session:', e);
+    }
+  };
+
+  // Try to restore offline session when no network
+  const tryOfflineRestore = async () => {
+    if (navigator.onLine) return false;
+    try {
+      const cached = await getOfflineSession();
+      if (cached) {
+        // Create a minimal user-like object for offline mode
+        setUser({ id: cached.userId, email: cached.email } as User);
+        setProfile(cached.profile);
+        setRoles(cached.roles);
+        setIsOfflineSession(true);
+        return true;
+      }
+    } catch (e) {
+      console.warn('Failed to restore offline session:', e);
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -46,10 +87,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setIsOfflineSession(false);
         if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            fetchRoles(session.user.id);
+          setTimeout(async () => {
+            const p = await fetchProfile(session.user.id);
+            const r = await fetchRoles(session.user.id);
+            await cacheSession(session.user.id, session.user.email || '', p, r);
           }, 0);
         } else {
           setProfile(null);
@@ -59,22 +102,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        fetchRoles(session.user.id);
+        const p = await fetchProfile(session.user.id);
+        const r = await fetchRoles(session.user.id);
+        await cacheSession(session.user.id, session.user.email || '', p, r);
+        setLoading(false);
+      } else {
+        // No online session — try offline restore
+        const restored = await tryOfflineRestore();
+        if (!restored) {
+          setProfile(null);
+          setRoles([]);
+        }
+        setLoading(false);
+      }
+    }).catch(async () => {
+      // Network error — try offline
+      const restored = await tryOfflineRestore();
+      if (!restored) {
+        setProfile(null);
+        setRoles([]);
       }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for coming back online to re-validate
+    const handleOnline = () => {
+      if (isOfflineSession) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            setSession(session);
+            setUser(session.user);
+            setIsOfflineSession(false);
+            fetchProfile(session.user.id);
+            fetchRoles(session.user.id);
+          }
+        });
+      }
+    };
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('online', handleOnline);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
-    // Only safe roles (agriculteur, eleveur, cooperative, partenaire) are accepted
-    // by the DB trigger. Privileged roles (admin, agent_technique) are blocked server-side.
     const safeRole = role && ['agriculteur', 'eleveur', 'cooperative', 'partenaire'].includes(role) ? role : 'agriculteur';
     const { error } = await supabase.auth.signUp({
       email,
@@ -98,19 +175,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try { await supabase.auth.signOut(); } catch {}
+    await clearOfflineSession();
     setUser(null);
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setIsOfflineSession(false);
   };
 
   const hasRole = (role: string) => roles.includes(role);
-
   const primaryRole = roles.length > 0 ? roles[0] : null;
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, signUp, signIn, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, isOfflineSession, signUp, signIn, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );
