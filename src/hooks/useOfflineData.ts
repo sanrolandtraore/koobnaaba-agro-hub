@@ -48,7 +48,7 @@ export function useOfflineData<T = any>({
 
     if (navigator.onLine) {
       try {
-        let query = (supabase.from(table) as any).select(select);
+        let query = (supabase.from(table as any) as any).select(select);
         if (filter) {
           for (const f of filter) {
             query = query.eq(f.column, f.value);
