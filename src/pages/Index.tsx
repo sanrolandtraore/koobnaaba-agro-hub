@@ -22,7 +22,7 @@ const Index = () => {
               <span className="text-gradient-warm">enfin facile.</span>
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl">
-              La plateforme de gestion agricole intelligente conçue pour les agriculteurs du Burkina Faso. 
+              La plateforme de gestion agricole intelligente conçue pour les agriculteurs africains. 
               Gérez vos exploitations, suivez vos cultures et optimisez vos rendements.
             </p>
             <div className="flex gap-4 flex-wrap justify-center">
