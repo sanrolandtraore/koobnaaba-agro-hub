@@ -1616,6 +1616,113 @@ export type Database = {
           },
         ]
       }
+      marketplace_orders: {
+        Row: {
+          amount: number
+          client_id: string
+          client_notes: string | null
+          completed_at: string | null
+          created_at: string
+          escrow_status: string
+          id: string
+          provider_id: string
+          provider_proof: string | null
+          provider_proof_images: string[] | null
+          released_at: string | null
+          service_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          client_id: string
+          client_notes?: string | null
+          completed_at?: string | null
+          created_at?: string
+          escrow_status?: string
+          id?: string
+          provider_id: string
+          provider_proof?: string | null
+          provider_proof_images?: string[] | null
+          released_at?: string | null
+          service_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string
+          client_notes?: string | null
+          completed_at?: string | null
+          created_at?: string
+          escrow_status?: string
+          id?: string
+          provider_id?: string
+          provider_proof?: string | null
+          provider_proof_images?: string[] | null
+          released_at?: string | null
+          service_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_orders_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_services: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean
+          location_name: string | null
+          phone: string | null
+          price: number
+          price_unit: string
+          provider_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean
+          location_name?: string | null
+          phone?: string | null
+          price?: number
+          price_unit?: string
+          provider_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean
+          location_name?: string | null
+          phone?: string | null
+          price?: number
+          price_unit?: string
+          provider_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       parcels: {
         Row: {
           area_ha: number
