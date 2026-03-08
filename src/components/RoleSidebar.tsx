@@ -40,7 +40,7 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/livestock/feeding", label: "Alimentation", icon: Utensils },
   { to: "/dashboard/livestock/finance", label: "Comptabilité", icon: Wallet },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
-  { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
+  { to: "/dashboard/livestock/services", label: "Services Vétérinaires", icon: ClipboardList },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export-eleveur", label: "Export", icon: Download },
 ];

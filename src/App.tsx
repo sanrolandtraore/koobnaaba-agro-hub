@@ -102,6 +102,7 @@ const App = () => (
               <Route path="livestock/reproduction" element={<AnimalReproductionPage />} />
               <Route path="livestock/feeding" element={<AnimalFeedingPage />} />
               <Route path="livestock/finance" element={<LivestockFinancePage />} />
+              <Route path="livestock/services" element={<LivestockServicesPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
