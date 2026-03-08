@@ -152,6 +152,8 @@ const MembersPage = () => {
       toast.success("Code copié !");
     }
   };
+
+  const filtered = members.filter(m => {
     const matchSearch = m.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (m.phone || "").includes(search) || (m.location || "").toLowerCase().includes(search.toLowerCase());
     const matchType = filterType === "all" || m.member_type === filterType;
