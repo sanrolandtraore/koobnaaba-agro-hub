@@ -47,6 +47,7 @@ import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
 import AnimalReproductionPage from "./pages/livestock/AnimalReproductionPage";
 import AnimalFeedingPage from "./pages/livestock/AnimalFeedingPage";
 import LivestockFinancePage from "./pages/livestock/LivestockFinancePage";
+import LivestockServicesPage from "./pages/livestock/LivestockServicesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
