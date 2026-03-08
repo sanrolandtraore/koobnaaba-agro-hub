@@ -138,8 +138,12 @@ interface SidebarContentProps {
 export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   const { profile, signOut, primaryRole } = useAuth();
   const location = useLocation();
-  const nav = getNavForRole(primaryRole);
-  const RoleIcon = roleIcons[primaryRole || "agriculteur"] || Wheat;
+  const { isCoopMember, isReadOnly, memberRole } = useCooperativeRole();
+
+  // If user is a cooperative member, show cooperative nav
+  const effectiveRole = isCoopMember ? "cooperative" : primaryRole;
+  const nav = getNavForRole(effectiveRole);
+  const RoleIcon = roleIcons[effectiveRole || "agriculteur"] || Wheat;
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
