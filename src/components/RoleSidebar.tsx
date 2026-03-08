@@ -75,7 +75,7 @@ const roleLabels: Record<string, string> = {
   agriculteur: "Agriculteur",
   eleveur: "Éleveur",
   cooperative: "Coopérative",
-  agent_technique: "Agent technique",
+  agent_technique: "Expert Agronome",
   partenaire: "Partenaire",
   admin: "Administrateur",
   manager: "Gestionnaire",
