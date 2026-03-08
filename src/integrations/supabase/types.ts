@@ -1729,6 +1729,42 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_limits: {
+        Row: {
+          can_analytics: boolean | null
+          can_export: boolean | null
+          can_use_ai: boolean | null
+          created_at: string
+          id: string
+          max_animals: number | null
+          max_members: number | null
+          max_parcels: number | null
+          plan: string
+        }
+        Insert: {
+          can_analytics?: boolean | null
+          can_export?: boolean | null
+          can_use_ai?: boolean | null
+          created_at?: string
+          id?: string
+          max_animals?: number | null
+          max_members?: number | null
+          max_parcels?: number | null
+          plan?: string
+        }
+        Update: {
+          can_analytics?: boolean | null
+          can_export?: boolean | null
+          can_use_ai?: boolean | null
+          created_at?: string
+          id?: string
+          max_animals?: number | null
+          max_members?: number | null
+          max_parcels?: number | null
+          plan?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1838,6 +1874,45 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          payment_method: string | null
+          payment_reference: string | null
+          plan: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          plan?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          plan?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
