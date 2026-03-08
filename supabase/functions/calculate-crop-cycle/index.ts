@@ -13,7 +13,7 @@ interface GeoJSONPolygon {
 
 // Haversine-based area for a polygon in hectares
 function computePolygonArea(coords: number[][]): number {
-  const R = 6371000; // Earth radius in meters
+  const R = 6371000;
   const toRad = (d: number) => (d * Math.PI) / 180;
   let area = 0;
   const n = coords.length;
@@ -25,7 +25,7 @@ function computePolygonArea(coords: number[][]): number {
     area += dLng * (2 + Math.sin(lat1) + Math.sin(lat2));
   }
   area = Math.abs((area * R * R) / 2);
-  return area / 10000; // m² to ha
+  return area / 10000;
 }
 
 function computePerimeter(coords: number[][]): number {
@@ -50,14 +50,33 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ===== Authenticate the user =====
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Non authentifié" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Non authentifié" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub as string;
+
+    // Service role client for data operations
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -65,6 +84,27 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { crop_cycle_id, parcel_id, geometry } = body;
+
+    // ===== Ownership verification =====
+    if (parcel_id) {
+      const { data: ownerData } = await supabase.rpc("get_farm_owner_from_parcel", { _parcel_id: parcel_id });
+      if (ownerData !== userId) {
+        return new Response(JSON.stringify({ error: "Accès interdit" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (crop_cycle_id) {
+      const { data: ownerData } = await supabase.rpc("get_farm_owner_from_cycle", { _cycle_id: crop_cycle_id });
+      if (ownerData !== userId) {
+        return new Response(JSON.stringify({ error: "Accès interdit" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // ===== 1. If geometry provided, update parcel =====
     if (parcel_id && geometry) {
@@ -148,7 +188,6 @@ Deno.serve(async (req) => {
     const inputRows: any[] = [];
 
     if (inputReqs && typeof inputReqs === "object") {
-      // input_requirements format: { "Engrais NPK": { qty_per_ha: 200, unit: "kg", unit_price: 350 }, ... }
       const inputs = Array.isArray(inputReqs) ? inputReqs : Object.entries(inputReqs).map(([name, v]: [string, any]) => ({
         input_name: name,
         quantity_per_ha: v.qty_per_ha || v.quantity_per_ha || 0,
@@ -156,7 +195,6 @@ Deno.serve(async (req) => {
         unit_price: v.unit_price || 0,
       }));
 
-      // Delete existing inputs for this cycle
       await supabase.from("crop_cycle_inputs").delete().eq("crop_cycle_id", crop_cycle_id);
 
       for (const inp of inputs) {
@@ -180,7 +218,6 @@ Deno.serve(async (req) => {
     }
 
     // ===== 7. Build investment plan =====
-    // Fetch existing cost entries for this cycle
     const { data: costEntries } = await supabase
       .from("cost_entries")
       .select("category, amount")
@@ -203,7 +240,6 @@ Deno.serve(async (req) => {
         ? Math.round(total_investment / crop.avg_price_per_kg)
         : 0;
 
-    // Upsert investment plan
     await supabase
       .from("investment_plans")
       .upsert(
@@ -246,7 +282,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    return new Response(JSON.stringify({ error: "Erreur serveur" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

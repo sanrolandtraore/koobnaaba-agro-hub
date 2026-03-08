@@ -73,13 +73,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
+    // Note: role is passed for UI purposes but the DB trigger ignores it
+    // and always assigns 'agriculteur'. Privileged roles are assigned by admins only.
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
-          role: role || "agriculteur",
           phone: phone || "",
           real_email: realEmail || "",
         },
