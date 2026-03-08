@@ -25,6 +25,7 @@ import MembersPage from "./pages/dashboard/MembersPage";
 import CollectesPage from "./pages/dashboard/CollectesPage";
 import CooperativeExportPage from "./pages/dashboard/CooperativeExportPage";
 import CooperativeFinancePage from "./pages/dashboard/CooperativeFinancePage";
+import CropPlanningPage from "./pages/dashboard/CropPlanningPage";
 import LivestockDashboardPage from "./pages/livestock/LivestockDashboardPage";
 import AnimalsPage from "./pages/livestock/AnimalsPage";
 import AnimalHealthPage from "./pages/livestock/AnimalHealthPage";
