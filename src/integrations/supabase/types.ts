@@ -435,6 +435,50 @@ export type Database = {
           },
         ]
       }
+      cooperative_cotisations: {
+        Row: {
+          amount: number
+          cooperative_user_id: string
+          cotisation_date: string
+          created_at: string
+          id: string
+          member_id: string | null
+          notes: string | null
+          period: string
+          status: string
+        }
+        Insert: {
+          amount?: number
+          cooperative_user_id: string
+          cotisation_date?: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          period?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          cooperative_user_id?: string
+          cotisation_date?: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          period?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooperative_cotisations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "cooperative_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cooperative_distributions: {
         Row: {
           cooperative_user_id: string
@@ -489,9 +533,133 @@ export type Database = {
           },
         ]
       }
+      cooperative_documents: {
+        Row: {
+          cooperative_user_id: string
+          created_at: string
+          description: string | null
+          document_type: string
+          file_url: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          cooperative_user_id: string
+          created_at?: string
+          description?: string | null
+          document_type?: string
+          file_url?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          cooperative_user_id?: string
+          created_at?: string
+          description?: string | null
+          document_type?: string
+          file_url?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      cooperative_equipment_schedule: {
+        Row: {
+          cooperative_user_id: string
+          created_at: string
+          duration_hours: number
+          equipment_name: string
+          equipment_type: string
+          id: string
+          member_id: string | null
+          notes: string | null
+          parcel_id: string | null
+          scheduled_date: string
+          status: string
+        }
+        Insert: {
+          cooperative_user_id: string
+          created_at?: string
+          duration_hours?: number
+          equipment_name: string
+          equipment_type?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          parcel_id?: string | null
+          scheduled_date: string
+          status?: string
+        }
+        Update: {
+          cooperative_user_id?: string
+          created_at?: string
+          duration_hours?: number
+          equipment_name?: string
+          equipment_type?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          parcel_id?: string | null
+          scheduled_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooperative_equipment_schedule_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "cooperative_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cooperative_equipment_schedule_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "cooperative_parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cooperative_expenses: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          category: string
+          cooperative_user_id: string
+          created_at: string
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          amount?: number
+          approved_by?: string | null
+          category?: string
+          cooperative_user_id: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          category?: string
+          cooperative_user_id?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       cooperative_members: {
         Row: {
           area_ha: number | null
+          cooperative_role: string
           cooperative_user_id: string
           created_at: string
           crop_type: string | null
@@ -508,6 +676,7 @@ export type Database = {
         }
         Insert: {
           area_ha?: number | null
+          cooperative_role?: string
           cooperative_user_id: string
           created_at?: string
           crop_type?: string | null
@@ -524,6 +693,7 @@ export type Database = {
         }
         Update: {
           area_ha?: number | null
+          cooperative_role?: string
           cooperative_user_id?: string
           created_at?: string
           crop_type?: string | null
@@ -536,6 +706,99 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cooperative_parcels: {
+        Row: {
+          area_ha: number
+          assigned_members: string[] | null
+          cooperative_user_id: string
+          created_at: string
+          crop_type: string | null
+          id: string
+          location: string | null
+          name: string
+          notes: string | null
+          season: string | null
+          status: string
+        }
+        Insert: {
+          area_ha?: number
+          assigned_members?: string[] | null
+          cooperative_user_id: string
+          created_at?: string
+          crop_type?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          notes?: string | null
+          season?: string | null
+          status?: string
+        }
+        Update: {
+          area_ha?: number
+          assigned_members?: string[] | null
+          cooperative_user_id?: string
+          created_at?: string
+          crop_type?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          notes?: string | null
+          season?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      cooperative_profiles: {
+        Row: {
+          address: string | null
+          cooperative_user_id: string
+          created_at: string
+          creation_date: string | null
+          description: string | null
+          email: string | null
+          id: string
+          legal_status: string | null
+          logo_url: string | null
+          name: string
+          phone: string | null
+          region: string | null
+          registration_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          cooperative_user_id: string
+          created_at?: string
+          creation_date?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          legal_status?: string | null
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          region?: string | null
+          registration_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          cooperative_user_id?: string
+          created_at?: string
+          creation_date?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          legal_status?: string | null
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          region?: string | null
+          registration_number?: string | null
           updated_at?: string
         }
         Relationships: []

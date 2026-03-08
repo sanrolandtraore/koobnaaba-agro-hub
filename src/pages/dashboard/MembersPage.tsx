@@ -21,6 +21,15 @@ const memberTypes = [
   { value: "commercant", label: "Commerçant" },
 ];
 
+const cooperativeRoles = [
+  { value: "president", label: "Président" },
+  { value: "vice_president", label: "Vice-président" },
+  { value: "tresorier", label: "Trésorier" },
+  { value: "secretaire", label: "Secrétaire" },
+  { value: "commissaire", label: "Commissaire aux comptes" },
+  { value: "membre", label: "Membre" },
+];
+
 const cropTypes = [
   "Maïs", "Riz", "Sorgho", "Mil", "Arachide", "Coton", "Soja", "Niébé",
   "Sésame", "Igname", "Manioc", "Patate douce", "Oignon", "Tomate", "Mangue", "Karité",
@@ -48,6 +57,7 @@ type Member = {
   phone: string | null;
   location: string | null;
   member_type: string;
+  cooperative_role: string;
   crop_type: string | null;
   livestock_type: string | null;
   area_ha: number | null;
@@ -65,6 +75,7 @@ const MembersPage = () => {
   const [filterType, setFilterType] = useState("all");
   const [form, setForm] = useState({
     full_name: "", phone: "", location: "", member_type: "producteur",
+    cooperative_role: "membre",
     crop_type: "", livestock_type: "", area_ha: "", status: "actif",
     joined_date: new Date().toISOString().split("T")[0], notes: "",
   });
@@ -90,6 +101,7 @@ const MembersPage = () => {
       phone: form.phone || null,
       location: form.location || null,
       member_type: form.member_type,
+      cooperative_role: form.cooperative_role,
       crop_type: form.crop_type || null,
       livestock_type: form.livestock_type || null,
       area_ha: form.area_ha ? parseFloat(form.area_ha) : 0,
@@ -100,7 +112,7 @@ const MembersPage = () => {
     if (error) { toast.error("Erreur: " + error.message); return; }
     toast.success("Membre ajouté !");
     setOpen(false);
-    setForm({ full_name: "", phone: "", location: "", member_type: "producteur", crop_type: "", livestock_type: "", area_ha: "", status: "actif", joined_date: new Date().toISOString().split("T")[0], notes: "" });
+    setForm({ full_name: "", phone: "", location: "", member_type: "producteur", cooperative_role: "membre", crop_type: "", livestock_type: "", area_ha: "", status: "actif", joined_date: new Date().toISOString().split("T")[0], notes: "" });
     fetchMembers();
   };
 
@@ -167,7 +179,13 @@ const MembersPage = () => {
                     <SelectContent>{livestockTypes.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-              )}
+               )}
+              <div><Label>Rôle dans la coopérative</Label>
+                <Select value={form.cooperative_role} onValueChange={v => setForm(f => ({ ...f, cooperative_role: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{cooperativeRoles.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>Superficie (ha)</Label><Input type="number" step="0.1" value={form.area_ha} onChange={e => setForm(f => ({ ...f, area_ha: e.target.value }))} /></div>
               <div><Label>Date d'adhésion</Label><Input type="date" value={form.joined_date} onChange={e => setForm(f => ({ ...f, joined_date: e.target.value }))} /></div>
               <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
@@ -207,6 +225,7 @@ const MembersPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
+                <TableHead>Rôle coop.</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Région</TableHead>
                 <TableHead>Téléphone</TableHead>
@@ -218,8 +237,9 @@ const MembersPage = () => {
             <TableBody>
               {filtered.map(m => (
                 <TableRow key={m.id}>
-                  <TableCell className="font-medium">{m.full_name}</TableCell>
-                  <TableCell>{memberTypes.find(t => t.value === m.member_type)?.label || m.member_type}</TableCell>
+                   <TableCell className="font-medium">{m.full_name}</TableCell>
+                   <TableCell><Badge variant={m.cooperative_role !== "membre" ? "default" : "outline"}>{cooperativeRoles.find(r => r.value === m.cooperative_role)?.label || m.cooperative_role}</Badge></TableCell>
+                   <TableCell>{memberTypes.find(t => t.value === m.member_type)?.label || m.member_type}</TableCell>
                   <TableCell>{m.location || "—"}</TableCell>
                   <TableCell>{m.phone || "—"}</TableCell>
                   <TableCell>{m.area_ha ? `${m.area_ha} ha` : "—"}</TableCell>

@@ -29,6 +29,12 @@ import MembersPage from "./pages/dashboard/MembersPage";
 import CollectesPage from "./pages/dashboard/CollectesPage";
 import CooperativeExportPage from "./pages/dashboard/CooperativeExportPage";
 import CooperativeFinancePage from "./pages/dashboard/CooperativeFinancePage";
+import CooperativeProfilePage from "./pages/dashboard/CooperativeProfilePage";
+import CooperativeCotisationsPage from "./pages/dashboard/CooperativeCotisationsPage";
+import CooperativeParcelsPage from "./pages/dashboard/CooperativeParcelsPage";
+import CooperativeEquipmentPage from "./pages/dashboard/CooperativeEquipmentPage";
+import CooperativeDocumentsPage from "./pages/dashboard/CooperativeDocumentsPage";
+import CooperativeScorePage from "./pages/dashboard/CooperativeScorePage";
 import CropPlanningPage from "./pages/dashboard/CropPlanningPage";
 import ServicesPage from "./pages/dashboard/ServicesPage";
 import AgentDashboard from "./pages/dashboard/AgentDashboard";
@@ -75,6 +81,12 @@ const App = () => (
               <Route path="collectes" element={<CollectesPage />} />
               <Route path="cooperative-export" element={<CooperativeExportPage />} />
               <Route path="cooperative-finance" element={<CooperativeFinancePage />} />
+              <Route path="cooperative-profile" element={<CooperativeProfilePage />} />
+              <Route path="cooperative-cotisations" element={<CooperativeCotisationsPage />} />
+              <Route path="cooperative-parcels" element={<CooperativeParcelsPage />} />
+              <Route path="cooperative-equipment" element={<CooperativeEquipmentPage />} />
+              <Route path="cooperative-documents" element={<CooperativeDocumentsPage />} />
+              <Route path="cooperative-score" element={<CooperativeScorePage />} />
               <Route path="services" element={<ServicesPage />} />
               <Route path="expert/requests" element={<AgentDashboard />} />
               <Route path="livestock" element={<LivestockDashboardPage />} />
