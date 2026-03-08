@@ -69,12 +69,12 @@ export const cooperativeNav: NavItem[] = [
 
 export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/expert/requests", label: "Demandes reçues", icon: ClipboardList },
+  { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export-agent", label: "Export", icon: Download },
+  { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
 export const partenaireNav: NavItem[] = [
