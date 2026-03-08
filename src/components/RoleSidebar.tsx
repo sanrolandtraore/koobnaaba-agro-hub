@@ -4,7 +4,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
-  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
+  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown, ShoppingBag,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award,
 } from "lucide-react";
@@ -26,6 +26,7 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/costs", label: "Coûts", icon: DollarSign },
   { to: "/dashboard/investment", label: "Investissement", icon: Calculator },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
+  { to: "/dashboard/marketplace", label: "Marketplace", icon: ShoppingBag },
   { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },

@@ -49,6 +49,7 @@ import AnimalFeedingPage from "./pages/livestock/AnimalFeedingPage";
 import LivestockFinancePage from "./pages/livestock/LivestockFinancePage";
 import LivestockServicesPage from "./pages/livestock/LivestockServicesPage";
 import PricingPage from "./pages/dashboard/PricingPage";
+import MarketplacePage from "./pages/dashboard/MarketplacePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="harvests" element={<HarvestsPage />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="marketplace" element={<MarketplacePage />} />
               <Route path="export" element={<AgriculteurExportPage />} />
               <Route path="export-eleveur" element={<EleveurExportPage />} />
               <Route path="export-agent" element={<AgentExportPage />} />
