@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { FileText, FileSpreadsheet, Download } from "lucide-react";
+import { Eye, Download, FileText, Loader2 } from "lucide-react";
+import ExportPreviewTable from "@/components/ExportPreviewTable";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -37,12 +38,8 @@ const flattenRow = (row: any): Record<string, any> => {
   const flat: Record<string, any> = {};
   for (const [k, v] of Object.entries(row)) {
     if (v && typeof v === "object" && !Array.isArray(v)) {
-      for (const [k2, v2] of Object.entries(v as Record<string, any>)) {
-        flat[`${k}_${k2}`] = v2;
-      }
-    } else {
-      flat[k] = v;
-    }
+      for (const [k2, v2] of Object.entries(v as Record<string, any>)) flat[`${k}_${k2}`] = v2;
+    } else flat[k] = v;
   }
   return flat;
 };
@@ -50,32 +47,18 @@ const flattenRow = (row: any): Record<string, any> => {
 const AgriculteurExportPage = () => {
   const [selected, setSelected] = useState<ExportType>("cycles");
   const [loading, setLoading] = useState(false);
+  const [previewRows, setPreviewRows] = useState<Record<string, any>[] | null>(null);
+  const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
 
-  const doExport = async (format: "csv" | "pdf") => {
+  const loadPreview = async () => {
     setLoading(true);
     try {
       const { data, error } = await fetchData(selected);
       if (error) throw error;
-      if (!data?.length) { toast.error("Aucune donnée à exporter"); return; }
+      if (!data?.length) { toast.error("Aucune donnée à exporter"); setPreviewRows(null); return; }
       const rows = data.map(flattenRow);
-      const headers = Object.keys(rows[0]);
-      const title = exportOptions.find(o => o.value === selected)?.label || selected;
-
-      if (format === "csv") {
-        const csv = [headers.join(";"), ...rows.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(";"))].join("\n");
-        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a"); a.href = url; a.download = `koobnaaba_${selected}.csv`; a.click();
-        URL.revokeObjectURL(url);
-        toast.success("CSV exporté !");
-      } else {
-        const doc = new jsPDF({ orientation: headers.length > 6 ? "landscape" : "portrait" });
-        doc.setFontSize(16); doc.text(`KoobNaaba — ${title}`, 14, 18);
-        doc.setFontSize(9); doc.text(`Généré le ${new Date().toLocaleDateString("fr")}`, 14, 25);
-        autoTable(doc, { startY: 30, head: [headers], body: rows.map(r => headers.map(h => String(r[h] ?? ""))), styles: { fontSize: 7 }, headStyles: { fillColor: [139, 90, 43] } });
-        doc.save(`koobnaaba_${selected}.pdf`);
-        toast.success("PDF exporté !");
-      }
+      setPreviewHeaders(Object.keys(rows[0]));
+      setPreviewRows(rows);
     } catch (err: any) { toast.error(err.message); }
     finally { setLoading(false); }
   };
@@ -84,30 +67,38 @@ const AgriculteurExportPage = () => {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold">Export — Cultures & Ressources</h1>
-        <p className="text-muted-foreground mt-1">Exportez vos données d'exploitation agricole</p>
+        <p className="text-muted-foreground mt-1">Prévisualisez et modifiez vos données avant export</p>
       </div>
+
       <Card>
         <CardHeader><CardTitle>Sélection du rapport</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Type de données</Label>
-            <Select value={selected} onValueChange={v => setSelected(v as ExportType)}>
+            <Select value={selected} onValueChange={v => { setSelected(v as ExportType); setPreviewRows(null); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {exportOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={() => doExport("pdf")} disabled={loading} className="flex-1">
-              <FileText className="h-4 w-4 mr-2" />{loading ? "Export..." : "Exporter PDF"}
-            </Button>
-            <Button onClick={() => doExport("csv")} disabled={loading} variant="outline" className="flex-1">
-              <FileSpreadsheet className="h-4 w-4 mr-2" />{loading ? "Export..." : "Exporter CSV"}
-            </Button>
-          </div>
+          <Button onClick={loadPreview} disabled={loading} className="w-full sm:w-auto">
+            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
+            {loading ? "Chargement..." : "Charger l'aperçu"}
+          </Button>
         </CardContent>
       </Card>
+
+      {previewRows && (
+        <ExportPreviewTable
+          rows={previewRows}
+          headers={previewHeaders}
+          title={exportOptions.find(o => o.value === selected)?.label || selected}
+          filePrefix={`koobnaaba_${selected}`}
+          headerColor={[139, 90, 43]}
+          onRowsChange={setPreviewRows}
+        />
+      )}
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" />Dossier de financement</CardTitle></CardHeader>
