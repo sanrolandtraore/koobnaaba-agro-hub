@@ -27,6 +27,7 @@ export function useOfflineData<T = any>({
   orderBy = 'created_at',
   ascending = false,
   filter,
+  limit = 500,
 }: UseOfflineDataOptions) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
