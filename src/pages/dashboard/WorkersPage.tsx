@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useOfflineData } from "@/hooks/useOfflineData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,26 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Users, Edit2 } from "lucide-react";
+import { Plus, Trash2, Users, Edit2, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+const statusColors: Record<string, string> = { active: "bg-success/10 text-success", inactive: "bg-muted text-muted-foreground" };
+
 const WorkersPage = () => {
-  const [workers, setWorkers] = useState<any[]>([]);
+  const { data: workers, loading, isOffline, insertRow, updateRow, deleteRow } = useOfflineData({
+    table: "workers",
+    select: "*, farms(name)",
+  });
   const [farms, setFarms] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ farm_id: "", full_name: "", role: "ouvrier", phone: "", daily_rate: "", status: "active", notes: "" });
 
-  const fetchWorkers = async () => {
-    const { data, error } = await supabase.from("workers").select("*, farms(name)").order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    else setWorkers(data || []);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchWorkers();
     supabase.from("farms").select("id, name").then(({ data }) => setFarms(data || []));
   }, []);
 
@@ -39,39 +36,34 @@ const WorkersPage = () => {
     e.preventDefault();
     const payload = { ...form, daily_rate: parseFloat(form.daily_rate) || 0 };
     if (editing) {
-      const { error } = await supabase.from("workers").update(payload).eq("id", editing.id);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Ouvrier modifié !");
+      const ok = await updateRow(editing.id, payload);
+      if (ok) toast.success("Ouvrier modifié !");
     } else {
-      const { error } = await supabase.from("workers").insert(payload);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Ouvrier ajouté !");
+      const result = await insertRow(payload);
+      if (result) toast.success("Ouvrier ajouté !");
     }
-    resetForm();
-    setOpen(false);
-    fetchWorkers();
+    resetForm(); setOpen(false);
   };
 
   const handleEdit = (w: any) => {
     setForm({ farm_id: w.farm_id, full_name: w.full_name, role: w.role, phone: w.phone || "", daily_rate: String(w.daily_rate || 0), status: w.status, notes: w.notes || "" });
-    setEditing(w);
-    setOpen(true);
+    setEditing(w); setOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cet ouvrier ?")) return;
-    const { error } = await supabase.from("workers").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Ouvrier supprimé"); fetchWorkers(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Ouvrier supprimé");
   };
-
-  const statusColors: Record<string, string> = { active: "bg-success/10 text-success", inactive: "bg-muted text-muted-foreground" };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Main d'œuvre</h1>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            Main d'œuvre
+            {isOffline && <WifiOff className="h-4 w-4 text-warning" />}
+          </h1>
           <p className="text-muted-foreground mt-1">Gérez vos ouvriers et leurs affectations</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
@@ -129,8 +121,8 @@ const WorkersPage = () => {
         <Card className="border-dashed"><CardContent className="flex flex-col items-center justify-center py-12"><Users className="h-12 w-12 text-muted-foreground mb-4" /><p className="text-muted-foreground">Aucun ouvrier enregistré</p></CardContent></Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {workers.map((w) => (
-            <Card key={w.id} className="shadow-sm hover:shadow-warm transition-shadow">
+          {workers.map((w: any) => (
+            <Card key={w.id} className={`shadow-sm hover:shadow-warm transition-shadow ${w._offline ? "border-warning/50" : ""}`}>
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
                   <CardTitle className="text-lg">{w.full_name}</CardTitle>
@@ -138,6 +130,7 @@ const WorkersPage = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Badge variant="outline" className={statusColors[w.status] || ""}>{w.status === "active" ? "Actif" : "Inactif"}</Badge>
+                  {w._offline && <Badge variant="outline" className="bg-warning/10 text-warning text-xs">hors-ligne</Badge>}
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(w)}><Edit2 className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => handleDelete(w.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>

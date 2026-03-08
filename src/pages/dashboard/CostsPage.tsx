@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOfflineData } from "@/hooks/useOfflineData";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, DollarSign } from "lucide-react";
+import { Plus, Trash2, DollarSign, WifiOff } from "lucide-react";
 
 const categories = [
   { value: "intrant", label: "Intrant" },
@@ -18,54 +19,51 @@ const categories = [
 ];
 
 const CostsPage = () => {
-  const [costs, setCosts] = useState<any[]>([]);
+  const { data: costs, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+    table: "cost_entries",
+    select: "*, crop_cycles(season, parcels(name), crop_references(name))",
+    orderBy: "date",
+  });
   const [cycles, setCycles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ crop_cycle_id: "", category: "intrant" as string, description: "", amount: "", date: new Date().toISOString().split("T")[0] });
 
-  const fetchCosts = async () => {
-    const { data, error } = await supabase.from("cost_entries").select("*, crop_cycles(season, parcels(name), crop_references(name))").order("date", { ascending: false });
-    if (error) toast.error(error.message);
-    else setCosts(data || []);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchCosts();
     supabase.from("crop_cycles").select("id, season, parcels(name), crop_references(name)").then(({ data }) => setCycles(data || []));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("cost_entries").insert({
+    const result = await insertRow({
       crop_cycle_id: form.crop_cycle_id,
       category: form.category as any,
       description: form.description,
       amount: parseFloat(form.amount),
       date: form.date,
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Coût enregistré !");
-    setForm({ crop_cycle_id: "", category: "intrant", description: "", amount: "", date: new Date().toISOString().split("T")[0] });
-    setOpen(false);
-    fetchCosts();
+    if (result) {
+      toast.success("Coût enregistré !");
+      setForm({ crop_cycle_id: "", category: "intrant", description: "", amount: "", date: new Date().toISOString().split("T")[0] });
+      setOpen(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ce coût ?")) return;
-    const { error } = await supabase.from("cost_entries").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Supprimé"); fetchCosts(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Supprimé");
   };
 
-  const totalCost = costs.reduce((s, c) => s + Number(c.amount), 0);
+  const totalCost = costs.reduce((s, c: any) => s + Number(c.amount), 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Coûts</h1>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            Coûts
+            {isOffline && <WifiOff className="h-4 w-4 text-warning" />}
+          </h1>
           <p className="text-muted-foreground mt-1">Suivi des dépenses par cycle cultural</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -118,13 +116,14 @@ const CostsPage = () => {
         </Card>
       ) : (
         <div className="space-y-3">
-          {costs.map((c) => (
-            <Card key={c.id} className="shadow-sm">
+          {costs.map((c: any) => (
+            <Card key={c.id} className={`shadow-sm ${c._offline ? "border-warning/50" : ""}`}>
               <CardContent className="flex items-center justify-between py-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <span className="font-medium">{c.description}</span>
                     <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">{categories.find(cat => cat.value === c.category)?.label}</span>
+                    {c._offline && <span className="text-xs bg-warning/10 text-warning px-2 py-0.5 rounded">hors-ligne</span>}
                   </div>
                   <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
                     <span>{c.crop_cycles?.crop_references?.name} · {c.crop_cycles?.parcels?.name}</span>
