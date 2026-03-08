@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { FileText, FileSpreadsheet } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { Eye, Loader2 } from "lucide-react";
+import ExportPreviewTable from "@/components/ExportPreviewTable";
 
 type ExportType = "animals" | "health" | "reproductions" | "feedings" | "feed_stocks" | "livestock_expenses" | "livestock_sales";
 
@@ -46,32 +45,18 @@ const flattenRow = (row: any): Record<string, any> => {
 const EleveurExportPage = () => {
   const [selected, setSelected] = useState<ExportType>("animals");
   const [loading, setLoading] = useState(false);
+  const [previewRows, setPreviewRows] = useState<Record<string, any>[] | null>(null);
+  const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
 
-  const doExport = async (format: "csv" | "pdf") => {
+  const loadPreview = async () => {
     setLoading(true);
     try {
       const { data, error } = await fetchData(selected);
       if (error) throw error;
-      if (!data?.length) { toast.error("Aucune donnée à exporter"); return; }
+      if (!data?.length) { toast.error("Aucune donnée à exporter"); setPreviewRows(null); return; }
       const rows = data.map(flattenRow);
-      const headers = Object.keys(rows[0]);
-      const title = exportOptions.find(o => o.value === selected)?.label || selected;
-
-      if (format === "csv") {
-        const csv = [headers.join(";"), ...rows.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(";"))].join("\n");
-        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a"); a.href = url; a.download = `koobnaaba_elevage_${selected}.csv`; a.click();
-        URL.revokeObjectURL(url);
-        toast.success("CSV exporté !");
-      } else {
-        const doc = new jsPDF({ orientation: headers.length > 6 ? "landscape" : "portrait" });
-        doc.setFontSize(16); doc.text(`KoobNaaba — ${title}`, 14, 18);
-        doc.setFontSize(9); doc.text(`Généré le ${new Date().toLocaleDateString("fr")}`, 14, 25);
-        autoTable(doc, { startY: 30, head: [headers], body: rows.map(r => headers.map(h => String(r[h] ?? ""))), styles: { fontSize: 7 }, headStyles: { fillColor: [34, 120, 74] } });
-        doc.save(`koobnaaba_elevage_${selected}.pdf`);
-        toast.success("PDF exporté !");
-      }
+      setPreviewHeaders(Object.keys(rows[0]));
+      setPreviewRows(rows);
     } catch (err: any) { toast.error(err.message); }
     finally { setLoading(false); }
   };
@@ -80,30 +65,38 @@ const EleveurExportPage = () => {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-heading font-bold">Export — Élevage</h1>
-        <p className="text-muted-foreground mt-1">Exportez vos données d'élevage en PDF ou CSV</p>
+        <p className="text-muted-foreground mt-1">Prévisualisez et modifiez vos données avant export</p>
       </div>
+
       <Card>
         <CardHeader><CardTitle>Sélection du rapport</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Type de données</Label>
-            <Select value={selected} onValueChange={v => setSelected(v as ExportType)}>
+            <Select value={selected} onValueChange={v => { setSelected(v as ExportType); setPreviewRows(null); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {exportOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={() => doExport("pdf")} disabled={loading} className="flex-1">
-              <FileText className="h-4 w-4 mr-2" />{loading ? "Export..." : "Exporter PDF"}
-            </Button>
-            <Button onClick={() => doExport("csv")} disabled={loading} variant="outline" className="flex-1">
-              <FileSpreadsheet className="h-4 w-4 mr-2" />{loading ? "Export..." : "Exporter CSV"}
-            </Button>
-          </div>
+          <Button onClick={loadPreview} disabled={loading} className="w-full sm:w-auto">
+            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
+            {loading ? "Chargement..." : "Charger l'aperçu"}
+          </Button>
         </CardContent>
       </Card>
+
+      {previewRows && (
+        <ExportPreviewTable
+          rows={previewRows}
+          headers={previewHeaders}
+          title={exportOptions.find(o => o.value === selected)?.label || selected}
+          filePrefix={`koobnaaba_elevage_${selected}`}
+          headerColor={[34, 120, 74]}
+          onRowsChange={setPreviewRows}
+        />
+      )}
     </div>
   );
 };
