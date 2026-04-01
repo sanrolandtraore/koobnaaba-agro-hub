@@ -1314,6 +1314,51 @@ export type Database = {
           },
         ]
       }
+      expert_parcels: {
+        Row: {
+          area_ha: number | null
+          center_lat: number | null
+          center_lng: number | null
+          client_name: string | null
+          created_at: string
+          geometry: Json | null
+          id: string
+          name: string
+          notes: string | null
+          perimeter_m: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area_ha?: number | null
+          center_lat?: number | null
+          center_lng?: number | null
+          client_name?: string | null
+          created_at?: string
+          geometry?: Json | null
+          id?: string
+          name: string
+          notes?: string | null
+          perimeter_m?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area_ha?: number | null
+          center_lat?: number | null
+          center_lng?: number | null
+          client_name?: string | null
+          created_at?: string
+          geometry?: Json | null
+          id?: string
+          name?: string
+          notes?: string | null
+          perimeter_m?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       farms: {
         Row: {
           climate_zone_id: string | null
@@ -1407,6 +1452,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      field_observations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          observation_type: string
+          parcel_name: string | null
+          photo_urls: string[] | null
+          severity: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          observation_type?: string
+          parcel_name?: string | null
+          photo_urls?: string[] | null
+          severity?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          observation_type?: string
+          parcel_name?: string | null
+          photo_urls?: string[] | null
+          severity?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       harvests: {
         Row: {

@@ -1,0 +1,689 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import {
+  MapPin, Plus, Trash2, Navigation, Locate, RotateCcw, Save,
+  Bug, Droplets, Leaf, AlertTriangle, Camera, StickyNote, Layers,
+  Ruler, Target, Image as ImageIcon, X,
+} from "lucide-react";
+
+// ─── Types ───
+interface Coordinate { lat: number; lng: number; }
+
+interface FieldObservation {
+  id: string;
+  user_id: string;
+  parcel_name: string | null;
+  observation_type: string;
+  latitude: number;
+  longitude: number;
+  title: string;
+  description: string | null;
+  photo_urls: string[];
+  severity: string;
+  created_at: string;
+}
+
+interface ExpertParcel {
+  id: string;
+  user_id: string;
+  name: string;
+  geometry: any;
+  area_ha: number;
+  perimeter_m: number;
+  center_lat: number | null;
+  center_lng: number | null;
+  notes: string | null;
+  client_name: string | null;
+  created_at: string;
+}
+
+const OBSERVATION_TYPES = [
+  { value: "zone_malade", label: "Zone malade", icon: Bug, color: "#ef4444" },
+  { value: "zone_seche", label: "Zone sèche", icon: Droplets, color: "#f59e0b" },
+  { value: "zone_insectes", label: "Ravagée par insectes", icon: Bug, color: "#dc2626" },
+  { value: "manque_engrais", label: "Manque d'engrais", icon: Leaf, color: "#84cc16" },
+  { value: "autre", label: "Autre observation", icon: AlertTriangle, color: "#6366f1" },
+];
+
+const SEVERITY_LEVELS = [
+  { value: "faible", label: "Faible", color: "bg-green-100 text-green-800" },
+  { value: "moyen", label: "Moyen", color: "bg-yellow-100 text-yellow-800" },
+  { value: "eleve", label: "Élevé", color: "bg-orange-100 text-orange-800" },
+  { value: "critique", label: "Critique", color: "bg-red-100 text-red-800" },
+];
+
+// ─── Area / Perimeter Utils ───
+function computeAreaHa(coords: Coordinate[]): number {
+  if (coords.length < 3) return 0;
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  let area = 0;
+  const n = coords.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    const dLng = toRad(coords[j].lng - coords[i].lng);
+    area += dLng * (2 + Math.sin(toRad(coords[i].lat)) + Math.sin(toRad(coords[j].lat)));
+  }
+  area = Math.abs((area * R * R) / 2);
+  return Math.round((area / 10000) * 1000) / 1000;
+}
+
+function computePerimeterM(coords: Coordinate[]): number {
+  if (coords.length < 2) return 0;
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  let perimeter = 0;
+  for (let i = 0; i < coords.length; i++) {
+    const j = (i + 1) % coords.length;
+    const dLat = toRad(coords[j].lat - coords[i].lat);
+    const dLng = toRad(coords[j].lng - coords[i].lng);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(coords[i].lat)) * Math.cos(toRad(coords[j].lat)) * Math.sin(dLng / 2) ** 2;
+    perimeter += 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  return Math.round(perimeter);
+}
+
+function coordsToGeoJSON(coords: Coordinate[]) {
+  if (coords.length < 3) return null;
+  const points = coords.map(c => [c.lng, c.lat]);
+  points.push(points[0]);
+  return { type: "Polygon" as const, coordinates: [points] };
+}
+
+// ─── Component ───
+const ExpertCartographyPage = () => {
+  const { user } = useAuth();
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<L.Map | null>(null);
+  const drawLayerRef = useRef<L.FeatureGroup | null>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+
+  // Drawing state
+  const [drawingMode, setDrawingMode] = useState<"none" | "polygon" | "marker">("none");
+  const [polygonPoints, setPolygonPoints] = useState<Coordinate[]>([]);
+  const [autoWalk, setAutoWalk] = useState(false);
+  const watchRef = useRef<number | null>(null);
+
+  // Data state
+  const [observations, setObservations] = useState<FieldObservation[]>([]);
+  const [parcels, setParcels] = useState<ExpertParcel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedParcel, setSelectedParcel] = useState<string | null>(null);
+
+  // New observation dialog
+  const [showObsDialog, setShowObsDialog] = useState(false);
+  const [newObsCoord, setNewObsCoord] = useState<Coordinate | null>(null);
+  const [obsForm, setObsForm] = useState({
+    title: "", description: "", observation_type: "zone_malade", severity: "moyen", parcel_name: "",
+  });
+  const [obsPhotos, setObsPhotos] = useState<File[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  // Save parcel dialog
+  const [showParcelDialog, setShowParcelDialog] = useState(false);
+  const [parcelForm, setParcelForm] = useState({ name: "", client_name: "", notes: "" });
+
+  // ─── Fetch data ───
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    const [obsRes, parcelRes] = await Promise.all([
+      supabase.from("field_observations").select("*").order("created_at", { ascending: false }),
+      supabase.from("expert_parcels").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (obsRes.data) setObservations(obsRes.data as FieldObservation[]);
+    if (parcelRes.data) setParcels(parcelRes.data as ExpertParcel[]);
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ─── Initialize Map ───
+  useEffect(() => {
+    if (!mapRef.current || mapInstance.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: [12.37, -1.52],
+      zoom: 6,
+      zoomControl: true,
+      attributionControl: false,
+    });
+
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19,
+    }).addTo(map);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+    }).addTo(map);
+
+    const drawLayer = L.featureGroup().addTo(map);
+    const markersLayer = L.layerGroup().addTo(map);
+    drawLayerRef.current = drawLayer;
+    markersLayerRef.current = markersLayer;
+    mapInstance.current = map;
+
+    // Map click handler
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      const event = new CustomEvent("map-click", { detail: { lat: e.latlng.lat, lng: e.latlng.lng } });
+      window.dispatchEvent(event);
+    });
+
+    return () => { map.remove(); mapInstance.current = null; };
+  }, []);
+
+  // ─── Map click listener ───
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { lat, lng } = (e as CustomEvent).detail;
+      if (drawingMode === "polygon") {
+        setPolygonPoints(prev => [...prev, { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 }]);
+      } else if (drawingMode === "marker") {
+        setNewObsCoord({ lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 });
+        setShowObsDialog(true);
+        setDrawingMode("none");
+      }
+    };
+    window.addEventListener("map-click", handler);
+    return () => window.removeEventListener("map-click", handler);
+  }, [drawingMode]);
+
+  // ─── Render saved observations on map ───
+  useEffect(() => {
+    if (!markersLayerRef.current) return;
+    markersLayerRef.current.clearLayers();
+
+    observations.forEach(obs => {
+      const typeInfo = OBSERVATION_TYPES.find(t => t.value === obs.observation_type) || OBSERVATION_TYPES[4];
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="background:${typeInfo.color};width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;">⚠</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      const marker = L.marker([Number(obs.latitude), Number(obs.longitude)], { icon }).addTo(markersLayerRef.current!);
+
+      const photoHtml = obs.photo_urls?.length
+        ? `<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">${obs.photo_urls.map(u => `<img src="${u}" style="width:60px;height:60px;object-fit:cover;border-radius:4px" />`).join("")}</div>`
+        : "";
+
+      marker.bindPopup(`
+        <div style="max-width:250px">
+          <strong>${obs.title}</strong>
+          <div style="margin:4px 0"><span style="background:${typeInfo.color};color:white;padding:2px 8px;border-radius:9999px;font-size:11px">${typeInfo.label}</span></div>
+          ${obs.description ? `<p style="font-size:13px;margin:6px 0">${obs.description}</p>` : ""}
+          ${photoHtml}
+          <p style="font-size:11px;color:#888;margin-top:6px">${new Date(obs.created_at).toLocaleDateString("fr-FR")}</p>
+        </div>
+      `);
+    });
+  }, [observations]);
+
+  // ─── Render saved parcels on map ───
+  useEffect(() => {
+    if (!drawLayerRef.current) return;
+    drawLayerRef.current.clearLayers();
+
+    // Render current drawing polygon
+    if (polygonPoints.length > 0) {
+      const latlngs = polygonPoints.map(c => [c.lat, c.lng] as L.LatLngTuple);
+      if (polygonPoints.length >= 3) {
+        L.polygon(latlngs, { color: "#22784a", fillColor: "#22784a", fillOpacity: 0.2, weight: 2 }).addTo(drawLayerRef.current);
+      }
+      polygonPoints.forEach((c, i) => {
+        L.circleMarker([c.lat, c.lng], { radius: 6, color: "#22784a", fillColor: "#22784a", fillOpacity: 0.8, weight: 2 })
+          .addTo(drawLayerRef.current!).bindTooltip(`P${i + 1}`, { permanent: true, direction: "top", className: "text-xs" });
+      });
+    }
+
+    // Render saved parcels
+    parcels.forEach(p => {
+      if (!p.geometry?.coordinates) return;
+      const isSelected = selectedParcel === p.id;
+      const coords = p.geometry.coordinates[0].map((c: number[]) => [c[1], c[0]] as L.LatLngTuple);
+      L.polygon(coords, {
+        color: isSelected ? "#3b82f6" : "#22784a",
+        fillColor: isSelected ? "#3b82f6" : "#22784a",
+        fillOpacity: isSelected ? 0.3 : 0.15,
+        weight: isSelected ? 3 : 2,
+      }).addTo(drawLayerRef.current!).bindPopup(`
+        <div><strong>${p.name}</strong><br/>${p.area_ha} ha · ${p.perimeter_m?.toLocaleString("fr-FR")} m
+        ${p.client_name ? `<br/>Client: ${p.client_name}` : ""}
+        ${p.notes ? `<br/><em>${p.notes}</em>` : ""}</div>
+      `);
+    });
+  }, [polygonPoints, parcels, selectedParcel]);
+
+  // ─── Auto-walk mode ───
+  const toggleAutoWalk = () => {
+    if (autoWalk && watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+      setAutoWalk(false);
+      toast.info(`Mode marche arrêté — ${polygonPoints.length} points`);
+      return;
+    }
+    if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
+    setAutoWalk(true);
+    setDrawingMode("polygon");
+    toast.info("Mode marche activé — Marchez le long du contour");
+    let lastLat = 0, lastLng = 0;
+    watchRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
+        const lng = Math.round(pos.coords.longitude * 1e6) / 1e6;
+        const dist = Math.sqrt((lat - lastLat) ** 2 + (lng - lastLng) ** 2) * 111000;
+        if (dist < 3 && lastLat !== 0) return;
+        lastLat = lat; lastLng = lng;
+        setPolygonPoints(prev => [...prev, { lat, lng }]);
+        mapInstance.current?.setView([lat, lng], 18);
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 2000 }
+    );
+  };
+
+  useEffect(() => () => { if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current); }, []);
+
+  // ─── Capture single GPS point ───
+  const captureGPSPoint = () => {
+    if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coord = { lat: Math.round(pos.coords.latitude * 1e6) / 1e6, lng: Math.round(pos.coords.longitude * 1e6) / 1e6 };
+        if (drawingMode === "polygon") {
+          setPolygonPoints(prev => [...prev, coord]);
+          mapInstance.current?.setView([coord.lat, coord.lng], 17);
+          toast.success(`Point capturé (±${Math.round(pos.coords.accuracy)}m)`);
+        } else {
+          setNewObsCoord(coord);
+          setShowObsDialog(true);
+          mapInstance.current?.setView([coord.lat, coord.lng], 17);
+        }
+      },
+      (err) => toast.error("Erreur GPS: " + err.message),
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  };
+
+  // ─── Save Parcel ───
+  const saveParcel = async () => {
+    if (!user || polygonPoints.length < 3) return;
+    setSaving(true);
+    const geometry = coordsToGeoJSON(polygonPoints);
+    const area_ha = computeAreaHa(polygonPoints);
+    const perimeter_m = computePerimeterM(polygonPoints);
+    const center_lat = polygonPoints.reduce((s, c) => s + c.lat, 0) / polygonPoints.length;
+    const center_lng = polygonPoints.reduce((s, c) => s + c.lng, 0) / polygonPoints.length;
+
+    const { error } = await supabase.from("expert_parcels").insert({
+      user_id: user.id,
+      name: parcelForm.name || `Parcelle ${new Date().toLocaleDateString("fr-FR")}`,
+      geometry,
+      area_ha,
+      perimeter_m,
+      center_lat,
+      center_lng,
+      notes: parcelForm.notes || null,
+      client_name: parcelForm.client_name || null,
+    });
+
+    if (error) toast.error(error.message);
+    else {
+      toast.success(`Parcelle sauvegardée — ${area_ha} ha`);
+      setPolygonPoints([]);
+      setShowParcelDialog(false);
+      setParcelForm({ name: "", client_name: "", notes: "" });
+      setDrawingMode("none");
+      fetchData();
+    }
+    setSaving(false);
+  };
+
+  // ─── Save Observation ───
+  const saveObservation = async () => {
+    if (!user || !newObsCoord) return;
+    setSaving(true);
+
+    // Upload photos
+    const photoUrls: string[] = [];
+    for (const file of obsPhotos) {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("field-observations").upload(path, file);
+      if (uploadErr) { toast.error("Erreur upload photo"); continue; }
+      const { data: urlData } = supabase.storage.from("field-observations").getPublicUrl(path);
+      photoUrls.push(urlData.publicUrl);
+    }
+
+    const { error } = await supabase.from("field_observations").insert({
+      user_id: user.id,
+      latitude: newObsCoord.lat,
+      longitude: newObsCoord.lng,
+      title: obsForm.title || "Observation",
+      description: obsForm.description || null,
+      observation_type: obsForm.observation_type,
+      severity: obsForm.severity,
+      parcel_name: obsForm.parcel_name || null,
+      photo_urls: photoUrls,
+    });
+
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Observation enregistrée");
+      setShowObsDialog(false);
+      setNewObsCoord(null);
+      setObsForm({ title: "", description: "", observation_type: "zone_malade", severity: "moyen", parcel_name: "" });
+      setObsPhotos([]);
+      fetchData();
+    }
+    setSaving(false);
+  };
+
+  // ─── Delete observation ───
+  const deleteObservation = async (id: string) => {
+    const { error } = await supabase.from("field_observations").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Observation supprimée"); fetchData(); }
+  };
+
+  // ─── Delete parcel ───
+  const deleteParcel = async (id: string) => {
+    const { error } = await supabase.from("expert_parcels").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Parcelle supprimée"); fetchData(); }
+  };
+
+  const areaHa = computeAreaHa(polygonPoints);
+  const perimeterM = computePerimeterM(polygonPoints);
+
+  if (loading) return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-64" />
+      <Skeleton className="h-[500px]" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-4 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+          <MapPin className="h-6 w-6 text-primary" /> Cartographie GPS
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Dessinez les parcelles, mesurez les superficies et marquez les points d'observation
+        </p>
+      </div>
+
+      {/* ─── Toolbar ─── */}
+      <Card className="shadow-sm">
+        <CardContent className="pt-4 pb-3">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={drawingMode === "polygon" ? "default" : "outline"}
+              onClick={() => { setDrawingMode(drawingMode === "polygon" ? "none" : "polygon"); setPolygonPoints([]); }}
+            >
+              <Layers className="h-4 w-4 mr-1" /> Dessiner parcelle
+            </Button>
+            <Button
+              size="sm"
+              variant={drawingMode === "marker" ? "default" : "outline"}
+              onClick={() => setDrawingMode(drawingMode === "marker" ? "none" : "marker")}
+            >
+              <Target className="h-4 w-4 mr-1" /> Placer observation
+            </Button>
+            <div className="border-l border-border mx-1" />
+            {drawingMode === "polygon" && (
+              <>
+                <Button size="sm" variant="outline" onClick={captureGPSPoint}>
+                  <Navigation className="h-4 w-4 mr-1" /> Point GPS
+                </Button>
+                <Button size="sm" variant={autoWalk ? "destructive" : "secondary"} onClick={toggleAutoWalk}>
+                  <Locate className="h-4 w-4 mr-1" /> {autoWalk ? "Arrêter" : "Mode marche"}
+                </Button>
+              </>
+            )}
+            {drawingMode === "marker" && (
+              <Button size="sm" variant="outline" onClick={captureGPSPoint}>
+                <Navigation className="h-4 w-4 mr-1" /> Ma position
+              </Button>
+            )}
+            {polygonPoints.length > 0 && (
+              <>
+                <Button size="sm" variant="ghost" onClick={() => setPolygonPoints([])}>
+                  <RotateCcw className="h-4 w-4 mr-1" /> Effacer
+                </Button>
+                {polygonPoints.length >= 3 && (
+                  <Button size="sm" onClick={() => setShowParcelDialog(true)}>
+                    <Save className="h-4 w-4 mr-1" /> Sauvegarder ({areaHa} ha)
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+          {drawingMode === "polygon" && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Cliquez sur la carte pour ajouter des sommets, ou utilisez le GPS • {polygonPoints.length} points · {areaHa} ha · {perimeterM.toLocaleString("fr-FR")} m
+            </p>
+          )}
+          {drawingMode === "marker" && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Cliquez sur la carte pour placer une observation géolocalisée
+            </p>
+          )}
+          {autoWalk && (
+            <div className="rounded-lg bg-primary/10 border border-primary/20 p-2 text-sm text-primary animate-pulse mt-2">
+              🚶 Mode marche actif — Marchez le long du contour du champ
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ─── Map ─── */}
+      <div ref={mapRef} style={{ height: "500px", width: "100%" }} className="rounded-lg border overflow-hidden shadow-sm" />
+
+      {/* ─── Side panels ─── */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Parcels list */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Layers className="h-4 w-4" /> Parcelles enregistrées ({parcels.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {parcels.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Aucune parcelle dessinée</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {parcels.map(p => (
+                  <div
+                    key={p.id}
+                    className={`rounded-lg border p-3 cursor-pointer transition-colors ${selectedParcel === p.id ? "bg-primary/5 border-primary" : "hover:bg-muted/50"}`}
+                    onClick={() => {
+                      setSelectedParcel(selectedParcel === p.id ? null : p.id);
+                      if (p.center_lat && p.center_lng) mapInstance.current?.setView([Number(p.center_lat), Number(p.center_lng)], 16);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.area_ha} ha · {Number(p.perimeter_m).toLocaleString("fr-FR")} m
+                          {p.client_name && ` · ${p.client_name}`}
+                        </p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); deleteParcel(p.id); }}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Observations list */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="h-4 w-4" /> Observations ({observations.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {observations.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Aucune observation</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {observations.map(obs => {
+                  const typeInfo = OBSERVATION_TYPES.find(t => t.value === obs.observation_type) || OBSERVATION_TYPES[4];
+                  const sevInfo = SEVERITY_LEVELS.find(s => s.value === obs.severity);
+                  return (
+                    <div key={obs.id} className="rounded-lg border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => mapInstance.current?.setView([Number(obs.latitude), Number(obs.longitude)], 18)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium">{obs.title}</p>
+                            <Badge variant="outline" className="text-[10px]" style={{ borderColor: typeInfo.color, color: typeInfo.color }}>
+                              {typeInfo.label}
+                            </Badge>
+                            {sevInfo && <Badge variant="outline" className={`text-[10px] ${sevInfo.color}`}>{sevInfo.label}</Badge>}
+                          </div>
+                          {obs.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{obs.description}</p>}
+                          {obs.photo_urls?.length > 0 && (
+                            <div className="flex gap-1 mt-2">
+                              {obs.photo_urls.map((url, i) => (
+                                <img key={i} src={url} alt="" className="h-10 w-10 rounded object-cover" />
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-[10px] text-muted-foreground mt-1">{new Date(obs.created_at).toLocaleDateString("fr-FR")}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={(e) => { e.stopPropagation(); deleteObservation(obs.id); }}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ─── Save Parcel Dialog ─── */}
+      <Dialog open={showParcelDialog} onOpenChange={setShowParcelDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="font-heading">Enregistrer la parcelle</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 text-sm">
+              <strong>{areaHa}</strong> ha · <strong>{perimeterM.toLocaleString("fr-FR")}</strong> m périmètre · {polygonPoints.length} sommets
+            </div>
+            <div className="space-y-2">
+              <Label>Nom de la parcelle</Label>
+              <Input value={parcelForm.name} onChange={e => setParcelForm(f => ({ ...f, name: e.target.value }))} placeholder="Ex: Parcelle Nord" />
+            </div>
+            <div className="space-y-2">
+              <Label>Nom du client</Label>
+              <Input value={parcelForm.client_name} onChange={e => setParcelForm(f => ({ ...f, client_name: e.target.value }))} placeholder="Ex: Ouedraogo Ibrahim" />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea value={parcelForm.notes} onChange={e => setParcelForm(f => ({ ...f, notes: e.target.value }))} placeholder="Observations générales..." rows={3} />
+            </div>
+            <Button onClick={saveParcel} disabled={saving} className="w-full">
+              {saving ? "Enregistrement..." : "Sauvegarder la parcelle"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── New Observation Dialog ─── */}
+      <Dialog open={showObsDialog} onOpenChange={v => { setShowObsDialog(v); if (!v) setNewObsCoord(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle className="font-heading">Nouvelle observation</DialogTitle></DialogHeader>
+          {newObsCoord && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted/50 border p-2 text-xs font-mono">
+                📍 {newObsCoord.lat}, {newObsCoord.lng}
+              </div>
+              <div className="space-y-2">
+                <Label>Titre</Label>
+                <Input value={obsForm.title} onChange={e => setObsForm(f => ({ ...f, title: e.target.value }))} placeholder="Ex: Tache brune sur feuilles" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <Select value={obsForm.observation_type} onValueChange={v => setObsForm(f => ({ ...f, observation_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {OBSERVATION_TYPES.map(t => (
+                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Sévérité</Label>
+                  <Select value={obsForm.severity} onValueChange={v => setObsForm(f => ({ ...f, severity: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {SEVERITY_LEVELS.map(s => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Nom de la parcelle (optionnel)</Label>
+                <Input value={obsForm.parcel_name} onChange={e => setObsForm(f => ({ ...f, parcel_name: e.target.value }))} placeholder="Ex: Parcelle Nord" />
+              </div>
+              <div className="space-y-2">
+                <Label>Description / Notes</Label>
+                <Textarea value={obsForm.description} onChange={e => setObsForm(f => ({ ...f, description: e.target.value }))} placeholder="Décrivez l'observation..." rows={3} />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><Camera className="h-4 w-4" /> Photos</Label>
+                <Input type="file" accept="image/*" multiple onChange={e => setObsPhotos(Array.from(e.target.files || []))} />
+                {obsPhotos.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    {obsPhotos.map((f, i) => (
+                      <div key={i} className="relative">
+                        <img src={URL.createObjectURL(f)} alt="" className="h-16 w-16 rounded object-cover" />
+                        <button className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5" onClick={() => setObsPhotos(ps => ps.filter((_, j) => j !== i))}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Button onClick={saveObservation} disabled={saving} className="w-full">
+                {saving ? "Enregistrement..." : "Enregistrer l'observation"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default ExpertCartographyPage;

@@ -58,6 +58,7 @@ const LivestockFinancePage = lazy(() => import("./pages/livestock/LivestockFinan
 const LivestockServicesPage = lazy(() => import("./pages/livestock/LivestockServicesPage"));
 const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
 const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
+const ExpertCartographyPage = lazy(() => import("./pages/dashboard/ExpertCartographyPage"));
 const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
 const UserProfilePage = lazy(() => import("./pages/dashboard/UserProfilePage"));
 
@@ -132,6 +133,7 @@ const App = () => (
                 <Route path="partner-requests" element={<Suspense fallback={<PageLoader />}><PartnerRequestsPage /></Suspense>} />
                 <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
                 <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
+                <Route path="expert-cartography" element={<Suspense fallback={<PageLoader />}><ExpertCartographyPage /></Suspense>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
