@@ -59,6 +59,7 @@ const LivestockServicesPage = lazy(() => import("./pages/livestock/LivestockServ
 const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
 const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
 const ExpertCartographyPage = lazy(() => import("./pages/dashboard/ExpertCartographyPage"));
+const ScoutingPage = lazy(() => import("./pages/dashboard/ScoutingPage"));
 const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
 const UserProfilePage = lazy(() => import("./pages/dashboard/UserProfilePage"));
 
