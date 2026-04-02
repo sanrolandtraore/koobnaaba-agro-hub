@@ -2010,6 +2010,69 @@ export type Database = {
         }
         Relationships: []
       }
+      scouting_sessions: {
+        Row: {
+          client_name: string | null
+          created_at: string
+          crop_type: string | null
+          general_condition: string | null
+          growth_stage: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          notes: string | null
+          parcel_name: string | null
+          photo_urls: string[] | null
+          problems_identified: Json | null
+          proposed_treatment: string | null
+          recommendations: string | null
+          report_shared_to: string[] | null
+          updated_at: string
+          user_id: string
+          visit_date: string
+        }
+        Insert: {
+          client_name?: string | null
+          created_at?: string
+          crop_type?: string | null
+          general_condition?: string | null
+          growth_stage?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          parcel_name?: string | null
+          photo_urls?: string[] | null
+          problems_identified?: Json | null
+          proposed_treatment?: string | null
+          recommendations?: string | null
+          report_shared_to?: string[] | null
+          updated_at?: string
+          user_id: string
+          visit_date?: string
+        }
+        Update: {
+          client_name?: string | null
+          created_at?: string
+          crop_type?: string | null
+          general_condition?: string | null
+          growth_stage?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          parcel_name?: string | null
+          photo_urls?: string[] | null
+          problems_identified?: Json | null
+          proposed_treatment?: string | null
+          recommendations?: string | null
+          report_shared_to?: string[] | null
+          updated_at?: string
+          user_id?: string
+          visit_date?: string
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
           created_at: string
