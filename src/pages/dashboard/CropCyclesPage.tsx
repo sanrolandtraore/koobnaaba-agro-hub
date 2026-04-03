@@ -26,7 +26,7 @@ const statusOptions = [
 ];
 
 const CropCyclesPage = () => {
-  const { data: cycles, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+  const { data: cycles, loading, isOffline, refetch, insertRow, deleteRow } = useOfflineData({
     table: 'crop_cycles',
     select: '*, parcels(name, area_ha, farms(name, climate_zones(climate_coefficient))), crop_references(name, avg_yield_per_ha, avg_price_per_kg, variety)',
   });
