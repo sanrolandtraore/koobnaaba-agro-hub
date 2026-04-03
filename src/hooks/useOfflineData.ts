@@ -83,7 +83,8 @@ export function useOfflineData<T = any>({
     }
 
     setLoading(false);
-  }, [table, cacheKey, select, orderBy, ascending, JSON.stringify(filter)]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, cacheKey, select, orderBy, ascending, JSON.stringify(filter), limit]);
 
   useEffect(() => {
     fetchData();

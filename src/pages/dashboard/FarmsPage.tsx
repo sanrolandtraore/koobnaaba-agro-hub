@@ -68,7 +68,9 @@ const FarmsPage = () => {
     };
 
     if (editingFarm) {
-      const ok = await updateRow(editingFarm.id, payload);
+      // Don't send user_id on update
+      const { user_id: _, ...updatePayload } = payload;
+      const ok = await updateRow(editingFarm.id, updatePayload);
       if (ok) toast.success("Exploitation mise à jour !");
     } else {
       const result = await insertRow(payload);

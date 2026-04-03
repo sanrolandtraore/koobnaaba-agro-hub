@@ -26,7 +26,7 @@ const statusOptions = [
 ];
 
 const CropCyclesPage = () => {
-  const { data: cycles, loading, isOffline, insertRow, deleteRow } = useOfflineData({
+  const { data: cycles, loading, isOffline, refetch, insertRow, deleteRow } = useOfflineData({
     table: 'crop_cycles',
     select: '*, parcels(name, area_ha, farms(name, climate_zones(climate_coefficient))), crop_references(name, avg_yield_per_ha, avg_price_per_kg, variety)',
   });
@@ -38,6 +38,9 @@ const CropCyclesPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.parcel_id) { toast.error("Veuillez sélectionner une parcelle"); return; }
+    if (!form.season) { toast.error("Veuillez sélectionner une saison"); return; }
+    if (!form.start_date) { toast.error("La date de début est requise"); return; }
     const parcel = parcels.find((p: any) => p.id === form.parcel_id);
     const crop = crops.find((c: any) => c.id === form.crop_reference_id);
 
@@ -77,6 +80,7 @@ const CropCyclesPage = () => {
       const { error } = await supabase.functions.invoke("calculate-crop-cycle", { body: { crop_cycle_id: id } });
       if (error) throw error;
       toast.success("Calculs exécutés !");
+      await refetch();
     } catch (err: any) {
       toast.error(err.message || "Erreur de calcul");
     }

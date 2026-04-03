@@ -20,22 +20,27 @@ const DashboardHome = () => {
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
-      const [farmsRes, parcelsRes, cyclesRes, costsRes, activitiesRes] = await Promise.all([
-        supabase.from("farms").select("id", { count: "exact", head: true }),
-        supabase.from("parcels").select("id", { count: "exact", head: true }),
-        supabase.from("crop_cycles").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.rpc("get_user_total_costs", { _user_id: user!.id }),
-        supabase.from("activity_logs").select("*").order("created_at", { ascending: false }).limit(5),
-      ]);
-      const totalCosts = typeof costsRes.data === "number" ? costsRes.data : 0;
-      setStats({
-        farms: farmsRes.count || 0,
-        parcels: parcelsRes.count || 0,
-        activeCycles: cyclesRes.count || 0,
-        totalCosts,
-      });
-      setRecentActivities(activitiesRes.data || []);
-      setLoading(false);
+      try {
+        const [farmsRes, parcelsRes, cyclesRes, costsRes, activitiesRes] = await Promise.all([
+          supabase.from("farms").select("id", { count: "exact", head: true }),
+          supabase.from("parcels").select("id", { count: "exact", head: true }),
+          supabase.from("crop_cycles").select("id", { count: "exact", head: true }).eq("status", "active"),
+          supabase.rpc("get_user_total_costs", { _user_id: user!.id }),
+          supabase.from("activity_logs").select("*").order("created_at", { ascending: false }).limit(5),
+        ]);
+        const totalCosts = typeof costsRes.data === "number" ? costsRes.data : 0;
+        setStats({
+          farms: farmsRes.count || 0,
+          parcels: parcelsRes.count || 0,
+          activeCycles: cyclesRes.count || 0,
+          totalCosts,
+        });
+        setRecentActivities(activitiesRes.data || []);
+      } catch (err) {
+        console.error("Dashboard stats error:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchStats();
   }, [user]);

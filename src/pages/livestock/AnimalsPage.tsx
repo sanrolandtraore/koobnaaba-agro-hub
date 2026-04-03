@@ -59,6 +59,7 @@ const AnimalsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
     const result = await insertRow({
       farm_id: form.farm_id,
       species: form.species,
