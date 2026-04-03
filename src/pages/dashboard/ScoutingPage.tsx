@@ -345,6 +345,9 @@ export default function ScoutingPage() {
         </div>
       )}
 
+      {/* Agronomic Plans Generator */}
+      <AgronomicPlansGenerator sessionData={viewSession || undefined} />
+
       {/* New Session Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
