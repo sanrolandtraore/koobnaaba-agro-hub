@@ -55,6 +55,14 @@ const ParcelsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.farm_id) {
+      toast.error("Veuillez sélectionner une exploitation");
+      return;
+    }
+    if (!form.name.trim()) {
+      toast.error("Le nom de la parcelle est requis");
+      return;
+    }
     const geometry = coordsToGeoJSON(gpsPoints);
     const payload: any = {
       name: form.name,
