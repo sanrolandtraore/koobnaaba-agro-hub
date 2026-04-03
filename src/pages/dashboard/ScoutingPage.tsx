@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import AgronomicPlansGenerator from "@/components/AgronomicPlansGenerator";
 
 type ScoutingSession = {
   id: string;
