@@ -38,6 +38,9 @@ const CropCyclesPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.parcel_id) { toast.error("Veuillez sélectionner une parcelle"); return; }
+    if (!form.season) { toast.error("Veuillez sélectionner une saison"); return; }
+    if (!form.start_date) { toast.error("La date de début est requise"); return; }
     const parcel = parcels.find((p: any) => p.id === form.parcel_id);
     const crop = crops.find((c: any) => c.id === form.crop_reference_id);
 
