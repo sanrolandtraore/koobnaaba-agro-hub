@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import AgronomicPlansGenerator from "@/components/AgronomicPlansGenerator";
 
 type ScoutingSession = {
   id: string;
@@ -343,6 +344,9 @@ export default function ScoutingPage() {
           ))}
         </div>
       )}
+
+      {/* Agronomic Plans Generator */}
+      <AgronomicPlansGenerator sessionData={viewSession || undefined} />
 
       {/* New Session Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
