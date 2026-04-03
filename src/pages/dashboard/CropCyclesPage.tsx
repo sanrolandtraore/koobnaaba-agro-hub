@@ -77,8 +77,7 @@ const CropCyclesPage = () => {
       const { error } = await supabase.functions.invoke("calculate-crop-cycle", { body: { crop_cycle_id: id } });
       if (error) throw error;
       toast.success("Calculs exécutés !");
-      // Refetch to show updated data
-      window.location.reload();
+      await refetch();
     } catch (err: any) {
       toast.error(err.message || "Erreur de calcul");
     }
