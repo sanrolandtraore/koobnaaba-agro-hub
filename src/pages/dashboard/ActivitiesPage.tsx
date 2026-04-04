@@ -39,6 +39,8 @@ const ActivitiesPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!form.crop_cycle_id) { toast.error("Veuillez sélectionner un cycle cultural"); return; }
+    if (!form.date) { toast.error("La date est requise"); return; }
     const result = await insertRow({
       crop_cycle_id: form.crop_cycle_id,
       activity_type: form.activity_type,

@@ -32,6 +32,9 @@ const HarvestsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.crop_cycle_id) { toast.error("Veuillez sélectionner un cycle cultural"); return; }
+    if (!form.date) { toast.error("La date de récolte est requise"); return; }
+    if (!form.quantity_kg || parseFloat(form.quantity_kg) <= 0) { toast.error("La quantité est requise"); return; }
     const result = await insertRow({
       crop_cycle_id: form.crop_cycle_id,
       date: form.date,
