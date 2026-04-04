@@ -34,6 +34,8 @@ const WorkersPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!form.full_name.trim()) { toast.error("Le nom est requis"); return; }
     const payload = { ...form, daily_rate: parseFloat(form.daily_rate) || 0 };
     if (editing) {
       const ok = await updateRow(editing.id, payload);

@@ -65,6 +65,9 @@ const AnimalFeedingPage = () => {
 
   const handleFeedingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!feedForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!feedForm.feed_type) { toast.error("Le type d'aliment est requis"); return; }
+    if (!feedForm.quantity_kg || Number(feedForm.quantity_kg) <= 0) { toast.error("La quantité est requise"); return; }
     const result = await insertFeeding({
       animal_id: feedForm.animal_id || null,
       farm_id: feedForm.farm_id,
@@ -83,6 +86,9 @@ const AnimalFeedingPage = () => {
 
   const handleStockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!stockForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!stockForm.feed_name.trim()) { toast.error("Le nom de l'aliment est requis"); return; }
+    if (!stockForm.quantity_kg || Number(stockForm.quantity_kg) <= 0) { toast.error("La quantité est requise"); return; }
     const result = await insertStock({
       farm_id: stockForm.farm_id,
       feed_name: stockForm.feed_name,

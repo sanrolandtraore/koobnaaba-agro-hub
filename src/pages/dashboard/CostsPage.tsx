@@ -34,6 +34,9 @@ const CostsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.crop_cycle_id) { toast.error("Veuillez sélectionner un cycle cultural"); return; }
+    if (!form.description.trim()) { toast.error("La description est requise"); return; }
+    if (!form.amount || parseFloat(form.amount) <= 0) { toast.error("Le montant doit être supérieur à 0"); return; }
     const result = await insertRow({
       crop_cycle_id: form.crop_cycle_id,
       category: form.category as any,
