@@ -62,6 +62,7 @@ const AnimalHealthPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.animal_id) { toast.error("Veuillez sélectionner un animal"); return; }
     const result = await insertRow({
       animal_id: form.animal_id,
       event_type: form.event_type,
