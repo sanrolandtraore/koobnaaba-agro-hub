@@ -187,7 +187,9 @@ export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCapt
       )}
     </div>
   );
-};
+});
+
+GPSPolygonCapture.displayName = "GPSPolygonCapture";
 
 export const coordsToGeoJSON = (coords: { lat: number; lng: number }[]) => {
   if (coords.length < 3) return null;
