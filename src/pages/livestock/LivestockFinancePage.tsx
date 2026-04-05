@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Trash2, TrendingDown, TrendingUp, DollarSign, WifiOff } from "lucide-react";
+import MarketplacePricePicker from "@/components/MarketplacePricePicker";
 
 const expenseCategories = [
   { value: "alimentation", label: "🌾 Alimentation" },
@@ -198,7 +199,7 @@ const LivestockFinancePage = () => {
                     </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>Montant (FCFA) *</Label><Input type="number" placeholder="0" value={expForm.amount} onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })} required /></div>
+                    <div className="space-y-1"><Label>Montant (FCFA) *</Label><MarketplacePricePicker value={expForm.amount} onChange={(v) => setExpForm({ ...expForm, amount: v })} searchHint={expForm.description} unit="FCFA" /></div>
                     <div className="space-y-1"><Label>Date</Label><Input type="date" value={expForm.expense_date} onChange={(e) => setExpForm({ ...expForm, expense_date: e.target.value })} /></div>
                   </div>
                   <div className="space-y-1">
@@ -265,7 +266,7 @@ const LivestockFinancePage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1"><Label>Quantité *</Label><Input type="number" placeholder="1" value={saleForm.quantity} onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })} required /></div>
-                    <div className="space-y-1"><Label>Prix unitaire (FCFA) *</Label><Input type="number" placeholder="0" value={saleForm.unit_price} onChange={(e) => setSaleForm({ ...saleForm, unit_price: e.target.value })} required /></div>
+                    <div className="space-y-1"><Label>Prix unitaire (FCFA) *</Label><MarketplacePricePicker value={saleForm.unit_price} onChange={(v) => setSaleForm({ ...saleForm, unit_price: v })} searchHint={saleForm.description} unit="FCFA" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
