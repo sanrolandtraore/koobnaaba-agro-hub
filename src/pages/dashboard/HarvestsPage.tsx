@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Trash2, Package, CheckCircle2, WifiOff } from "lucide-react";
+import MarketplacePricePicker from "@/components/MarketplacePricePicker";
 import { Badge } from "@/components/ui/badge";
 import { useOfflineData } from "@/hooks/useOfflineData";
 

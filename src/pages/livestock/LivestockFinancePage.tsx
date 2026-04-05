@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Trash2, TrendingDown, TrendingUp, DollarSign, WifiOff } from "lucide-react";
+import MarketplacePricePicker from "@/components/MarketplacePricePicker";
 
 const expenseCategories = [
   { value: "alimentation", label: "🌾 Alimentation" },
