@@ -199,7 +199,7 @@ const LivestockFinancePage = () => {
                     </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>Montant (FCFA) *</Label><Input type="number" placeholder="0" value={expForm.amount} onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })} required /></div>
+                    <div className="space-y-1"><Label>Montant (FCFA) *</Label><MarketplacePricePicker value={expForm.amount} onChange={(v) => setExpForm({ ...expForm, amount: v })} searchHint={expForm.description} unit="FCFA" /></div>
                     <div className="space-y-1"><Label>Date</Label><Input type="date" value={expForm.expense_date} onChange={(e) => setExpForm({ ...expForm, expense_date: e.target.value })} /></div>
                   </div>
                   <div className="space-y-1">
