@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus, Trash2, Navigation, Locate, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
@@ -47,7 +47,7 @@ function computePerimeterM(coords: Coordinate[]): number {
   return Math.round(perimeter);
 }
 
-export const GPSPolygonCapture = ({ value, onChange, onCenterDetected }: GPSPolygonCaptureProps) => {
+export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCaptureProps>(({ value, onChange, onCenterDetected }, ref) => {
   const [capturing, setCapturing] = useState(false);
   const [autoMode, setAutoMode] = useState(false);
   const watchRef = useRef<number | null>(null);
@@ -128,7 +128,7 @@ export const GPSPolygonCapture = ({ value, onChange, onCenterDetected }: GPSPoly
   const perimeterM = computePerimeterM(value);
 
   return (
-    <div className="space-y-3">
+    <div ref={ref} className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-sm font-medium">Points GPS ({value.length})</span>
         <div className="flex gap-2">
@@ -187,7 +187,9 @@ export const GPSPolygonCapture = ({ value, onChange, onCenterDetected }: GPSPoly
       )}
     </div>
   );
-};
+});
+
+GPSPolygonCapture.displayName = "GPSPolygonCapture";
 
 export const coordsToGeoJSON = (coords: { lat: number; lng: number }[]) => {
   if (coords.length < 3) return null;
