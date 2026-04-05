@@ -47,7 +47,7 @@ function computePerimeterM(coords: Coordinate[]): number {
   return Math.round(perimeter);
 }
 
-export const GPSPolygonCapture = ({ value, onChange, onCenterDetected }: GPSPolygonCaptureProps) => {
+export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCaptureProps>(({ value, onChange, onCenterDetected }, ref) => {
   const [capturing, setCapturing] = useState(false);
   const [autoMode, setAutoMode] = useState(false);
   const watchRef = useRef<number | null>(null);
