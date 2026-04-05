@@ -110,7 +110,7 @@ const HarvestsPage = () => {
                 <div className="space-y-2"><Label>N° Lot</Label><Input value={form.lot_number} onChange={(e) => setForm({ ...form, lot_number: e.target.value })} placeholder="Auto-généré" /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Prix/kg (FCFA)</Label><Input type="number" value={form.unit_price_kg} onChange={(e) => setForm({ ...form, unit_price_kg: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Prix/kg (FCFA)</Label><MarketplacePricePicker value={form.unit_price_kg} onChange={(v) => setForm({ ...form, unit_price_kg: v })} searchHint={cycles.find((c: any) => c.id === form.crop_cycle_id)?.crop_references?.name || ""} unit="FCFA" /></div>
                 <div className="space-y-2"><Label>Acheteur</Label><Input value={form.buyer} onChange={(e) => setForm({ ...form, buyer: e.target.value })} /></div>
               </div>
               <div className="flex items-center gap-2">
