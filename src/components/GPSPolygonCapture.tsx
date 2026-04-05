@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus, Trash2, Navigation, Locate, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
