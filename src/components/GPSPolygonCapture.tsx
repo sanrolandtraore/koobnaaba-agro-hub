@@ -128,7 +128,7 @@ export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCapt
   const perimeterM = computePerimeterM(value);
 
   return (
-    <div className="space-y-3">
+    <div ref={ref} className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-sm font-medium">Points GPS ({value.length})</span>
         <div className="flex gap-2">
