@@ -41,10 +41,23 @@ const Auth = () => {
   const [resetName, setResetName] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
   const [loading, setLoading] = useState(false);
-  // For register: choose primary method
   const [registerMethod, setRegisterMethod] = useState<LoginMethod>("phone");
-  const { signIn, signUp } = useAuth();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [hasCachedCreds, setHasCachedCreds] = useState(false);
+  const { signIn, signUp, signInOffline } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    hasOfflineCredentials().then(setHasCachedCreds);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
