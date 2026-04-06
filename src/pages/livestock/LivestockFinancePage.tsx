@@ -80,6 +80,16 @@ const LivestockFinancePage = () => {
   const [openExpense, setOpenExpense] = useState(false);
   const [openSale, setOpenSale] = useState(false);
 
+  const [expForm, setExpForm] = useState({
+    farm_id: "", animal_id: "", category: "alimentation", description: "",
+    amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "",
+  });
+  const [saleForm, setSaleForm] = useState({
+    farm_id: "", animal_id: "", sale_type: "animal", description: "",
+    quantity: "1", unit_price: "", buyer: "",
+    sale_date: new Date().toISOString().split("T")[0], notes: "",
+  });
+
   const loading = loadingExp || loadingSale;
 
   const handleExpenseSubmit = async (e: React.FormEvent) => {
