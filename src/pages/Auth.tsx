@@ -171,7 +171,12 @@ const Auth = () => {
             {mode === "forgot" ? <span className="text-gradient-warm">mot de passe</span> : <span className="text-gradient-warm">KoobNaaba</span>}
           </CardTitle>
           <CardDescription>
-            {mode === "login" ? "Connectez-vous avec votre téléphone ou email" : mode === "register" ? "Créez votre compte avec téléphone ou email" : "Entrez votre identifiant et votre nom complet"}
+            {!isOnline ? (
+              <span className="flex items-center justify-center gap-1.5 text-amber-600">
+                <WifiOff className="h-4 w-4" />
+                {hasCachedCreds ? "Mode hors-ligne — connectez-vous avec vos identifiants enregistrés" : "Pas de connexion internet"}
+              </span>
+            ) : mode === "login" ? "Connectez-vous avec votre téléphone ou email" : mode === "register" ? "Créez votre compte avec téléphone ou email" : "Entrez votre identifiant et votre nom complet"}
           </CardDescription>
         </CardHeader>
         <CardContent>
