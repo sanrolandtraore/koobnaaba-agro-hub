@@ -72,6 +72,20 @@ const Auth = () => {
         if (!loginEmail.trim()) { toast.error("L'email est requis"); setLoading(false); return; }
         authEmail = loginEmail.trim();
       }
+
+      if (!isOnline) {
+        // Offline login
+        const { error } = await signInOffline(authEmail, password);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Connexion hors-ligne réussie !");
+          navigate("/dashboard");
+        }
+        setLoading(false);
+        return;
+      }
+
       const { error } = await signIn(authEmail, password);
       if (error) {
         toast.error(error.message === "Invalid login credentials"
