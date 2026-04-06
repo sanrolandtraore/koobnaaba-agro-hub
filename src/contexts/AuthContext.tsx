@@ -207,7 +207,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const primaryRole = roles.length > 0 ? roles[0] : null;
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, isOfflineSession, signUp, signIn, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, isOfflineSession, signUp, signIn, signInOffline, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );
