@@ -37,6 +37,7 @@ export const agriculteurNav: NavItem[] = [
 
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
   { to: "/dashboard/livestock-dashboard", label: "Tableau élevage", icon: Beef },
   { to: "/dashboard/animals", label: "Animaux", icon: Beef },
   { to: "/dashboard/animal-health", label: "Santé", icon: Heart },

@@ -36,6 +36,7 @@ const statusOptions = [
 
 const breedsBySpecies: Record<string, string[]> = {
   bovin: ["Zébu Peulh", "Zébu Azawak", "Zébu Bororo", "N'Dama", "Baoulé", "Borgou", "Métis", "Holstein", "Charolais", "Brahman", "Autre"],
+  ovin: ["Bali-Bali", "Djallonké", "Mouton du Sahel", "Oudah", "Touareg", "Peulh", "Métis", "Autre"],
   caprin: ["Chèvre du Sahel", "Chèvre naine", "Chèvre rousse", "Alpine", "Saanen", "Boer", "Métis", "Autre"],
   porcin: ["Large White", "Landrace", "Duroc", "Porc local", "Piétrain", "Métis", "Autre"],
   volaille: ["Poulet local", "Poulet de chair", "Pondeuse", "Pintade", "Canard", "Dinde", "Caille", "Autre"],

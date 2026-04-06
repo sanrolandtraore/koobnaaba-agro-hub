@@ -52,6 +52,7 @@ const AnimalHealthPage = () => {
     table: 'animals',
     select: 'id, name, identification_number, species',
     queryKey: 'actif-only',
+    filter: [{ column: 'status', value: 'actif' }],
   });
 
   const [open, setOpen] = useState(false);
