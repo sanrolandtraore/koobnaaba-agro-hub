@@ -272,19 +272,21 @@ const Auth = () => {
                   <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
                 </div>
 
-                <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
-                  {loading ? "Chargement..." : mode === "login" ? "Se connecter" : "S'inscrire"}
+                <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading || (!isOnline && mode === "register")}>
+                  {loading ? "Chargement..." : !isOnline && mode === "login" ? "Se connecter hors-ligne" : mode === "login" ? "Se connecter" : "S'inscrire"}
                 </Button>
               </form>
               <div className="mt-4 text-center space-y-2">
-                {mode === "login" && (
+                {mode === "login" && isOnline && (
                   <button type="button" onClick={() => setMode("forgot")} className="block w-full text-sm text-primary hover:text-primary/80 transition-colors font-medium">
                     Mot de passe oublié ?
                   </button>
                 )}
-                <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {mode === "login" ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
-                </button>
+                {isOnline && (
+                  <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {mode === "login" ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
+                  </button>
+                )}
               </div>
             </>
           )}
