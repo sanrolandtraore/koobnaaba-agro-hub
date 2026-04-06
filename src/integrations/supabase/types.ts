@@ -2286,6 +2286,7 @@ export type Database = {
         | "porcin"
         | "volaille"
         | "pisciculture"
+        | "ovin"
       app_role:
         | "admin"
         | "manager"
@@ -2451,7 +2452,14 @@ export const Constants = {
         "autre",
       ],
       animal_sex: ["male", "femelle", "inconnu"],
-      animal_species: ["bovin", "caprin", "porcin", "volaille", "pisciculture"],
+      animal_species: [
+        "bovin",
+        "caprin",
+        "porcin",
+        "volaille",
+        "pisciculture",
+        "ovin",
+      ],
       app_role: [
         "admin",
         "manager",
