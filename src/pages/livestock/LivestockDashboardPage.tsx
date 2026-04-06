@@ -16,6 +16,7 @@ interface Stats {
 
 const speciesLabels: Record<string, string> = {
   bovin: "Bovins",
+  ovin: "Ovins",
   caprin: "Caprins",
   porcin: "Porcins",
   volaille: "Volaille",

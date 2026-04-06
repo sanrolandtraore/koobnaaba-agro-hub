@@ -1,0 +1,1 @@
+ALTER TYPE public.animal_species ADD VALUE IF NOT EXISTS 'ovin';

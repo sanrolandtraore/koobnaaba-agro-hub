@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOfflineData } from "@/hooks/useOfflineData";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,8 +74,8 @@ const LivestockFinancePage = () => {
     orderBy: "sale_date",
   });
 
-  const [farms, setFarms] = useState<any[]>([]);
-  const [animals, setAnimals] = useState<any[]>([]);
+  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
+  const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species' });
   const [openExpense, setOpenExpense] = useState(false);
   const [openSale, setOpenSale] = useState(false);
 
@@ -89,18 +88,6 @@ const LivestockFinancePage = () => {
     quantity: "1", unit_price: "", buyer: "",
     sale_date: new Date().toISOString().split("T")[0], notes: "",
   });
-
-  useEffect(() => {
-    if (user) {
-      Promise.all([
-        supabase.from("farms").select("id, name"),
-        supabase.from("animals").select("id, name, identification_number, species"),
-      ]).then(([farmsRes, animalsRes]) => {
-        setFarms(farmsRes.data || []);
-        setAnimals(animalsRes.data || []);
-      });
-    }
-  }, [user]);
 
   const loading = loadingExp || loadingSale;
 
