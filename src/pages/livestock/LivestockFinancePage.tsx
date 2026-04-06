@@ -75,32 +75,10 @@ const LivestockFinancePage = () => {
     orderBy: "sale_date",
   });
 
-  const [farms, setFarms] = useState<any[]>([]);
-  const [animals, setAnimals] = useState<any[]>([]);
+  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
+  const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species' });
   const [openExpense, setOpenExpense] = useState(false);
   const [openSale, setOpenSale] = useState(false);
-
-  const [expForm, setExpForm] = useState({
-    farm_id: "", animal_id: "", category: "alimentation", description: "",
-    amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "",
-  });
-  const [saleForm, setSaleForm] = useState({
-    farm_id: "", animal_id: "", sale_type: "animal", description: "",
-    quantity: "1", unit_price: "", buyer: "",
-    sale_date: new Date().toISOString().split("T")[0], notes: "",
-  });
-
-  useEffect(() => {
-    if (user) {
-      Promise.all([
-        supabase.from("farms").select("id, name"),
-        supabase.from("animals").select("id, name, identification_number, species"),
-      ]).then(([farmsRes, animalsRes]) => {
-        setFarms(farmsRes.data || []);
-        setAnimals(animalsRes.data || []);
-      });
-    }
-  }, [user]);
 
   const loading = loadingExp || loadingSale;
 

@@ -121,7 +121,7 @@ const App = () => (
                 <Route path="cooperative-documents" element={<Suspense fallback={<PageLoader />}><CooperativeDocumentsPage /></Suspense>} />
                 <Route path="cooperative-cotisations" element={<Suspense fallback={<PageLoader />}><CooperativeCotisationsPage /></Suspense>} />
                 <Route path="cooperative-score" element={<Suspense fallback={<PageLoader />}><CooperativeScorePage /></Suspense>} />
-                <Route path="export" element={<Suspense fallback={<PageLoader />}><AgriculteurExportPage /></Suspense>} />
+                <Route path="export" element={<Suspense fallback={<PageLoader />}><RoleExportRouter /></Suspense>} />
                 <Route path="animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
                 <Route path="animal-health" element={<Suspense fallback={<PageLoader />}><AnimalHealthPage /></Suspense>} />
                 <Route path="animal-feeding" element={<Suspense fallback={<PageLoader />}><AnimalFeedingPage /></Suspense>} />
