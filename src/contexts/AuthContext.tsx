@@ -14,6 +14,7 @@ interface AuthContextType {
   isOfflineSession: boolean;
   signUp: (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInOffline: (identifier: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
 }
