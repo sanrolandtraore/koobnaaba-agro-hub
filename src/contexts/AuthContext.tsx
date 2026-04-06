@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { saveOfflineSession, getOfflineSession, clearOfflineSession } from "@/lib/offlineDb";
+import { saveOfflineCredentials, verifyOfflineCredentials, clearOfflineCredentials } from "@/lib/offlineAuth";
 
 interface AuthContextType {
   user: User | null;
@@ -13,6 +14,7 @@ interface AuthContextType {
   isOfflineSession: boolean;
   signUp: (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInOffline: (identifier: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
 }
@@ -171,12 +173,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) {
+      // Cache credentials for offline login
+      await saveOfflineCredentials(email, password);
+    }
     return { error };
+  };
+
+  const signInOffline = async (identifier: string, password: string) => {
+    const valid = await verifyOfflineCredentials(identifier, password);
+    if (!valid) {
+      return { error: { message: "Identifiants hors-ligne invalides ou expirés" } };
+    }
+    const restored = await tryOfflineRestore();
+    if (!restored) {
+      return { error: { message: "Aucune session hors-ligne disponible" } };
+    }
+    return { error: null };
   };
 
   const signOut = async () => {
     try { await supabase.auth.signOut(); } catch {}
     await clearOfflineSession();
+    await clearOfflineCredentials();
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -188,7 +207,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const primaryRole = roles.length > 0 ? roles[0] : null;
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, isOfflineSession, signUp, signIn, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, isOfflineSession, signUp, signIn, signInOffline, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

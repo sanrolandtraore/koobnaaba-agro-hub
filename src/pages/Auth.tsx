@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound } from "lucide-react";
+import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { hasOfflineCredentials } from "@/lib/offlineAuth";
 import logo from "@/assets/logo.png";
 
 const ROLES = [
@@ -40,10 +41,23 @@ const Auth = () => {
   const [resetName, setResetName] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
   const [loading, setLoading] = useState(false);
-  // For register: choose primary method
   const [registerMethod, setRegisterMethod] = useState<LoginMethod>("phone");
-  const { signIn, signUp } = useAuth();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [hasCachedCreds, setHasCachedCreds] = useState(false);
+  const { signIn, signUp, signInOffline } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    hasOfflineCredentials().then(setHasCachedCreds);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +72,20 @@ const Auth = () => {
         if (!loginEmail.trim()) { toast.error("L'email est requis"); setLoading(false); return; }
         authEmail = loginEmail.trim();
       }
+
+      if (!isOnline) {
+        // Offline login
+        const { error } = await signInOffline(authEmail, password);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Connexion hors-ligne réussie !");
+          navigate("/dashboard");
+        }
+        setLoading(false);
+        return;
+      }
+
       const { error } = await signIn(authEmail, password);
       if (error) {
         toast.error(error.message === "Invalid login credentials"
@@ -143,7 +171,12 @@ const Auth = () => {
             {mode === "forgot" ? <span className="text-gradient-warm">mot de passe</span> : <span className="text-gradient-warm">KoobNaaba</span>}
           </CardTitle>
           <CardDescription>
-            {mode === "login" ? "Connectez-vous avec votre téléphone ou email" : mode === "register" ? "Créez votre compte avec téléphone ou email" : "Entrez votre identifiant et votre nom complet"}
+            {!isOnline ? (
+              <span className="flex items-center justify-center gap-1.5 text-amber-600">
+                <WifiOff className="h-4 w-4" />
+                {hasCachedCreds ? "Mode hors-ligne — connectez-vous avec vos identifiants enregistrés" : "Pas de connexion internet"}
+              </span>
+            ) : mode === "login" ? "Connectez-vous avec votre téléphone ou email" : mode === "register" ? "Créez votre compte avec téléphone ou email" : "Entrez votre identifiant et votre nom complet"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -239,19 +272,21 @@ const Auth = () => {
                   <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
                 </div>
 
-                <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
-                  {loading ? "Chargement..." : mode === "login" ? "Se connecter" : "S'inscrire"}
+                <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading || (!isOnline && mode === "register")}>
+                  {loading ? "Chargement..." : !isOnline && mode === "login" ? "Se connecter hors-ligne" : mode === "login" ? "Se connecter" : "S'inscrire"}
                 </Button>
               </form>
               <div className="mt-4 text-center space-y-2">
-                {mode === "login" && (
+                {mode === "login" && isOnline && (
                   <button type="button" onClick={() => setMode("forgot")} className="block w-full text-sm text-primary hover:text-primary/80 transition-colors font-medium">
                     Mot de passe oublié ?
                   </button>
                 )}
-                <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {mode === "login" ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
-                </button>
+                {isOnline && (
+                  <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {mode === "login" ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
+                  </button>
+                )}
               </div>
             </>
           )}
