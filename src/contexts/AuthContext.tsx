@@ -173,7 +173,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) {
+      // Cache credentials for offline login
+      await saveOfflineCredentials(email, password);
+    }
     return { error };
+  };
+
+  const signInOffline = async (identifier: string, password: string) => {
+    const valid = await verifyOfflineCredentials(identifier, password);
+    if (!valid) {
+      return { error: { message: "Identifiants hors-ligne invalides ou expirés" } };
+    }
+    const restored = await tryOfflineRestore();
+    if (!restored) {
+      return { error: { message: "Aucune session hors-ligne disponible" } };
+    }
+    return { error: null };
   };
 
   const signOut = async () => {
