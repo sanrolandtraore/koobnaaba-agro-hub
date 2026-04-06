@@ -14,6 +14,7 @@ import { useOfflineData } from "@/hooks/useOfflineData";
 
 const speciesOptions = [
   { value: "bovin", label: "Bovin 🐄" },
+  { value: "ovin", label: "Ovin 🐑" },
   { value: "caprin", label: "Caprin 🐐" },
   { value: "porcin", label: "Porcin 🐷" },
   { value: "volaille", label: "Volaille 🐔" },
