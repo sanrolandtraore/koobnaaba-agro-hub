@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound } from "lucide-react";
+import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { hasOfflineCredentials } from "@/lib/offlineAuth";
 import logo from "@/assets/logo.png";
 
 const ROLES = [
