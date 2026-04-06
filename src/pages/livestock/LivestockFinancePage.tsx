@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOfflineData } from "@/hooks/useOfflineData";
 import { Card, CardContent } from "@/components/ui/card";
