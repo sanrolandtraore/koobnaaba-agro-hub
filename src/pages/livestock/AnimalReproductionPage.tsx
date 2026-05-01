@@ -31,7 +31,9 @@ const AnimalReproductionPage = () => {
   });
   const { data: animals } = useOfflineData({
     table: 'animals',
-    select: 'id, name, identification_number, species, sex',
+    select: 'id, name, identification_number, species, sex, status',
+    queryKey: 'repro-animals-actif',
+    filter: [{ column: 'status', value: 'actif' }],
   });
 
   const [open, setOpen] = useState(false);
