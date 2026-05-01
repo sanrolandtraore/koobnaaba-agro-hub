@@ -34,33 +34,43 @@ const LivestockDashboardPage = () => {
 
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    let cancelled = false;
+    const fetchAll = async () => {
       setLoading(true);
-      const [animalsRes, healthRes, reproRes, expensesRes, salesRes, recentHealthRes] = await Promise.all([
-        supabase.from("animals").select("species, status").eq("status", "actif"),
-        supabase.from("animal_health_events").select("id, event_date").gte("event_date", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0]),
-        supabase.from("animal_reproductions").select("id, expected_birth_date").not("expected_birth_date", "is", null).is("actual_birth_date", null),
-        supabase.from("livestock_expenses").select("amount"),
-        supabase.from("livestock_sales").select("total_amount"),
-        supabase.from("animal_health_events").select("id, event_type, event_date, description, animal_id, animals(name, species)").order("event_date", { ascending: false }).limit(5),
-      ]);
+      try {
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
+        const [animalsRes, healthRes, reproRes, expensesRes, salesRes, recentHealthRes] = await Promise.all([
+          supabase.from("animals").select("species, status").eq("status", "actif"),
+          supabase.from("animal_health_events").select("id, event_date").gte("event_date", monthStart),
+          supabase.from("animal_reproductions").select("id, expected_birth_date").not("expected_birth_date", "is", null).is("actual_birth_date", null),
+          supabase.from("livestock_expenses").select("amount"),
+          supabase.from("livestock_sales").select("total_amount"),
+          supabase.from("animal_health_events").select("id, event_type, event_date, description, animal_id, animals(name, species)").order("event_date", { ascending: false }).limit(5),
+        ]);
 
-      const animals = animalsRes.data || [];
-      const bySpecies: Record<string, number> = {};
-      animals.forEach((a: any) => { bySpecies[a.species] = (bySpecies[a.species] || 0) + 1; });
+        if (cancelled) return;
 
-      setStats({
-        totalAnimals: animals.length,
-        bySpecies,
-        healthEventsThisMonth: (healthRes.data || []).length,
-        upcomingBirths: (reproRes.data || []).length,
-        totalExpenses: (expensesRes.data || []).reduce((s: number, e: any) => s + Number(e.amount), 0),
-        totalSales: (salesRes.data || []).reduce((s: number, e: any) => s + Number(e.total_amount), 0),
-      });
-      setRecentHealth(recentHealthRes.data || []);
-      setLoading(false);
+        const animals = animalsRes.data || [];
+        const bySpecies: Record<string, number> = {};
+        animals.forEach((a: any) => { bySpecies[a.species] = (bySpecies[a.species] || 0) + 1; });
+
+        setStats({
+          totalAnimals: animals.length,
+          bySpecies,
+          healthEventsThisMonth: (healthRes.data || []).length,
+          upcomingBirths: (reproRes.data || []).length,
+          totalExpenses: (expensesRes.data || []).reduce((s: number, e: any) => s + Number(e.amount || 0), 0),
+          totalSales: (salesRes.data || []).reduce((s: number, e: any) => s + Number(e.total_amount || 0), 0),
+        });
+        setRecentHealth(recentHealthRes.data || []);
+      } catch (err) {
+        console.error("Erreur chargement tableau de bord élevage:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-    fetch();
+    fetchAll();
+    return () => { cancelled = true; };
   }, [user]);
 
   if (loading) {
