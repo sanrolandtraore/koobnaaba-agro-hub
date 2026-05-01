@@ -1,18 +1,10 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOfflineData } from "@/hooks/useOfflineData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bug, Heart, Baby, DollarSign, AlertTriangle } from "lucide-react";
-
-interface Stats {
-  totalAnimals: number;
-  bySpecies: Record<string, number>;
-  healthEventsThisMonth: number;
-  upcomingBirths: number;
-  totalExpenses: number;
-  totalSales: number;
-}
+import { Badge } from "@/components/ui/badge";
+import { Bug, Heart, Baby, DollarSign, AlertTriangle, WifiOff } from "lucide-react";
 
 const speciesLabels: Record<string, string> = {
   bovin: "Bovins",
@@ -25,53 +17,71 @@ const speciesLabels: Record<string, string> = {
 
 const LivestockDashboardPage = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState<Stats>({
-    totalAnimals: 0, bySpecies: {}, healthEventsThisMonth: 0,
-    upcomingBirths: 0, totalExpenses: 0, totalSales: 0,
+
+  const monthStart = useMemo(
+    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
+    []
+  );
+
+  const { data: animals, loading: loadingAnimals, isOffline } = useOfflineData<any>({
+    table: "animals",
+    select: "species, status",
+    queryKey: "dashboard-animals-actif",
+    filter: [{ column: "status", value: "actif" }],
   });
-  const [recentHealth, setRecentHealth] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    const fetchAll = async () => {
-      setLoading(true);
-      try {
-        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
-        const [animalsRes, healthRes, reproRes, expensesRes, salesRes, recentHealthRes] = await Promise.all([
-          supabase.from("animals").select("species, status").eq("status", "actif"),
-          supabase.from("animal_health_events").select("id, event_date").gte("event_date", monthStart),
-          supabase.from("animal_reproductions").select("id, expected_birth_date").not("expected_birth_date", "is", null).is("actual_birth_date", null),
-          supabase.from("livestock_expenses").select("amount"),
-          supabase.from("livestock_sales").select("total_amount"),
-          supabase.from("animal_health_events").select("id, event_type, event_date, description, animal_id, animals(name, species)").order("event_date", { ascending: false }).limit(5),
-        ]);
+  const { data: healthAll, loading: loadingHealth } = useOfflineData<any>({
+    table: "animal_health_events",
+    select: "id, event_type, event_date, description, animal_id, animals(name, species)",
+    orderBy: "event_date",
+    queryKey: "dashboard-health-all",
+  });
 
-        if (cancelled) return;
+  const { data: reproAll, loading: loadingRepro } = useOfflineData<any>({
+    table: "animal_reproductions",
+    select: "id, expected_birth_date, actual_birth_date",
+    queryKey: "dashboard-repro-all",
+  });
 
-        const animals = animalsRes.data || [];
-        const bySpecies: Record<string, number> = {};
-        animals.forEach((a: any) => { bySpecies[a.species] = (bySpecies[a.species] || 0) + 1; });
+  const { data: expenses, loading: loadingExp } = useOfflineData<any>({
+    table: "livestock_expenses",
+    select: "amount",
+    queryKey: "dashboard-expenses",
+  });
 
-        setStats({
-          totalAnimals: animals.length,
-          bySpecies,
-          healthEventsThisMonth: (healthRes.data || []).length,
-          upcomingBirths: (reproRes.data || []).length,
-          totalExpenses: (expensesRes.data || []).reduce((s: number, e: any) => s + Number(e.amount || 0), 0),
-          totalSales: (salesRes.data || []).reduce((s: number, e: any) => s + Number(e.total_amount || 0), 0),
-        });
-        setRecentHealth(recentHealthRes.data || []);
-      } catch (err) {
-        console.error("Erreur chargement tableau de bord élevage:", err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+  const { data: sales, loading: loadingSales } = useOfflineData<any>({
+    table: "livestock_sales",
+    select: "total_amount",
+    queryKey: "dashboard-sales",
+  });
+
+  const loading = loadingAnimals || loadingHealth || loadingRepro || loadingExp || loadingSales;
+
+  const stats = useMemo(() => {
+    const bySpecies: Record<string, number> = {};
+    animals.forEach((a: any) => { bySpecies[a.species] = (bySpecies[a.species] || 0) + 1; });
+
+    const healthThisMonth = healthAll.filter((h: any) => h.event_date && h.event_date >= monthStart).length;
+    const upcomingBirths = reproAll.filter((r: any) => r.expected_birth_date && !r.actual_birth_date).length;
+    const totalExpenses = expenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0);
+    const totalSales = sales.reduce((s: number, e: any) => s + Number(e.total_amount || 0), 0);
+
+    return {
+      totalAnimals: animals.length,
+      bySpecies,
+      healthEventsThisMonth: healthThisMonth,
+      upcomingBirths,
+      totalExpenses,
+      totalSales,
     };
-    fetchAll();
-    return () => { cancelled = true; };
-  }, [user]);
+  }, [animals, healthAll, reproAll, expenses, sales, monthStart]);
+
+  const recentHealth = useMemo(
+    () => [...healthAll].sort((a: any, b: any) => (b.event_date || "").localeCompare(a.event_date || "")).slice(0, 5),
+    [healthAll]
+  );
+
+  if (!user) return null;
 
   if (loading) {
     return (
@@ -93,7 +103,14 @@ const LivestockDashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-heading font-bold">Élevage — Tableau de bord</h1>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-heading font-bold">Élevage — Tableau de bord</h1>
+        {isOffline && (
+          <Badge variant="outline" className="text-xs">
+            <WifiOff className="h-3 w-3 mr-1" />Mode hors-ligne — données en cache
+          </Badge>
+        )}
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((s) => (
@@ -141,8 +158,11 @@ const LivestockDashboardPage = () => {
                   <div key={h.id} className="flex items-start gap-3 text-sm">
                     <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-medium">{h.event_type} — {(h as any).animals?.name || "Animal"}</p>
-                      <p className="text-muted-foreground">{h.description || "Pas de détails"} • {new Date(h.event_date).toLocaleDateString("fr-FR")}</p>
+                      <p className="font-medium">{h.event_type} — {h.animals?.name || "Animal"}</p>
+                      <p className="text-muted-foreground">
+                        {h.description || "Pas de détails"}
+                        {h.event_date && ` • ${new Date(h.event_date).toLocaleDateString("fr-FR")}`}
+                      </p>
                     </div>
                   </div>
                 ))}
