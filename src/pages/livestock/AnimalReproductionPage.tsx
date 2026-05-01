@@ -90,9 +90,10 @@ const AnimalReproductionPage = () => {
               <div className="space-y-1">
                 <Label>Animal (mère) *</Label>
                 <Select value={form.animal_id} onValueChange={(v) => setForm({ ...form, animal_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Choisir la femelle..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={females.length === 0 ? "Aucune femelle active" : "Choisir la femelle..."} /></SelectTrigger>
                   <SelectContent>{females.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)} ({a.species})</SelectItem>)}</SelectContent>
                 </Select>
+                {females.length === 0 && <p className="text-xs text-muted-foreground">Ajoutez d'abord une femelle dans le registre des animaux.</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
