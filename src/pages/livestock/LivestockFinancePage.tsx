@@ -93,12 +93,16 @@ const LivestockFinancePage = () => {
 
   const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!expForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!expForm.description) { toast.error("Description requise"); return; }
+    const amount = Number(expForm.amount);
+    if (!amount || amount <= 0) { toast.error("Montant invalide"); return; }
     const result = await insertExpense({
       farm_id: expForm.farm_id,
       animal_id: expForm.animal_id || null,
       category: expForm.category,
       description: expForm.description,
-      amount: Number(expForm.amount),
+      amount,
       expense_date: expForm.expense_date,
       notes: expForm.notes || null,
     });
@@ -111,14 +115,20 @@ const LivestockFinancePage = () => {
 
   const handleSaleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const total = Number(saleForm.quantity) * Number(saleForm.unit_price);
+    if (!saleForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!saleForm.description) { toast.error("Description requise"); return; }
+    const quantity = Number(saleForm.quantity);
+    const unitPrice = Number(saleForm.unit_price);
+    if (!quantity || quantity <= 0) { toast.error("Quantité invalide"); return; }
+    if (!unitPrice || unitPrice <= 0) { toast.error("Prix unitaire invalide"); return; }
+    const total = quantity * unitPrice;
     const result = await insertSale({
       farm_id: saleForm.farm_id,
       animal_id: saleForm.animal_id || null,
       sale_type: saleForm.sale_type,
       description: saleForm.description,
-      quantity: Number(saleForm.quantity),
-      unit_price: Number(saleForm.unit_price),
+      quantity,
+      unit_price: unitPrice,
       total_amount: total,
       buyer: saleForm.buyer || null,
       sale_date: saleForm.sale_date,
