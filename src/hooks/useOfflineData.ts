@@ -71,13 +71,13 @@ export function useOfflineData<T = any>({
   const fetchData = useCallback(async () => {
     setLoading(true);
 
+    const parsedFilter: { column: string; value: any }[] = JSON.parse(stableFilter);
+
     if (navigator.onLine) {
       try {
         let query = (supabase.from(table as any) as any).select(select);
-        if (filter) {
-          for (const f of filter) {
-            query = query.eq(f.column, f.value);
-          }
+        for (const f of parsedFilter) {
+          query = query.eq(f.column, f.value);
         }
         query = query.order(orderBy, { ascending }).limit(limit);
 
@@ -106,7 +106,7 @@ export function useOfflineData<T = any>({
     }
 
     setLoading(false);
-  }, [table, cacheKey, select, orderBy, ascending, filter, limit]);
+  }, [table, cacheKey, select, orderBy, ascending, stableFilter, limit]);
 
   useEffect(() => {
     fetchData();
