@@ -50,7 +50,7 @@ const AnimalFeedingPage = () => {
     ascending: true,
   });
   const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
-  const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species' });
+  const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species', queryKey: 'feeding-animals-actif', filter: [{ column: 'status', value: 'actif' }] });
 
   const [openFeeding, setOpenFeeding] = useState(false);
   const [openStock, setOpenStock] = useState(false);
