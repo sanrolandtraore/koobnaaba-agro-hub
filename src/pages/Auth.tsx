@@ -10,6 +10,7 @@ import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRo
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { hasOfflineCredentials } from "@/lib/offlineAuth";
+import { hasPin } from "@/lib/pinAuth";
 import logo from "@/assets/logo.png";
 
 const ROLES = [
@@ -93,7 +94,8 @@ const Auth = () => {
           : error.message);
       } else {
         toast.success("Connexion réussie !");
-        navigate("/dashboard");
+        const pinExists = await hasPin();
+        navigate(pinExists ? "/dashboard" : "/auth/pin-setup");
       }
     } else {
       // Register
