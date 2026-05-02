@@ -203,6 +203,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try { await supabase.auth.signOut(); } catch {}
     await clearOfflineSession();
     await clearOfflineCredentials();
+    await clearPinLib();
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -213,8 +214,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hasRole = (role: string) => roles.includes(role);
   const primaryRole = roles.length > 0 ? roles[0] : null;
 
+  // ── PIN helpers ──
+  const setupPin = async (pin: string) => {
+    if (!user) return { ok: false, error: "Vous devez être connecté pour configurer un PIN" };
+    return setupPinLib(user.id, user.email || '', pin);
+  };
+
+  const unlockWithPin = async (pin: string) => {
+    const result = await verifyPinLib(pin);
+    if (!result.ok || !result.record) return { ok: false, error: result.error };
+    // Try restore offline session first (works without network)
+    const restored = await tryOfflineRestore();
+    if (!restored) {
+      return { ok: false, error: "Session locale introuvable. Reconnectez-vous avec votre mot de passe." };
+    }
+    return { ok: true };
+  };
+
+  const hasPin = () => hasPinLib();
+  const clearPin = () => clearPinLib();
+  const getPinIdentifier = async () => {
+    const rec = await getPinRecord();
+    return rec?.identifier ?? null;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, primaryRole, isOfflineSession, signUp, signIn, signInOffline, signOut, hasRole }}>
+    <AuthContext.Provider value={{
+      user, session, loading, profile, roles, primaryRole, isOfflineSession,
+      signUp, signIn, signInOffline, signOut, hasRole,
+      setupPin, unlockWithPin, hasPin, clearPin, getPinIdentifier,
+    }}>
       {children}
     </AuthContext.Provider>
   );
