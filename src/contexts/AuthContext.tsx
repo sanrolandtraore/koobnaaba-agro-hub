@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { saveOfflineSession, getOfflineSession, clearOfflineSession } from "@/lib/offlineDb";
 import { saveOfflineCredentials, verifyOfflineCredentials, clearOfflineCredentials } from "@/lib/offlineAuth";
+import { setupPin as setupPinLib, verifyPin as verifyPinLib, hasPin as hasPinLib, clearPin as clearPinLib, getPinRecord } from "@/lib/pinAuth";
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +18,12 @@ interface AuthContextType {
   signInOffline: (identifier: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
+  // PIN helpers
+  setupPin: (pin: string) => Promise<{ ok: boolean; error?: string }>;
+  unlockWithPin: (pin: string) => Promise<{ ok: boolean; error?: string }>;
+  hasPin: () => Promise<boolean>;
+  clearPin: () => Promise<void>;
+  getPinIdentifier: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
