@@ -10,6 +10,8 @@ import OfflineIndicator from "@/components/OfflineIndicator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import PinSetup from "./pages/PinSetup";
+import PinUnlock from "./pages/PinUnlock";
 import MentionsLegales from "./pages/MentionsLegales";
 import ConditionsUtilisation from "./pages/ConditionsUtilisation";
 import PolitiqueConfidentialite from "./pages/PolitiqueConfidentialite";
@@ -94,6 +96,8 @@ const App = () => (
               <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
               <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/pin-setup" element={<PinSetup />} />
+              <Route path="/auth/pin" element={<PinUnlock />} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
                 <Route path="farms" element={<Suspense fallback={<PageLoader />}><FarmsPage /></Suspense>} />
