@@ -203,7 +203,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try { await supabase.auth.signOut(); } catch {}
     await clearOfflineSession();
     await clearOfflineCredentials();
-    await clearPinLib();
+    // NOTE: PIN is intentionally NOT cleared on signOut so the user can
+    // re-login quickly. Use clearPin() explicitly to remove it.
     setUser(null);
     setSession(null);
     setProfile(null);
