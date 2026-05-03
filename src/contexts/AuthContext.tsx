@@ -72,13 +72,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Try to restore offline session when no network
-  const tryOfflineRestore = async () => {
-    if (navigator.onLine) return false;
+  // Try to restore offline session. By default only when offline; pass
+  // `force=true` to restore even when online (used by PIN unlock fallback).
+  const tryOfflineRestore = async (force = false) => {
+    if (!force && navigator.onLine) return false;
     try {
       const cached = await getOfflineSession();
       if (cached) {
-        // Create a minimal user-like object for offline mode
         setUser({ id: cached.userId, email: cached.email } as User);
         setProfile(cached.profile);
         setRoles(cached.roles);
