@@ -251,7 +251,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // Offline (or no JWT available) — restore cached read-only session
-    const restored = await tryOfflineRestore();
+    const restored = await tryOfflineRestore(true);
     if (!restored) {
       return { ok: false, error: "Session locale introuvable. Reconnectez-vous avec votre mot de passe." };
     }
