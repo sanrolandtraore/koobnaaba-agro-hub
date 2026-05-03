@@ -223,7 +223,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const unlockWithPin = async (pin: string) => {
     const result = await verifyPinLib(pin);
     if (!result.ok || !result.record) return { ok: false, error: result.error };
-    // Try restore offline session first (works without network)
+
+    // If online, try to silently re-establish a real Supabase JWT session
+    // by reusing the cached offline credentials (auto-login total).
+    if (navigator.onLine) {
+      try {
+        const db = await (await import("@/lib/offlineDb")).getDb();
+        const entry = await db.get("cachedData", "offline-credentials");
+        const creds = entry?.data?.[0];
+        if (creds?.identifier) {
+          // We only have the hash; we cannot replay the password. Fall back to
+          // refreshing any existing Supabase session token if available.
+          const { data } = await supabase.auth.getSession();
+          if (data.session?.user) {
+            setSession(data.session);
+            setUser(data.session.user);
+            setIsOfflineSession(false);
+            const p = await fetchProfile(data.session.user.id);
+            const r = await fetchRoles(data.session.user.id);
+            await cacheSession(data.session.user.id, data.session.user.email || "", p, r);
+            return { ok: true };
+          }
+        }
+      } catch (e) {
+        console.warn("PIN unlock: online refresh failed, falling back to offline session", e);
+      }
+    }
+
+    // Offline (or no JWT available) — restore cached read-only session
     const restored = await tryOfflineRestore();
     if (!restored) {
       return { ok: false, error: "Session locale introuvable. Reconnectez-vous avec votre mot de passe." };
