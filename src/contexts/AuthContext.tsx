@@ -192,7 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!valid) {
       return { error: { message: "Identifiants hors-ligne invalides ou expirés" } };
     }
-    const restored = await tryOfflineRestore();
+    const restored = await tryOfflineRestore(true);
     if (!restored) {
       return { error: { message: "Aucune session hors-ligne disponible" } };
     }
