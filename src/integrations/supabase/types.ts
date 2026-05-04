@@ -2075,6 +2075,7 @@ export type Database = {
       }
       service_requests: {
         Row: {
+          assigned_partner_id: string | null
           created_at: string
           description: string | null
           estimated_cost: number | null
@@ -2090,6 +2091,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_partner_id?: string | null
           created_at?: string
           description?: string | null
           estimated_cost?: number | null
@@ -2105,6 +2107,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_partner_id?: string | null
           created_at?: string
           description?: string | null
           estimated_cost?: number | null
