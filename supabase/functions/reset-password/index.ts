@@ -81,42 +81,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const isEmail = identifier.includes("@");
+    // Phone-only identifier
+    const cleaned = identifier.replace(/[^0-9+]/g, "");
+    if (cleaned.length < 8) {
+      return new Response(
+        JSON.stringify({ error: "Numéro de téléphone invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     let userId: string | null = null;
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id, full_name")
+      .eq("phone", cleaned)
+      .limit(5);
 
-    if (isEmail) {
-      const { data: profiles } = await supabaseAdmin
-        .from("profiles")
-        .select("user_id, full_name")
-        .eq("email", identifier.trim().toLowerCase())
-        .limit(5);
-
-      if (profiles && profiles.length > 0) {
-        const match = profiles.find(
-          (p: any) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
-        );
-        if (match) userId = match.user_id;
-      }
-    } else {
-      const cleaned = identifier.replace(/[^0-9+]/g, "");
-      if (cleaned.length < 8) {
-        return new Response(
-          JSON.stringify({ error: "Numéro de téléphone invalide" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const { data: profiles } = await supabaseAdmin
-        .from("profiles")
-        .select("user_id, full_name")
-        .eq("phone", cleaned)
-        .limit(5);
-
-      if (profiles && profiles.length > 0) {
-        const match = profiles.find(
-          (p: any) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
-        );
-        if (match) userId = match.user_id;
-      }
+    if (profiles && profiles.length > 0) {
+      const match = profiles.find(
+        (p: any) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
+      );
+      if (match) userId = match.user_id;
     }
 
     // Audit log (always, regardless of outcome)
@@ -125,8 +109,8 @@ serve(async (req) => {
       table_name: "auth.users",
       record_id: userId || null,
       new_data: {
-        identifier_type: isEmail ? "email" : "phone",
-        identifier_hint: isEmail ? identifier.slice(0, 3) + "***" : "***" + identifier.slice(-4),
+        identifier_type: "phone",
+        identifier_hint: "***" + cleaned.slice(-4),
         success: !!userId,
       },
     });

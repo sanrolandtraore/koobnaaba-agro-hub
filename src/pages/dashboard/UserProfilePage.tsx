@@ -146,10 +146,6 @@ const UserProfilePage = () => {
               <Label>Téléphone</Label>
               <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             </div>
-            <div>
-              <Label>Email</Label>
-              <Input value={user?.email || ""} disabled className="bg-muted" />
-            </div>
           </CardContent>
         </Card>
 
