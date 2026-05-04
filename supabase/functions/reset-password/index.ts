@@ -109,8 +109,8 @@ serve(async (req) => {
       table_name: "auth.users",
       record_id: userId || null,
       new_data: {
-        identifier_type: isEmail ? "email" : "phone",
-        identifier_hint: isEmail ? identifier.slice(0, 3) + "***" : "***" + identifier.slice(-4),
+        identifier_type: "phone",
+        identifier_hint: "***" + cleaned.slice(-4),
         success: !!userId,
       },
     });
