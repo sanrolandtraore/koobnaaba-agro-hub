@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
+import { Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { hasOfflineCredentials } from "@/lib/offlineAuth";
@@ -20,29 +20,29 @@ const ROLES = [
   { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Financement et accompagnement" },
 ] as const;
 
-const phoneToEmail = (phone: string) => {
+// Generate a stable internal identifier from phone number.
+// The "@koobnaaba.local" suffix is a technical requirement of Supabase Auth
+// and is never displayed to the user.
+const phoneToInternalId = (phone: string) => {
   const cleaned = phone.replace(/[^0-9+]/g, "");
   return `${cleaned}@koobnaaba.local`;
 };
 
+const cleanPhone = (phone: string) => phone.replace(/[^0-9+]/g, "");
+
 type AuthMode = "login" | "register" | "forgot";
-type LoginMethod = "phone" | "email";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>("phone");
   const [phone, setPhone] = useState("");
-  const [loginEmail, setLoginEmail] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [resetIdentifier, setResetIdentifier] = useState("");
+  const [resetPhone, setResetPhone] = useState("");
   const [resetName, setResetName] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
   const [loading, setLoading] = useState(false);
-  const [registerMethod, setRegisterMethod] = useState<LoginMethod>("phone");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [hasCachedCreds, setHasCachedCreds] = useState(false);
   const { signIn, signUp, signInOffline } = useAuth();
@@ -64,22 +64,18 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (mode === "login") {
-      let authEmail: string;
-      if (loginMethod === "phone") {
-        if (!phone.trim()) { toast.error("Le numéro de téléphone est requis"); setLoading(false); return; }
-        authEmail = phoneToEmail(phone);
-      } else {
-        if (!loginEmail.trim()) { toast.error("L'email est requis"); setLoading(false); return; }
-        authEmail = loginEmail.trim();
-      }
+    if (!phone.trim()) {
+      toast.error("Le numéro de téléphone est requis");
+      setLoading(false);
+      return;
+    }
+    const internalId = phoneToInternalId(phone);
 
+    if (mode === "login") {
       if (!isOnline) {
-        // Offline login
-        const { error } = await signInOffline(authEmail, password);
-        if (error) {
-          toast.error(error.message);
-        } else {
+        const { error } = await signInOffline(internalId, password);
+        if (error) toast.error(error.message);
+        else {
           toast.success("Connexion hors-ligne réussie !");
           navigate("/dashboard");
         }
@@ -87,10 +83,10 @@ const Auth = () => {
         return;
       }
 
-      const { error } = await signIn(authEmail, password);
+      const { error } = await signIn(internalId, password);
       if (error) {
         toast.error(error.message === "Invalid login credentials"
-          ? "Identifiant ou mot de passe incorrect"
+          ? "Numéro ou mot de passe incorrect"
           : error.message);
       } else {
         toast.success("Connexion réussie !");
@@ -99,28 +95,22 @@ const Auth = () => {
       }
     } else {
       // Register
-      if (!fullName.trim()) { toast.error("Le nom complet est requis"); setLoading(false); return; }
-
-      let authEmail: string;
-      let realPhone = "";
-      let realEmail = "";
-
-      if (registerMethod === "phone") {
-        if (!phone.trim()) { toast.error("Le numéro de téléphone est requis"); setLoading(false); return; }
-        authEmail = phoneToEmail(phone);
-        realPhone = phone.replace(/[^0-9+]/g, "");
-        realEmail = email; // optional
-      } else {
-        if (!loginEmail.trim()) { toast.error("L'email est requis"); setLoading(false); return; }
-        authEmail = loginEmail.trim();
-        realEmail = loginEmail.trim();
-        realPhone = phone; // optional
+      if (!fullName.trim()) {
+        toast.error("Le nom complet est requis");
+        setLoading(false);
+        return;
+      }
+      const realPhone = cleanPhone(phone);
+      if (realPhone.length < 8) {
+        toast.error("Numéro de téléphone invalide");
+        setLoading(false);
+        return;
       }
 
-      const { error } = await signUp(authEmail, password, fullName, selectedRole, realPhone, realEmail);
+      const { error } = await signUp(internalId, password, fullName, selectedRole, realPhone, "");
       if (error) {
         if (error.message?.includes("already registered")) {
-          toast.error("Cet identifiant est déjà utilisé. Essayez de vous connecter.");
+          toast.error("Ce numéro est déjà utilisé. Essayez de vous connecter.");
         } else {
           toast.error(error.message);
         }
@@ -134,34 +124,43 @@ const Auth = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetIdentifier.trim() || !resetName.trim()) { toast.error("Veuillez remplir tous les champs"); return; }
-    if (newPassword.length < 8) { toast.error("Le mot de passe doit contenir au moins 8 caractères"); return; }
-    if (newPassword !== confirmPassword) { toast.error("Les mots de passe ne correspondent pas"); return; }
+    if (!resetPhone.trim() || !resetName.trim()) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("reset-password", {
-        body: { identifier: resetIdentifier.trim(), new_password: newPassword, full_name: resetName.trim() },
+        body: {
+          identifier: cleanPhone(resetPhone),
+          new_password: newPassword,
+          full_name: resetName.trim(),
+        },
       });
       if (error) toast.error("Erreur de connexion au serveur");
       else if (data?.error) toast.error(data.error);
-      else { toast.success("Mot de passe réinitialisé ! Connectez-vous."); setMode("login"); setResetIdentifier(""); setResetName(""); setNewPassword(""); setConfirmPassword(""); }
-    } catch { toast.error("Erreur de connexion au serveur"); }
+      else {
+        toast.success("Mot de passe réinitialisé ! Connectez-vous.");
+        setMode("login");
+        setResetPhone("");
+        setResetName("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch {
+      toast.error("Erreur de connexion au serveur");
+    }
     setLoading(false);
   };
-
-  const MethodToggle = ({ value, onChange, label1 = "Téléphone", label2 = "Email" }: { value: LoginMethod; onChange: (v: LoginMethod) => void; label1?: string; label2?: string }) => (
-    <div className="flex rounded-lg border border-border overflow-hidden">
-      <button type="button" onClick={() => onChange("phone")}
-        className={cn("flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors", value === "phone" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted")}>
-        <Phone className="h-3.5 w-3.5" />{label1}
-      </button>
-      <button type="button" onClick={() => onChange("email")}
-        className={cn("flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors", value === "email" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted")}>
-        <Mail className="h-3.5 w-3.5" />{label2}
-      </button>
-    </div>
-  );
 
   return (
     <div className="flex min-h-screen items-center justify-center gradient-hero p-4">
@@ -178,15 +177,19 @@ const Auth = () => {
                 <WifiOff className="h-4 w-4" />
                 {hasCachedCreds ? "Mode hors-ligne — connectez-vous avec vos identifiants enregistrés" : "Pas de connexion internet"}
               </span>
-            ) : mode === "login" ? "Connectez-vous avec votre téléphone ou email" : mode === "register" ? "Créez votre compte avec téléphone ou email" : "Entrez votre identifiant et votre nom complet"}
+            ) : mode === "login"
+              ? "Connectez-vous avec votre numéro de téléphone"
+              : mode === "register"
+              ? "Créez votre compte avec votre numéro de téléphone"
+              : "Entrez votre numéro et votre nom complet"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {mode === "forgot" ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="resetId" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Téléphone ou Email</Label>
-                <Input id="resetId" value={resetIdentifier} onChange={e => setResetIdentifier(e.target.value)} placeholder="+226 70 00 00 00 ou votre@email.com" required />
+                <Label htmlFor="resetPhone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
+                <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="resetName" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet (vérification)</Label>
@@ -233,45 +236,14 @@ const Auth = () => {
                   </>
                 )}
 
-                {/* Method toggle */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Se {mode === "login" ? "connecter" : "inscrire"} avec</Label>
-                  <MethodToggle value={mode === "login" ? loginMethod : registerMethod} onChange={v => mode === "login" ? setLoginMethod(v) : setRegisterMethod(v)} />
+                  <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
+                  <Input id="phone" type="tel" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+226 70 00 00 00" required autoComplete="tel" />
                 </div>
-
-                {/* Phone field */}
-                {((mode === "login" && loginMethod === "phone") || (mode === "register" && registerMethod === "phone")) && (
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
-                    <Input id="phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+226 70 00 00 00" required />
-                  </div>
-                )}
-
-                {/* Email field (login or register primary) */}
-                {((mode === "login" && loginMethod === "email") || (mode === "register" && registerMethod === "email")) && (
-                  <div className="space-y-2">
-                    <Label htmlFor="loginEmail" className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> Email</Label>
-                    <Input id="loginEmail" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="votre@email.com" required />
-                  </div>
-                )}
-
-                {/* Optional secondary field for register */}
-                {mode === "register" && registerMethod === "phone" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> Email <span className="text-xs text-muted-foreground">(optionnel)</span></Label>
-                    <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="votre@email.com" />
-                  </div>
-                )}
-                {mode === "register" && registerMethod === "email" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneOpt" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Téléphone <span className="text-xs text-muted-foreground">(optionnel)</span></Label>
-                    <Input id="phoneOpt" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+226 70 00 00 00" />
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Mot de passe</Label>
-                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
+                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} />
                 </div>
 
                 <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading || (!isOnline && mode === "register")}>
