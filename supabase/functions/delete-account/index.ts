@@ -123,9 +123,9 @@ serve(async (req) => {
     });
   } catch (error: any) {
     console.error("delete-account error:", error);
-    return new Response(JSON.stringify({ error: "Erreur lors de la suppression du compte" }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: "Erreur lors de la suppression du compte" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
