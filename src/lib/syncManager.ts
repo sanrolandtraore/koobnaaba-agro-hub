@@ -88,6 +88,10 @@ export async function syncOnReconnect(): Promise<void> {
 // Auto-sync when coming back online
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    setTimeout(() => syncOnReconnect(), 1500);
+    setTimeout(async () => {
+      await syncOnReconnect();
+      // Notify the rest of the app (hooks, dashboards) that they should refetch
+      window.dispatchEvent(new CustomEvent('koobnaaba:sync-completed'));
+    }, 1500);
   });
 }
