@@ -112,6 +112,13 @@ export function useOfflineData<T = any>({
     fetchData();
   }, [fetchData]);
 
+  // Refetch fresh data after reconnect & queued sync completes
+  useEffect(() => {
+    const handleSynced = () => { fetchData(); };
+    window.addEventListener('koobnaaba:sync-completed', handleSynced);
+    return () => window.removeEventListener('koobnaaba:sync-completed', handleSynced);
+  }, [fetchData]);
+
   const queueOfflineInsert = useCallback(async (row: any, message: string) => {
     const tempId = `offline-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const offlineRow = { ...row, id: tempId, _offline: true, created_at: new Date().toISOString() };
