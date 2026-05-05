@@ -72,7 +72,13 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
 
 export async function syncOnReconnect(): Promise<void> {
   const count = await getSyncQueueCount();
-  if (count === 0) return;
+  if (count === 0) {
+    // Still notify so UIs can refetch fresh server data after reconnect
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('koobnaaba:sync-completed'));
+    }
+    return;
+  }
 
   toast.info(`Synchronisation de ${count} modification(s)...`);
   const { synced, failed } = await processSyncQueue();
@@ -88,6 +94,10 @@ export async function syncOnReconnect(): Promise<void> {
 // Auto-sync when coming back online
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    setTimeout(() => syncOnReconnect(), 1500);
+    setTimeout(async () => {
+      await syncOnReconnect();
+      // Notify the rest of the app (hooks, dashboards) that they should refetch
+      window.dispatchEvent(new CustomEvent('koobnaaba:sync-completed'));
+    }, 1500);
   });
 }

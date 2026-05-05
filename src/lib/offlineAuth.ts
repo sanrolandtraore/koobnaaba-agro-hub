@@ -3,9 +3,20 @@ import { getDb } from './offlineDb';
 const CREDENTIALS_KEY = 'offline-credentials';
 
 interface OfflineCredentials {
-  identifier: string; // email or phone-email
+  identifier: string; // normalized phone number (digits + optional leading '+')
   passwordHash: string;
   savedAt: number;
+}
+
+// Normalize any phone-like input or legacy email-format identifier
+// (e.g. "+22670000000@koobnaaba.local") to a canonical phone string.
+export function normalizePhoneIdentifier(input: string): string {
+  if (!input) return '';
+  // Strip the legacy "@koobnaaba.local" suffix if present
+  const base = input.split('@')[0];
+  // Keep digits and a leading '+'
+  const cleaned = base.replace(/[^0-9+]/g, '');
+  return cleaned.toLowerCase();
 }
 
 async function hashPassword(password: string): Promise<string> {
@@ -20,7 +31,11 @@ export async function saveOfflineCredentials(identifier: string, password: strin
   try {
     const db = await getDb();
     const passwordHash = await hashPassword(password);
-    const creds: OfflineCredentials = { identifier: identifier.toLowerCase(), passwordHash, savedAt: Date.now() };
+    const creds: OfflineCredentials = {
+      identifier: normalizePhoneIdentifier(identifier),
+      passwordHash,
+      savedAt: Date.now(),
+    };
     await db.put('cachedData', {
       key: CREDENTIALS_KEY,
       table: '_credentials',
@@ -40,7 +55,7 @@ export async function verifyOfflineCredentials(identifier: string, password: str
     const creds = entry.data[0] as OfflineCredentials;
     // Expire after 30 days
     if (Date.now() - creds.savedAt > 30 * 24 * 60 * 60 * 1000) return false;
-    if (creds.identifier !== identifier.toLowerCase()) return false;
+    if (creds.identifier !== normalizePhoneIdentifier(identifier)) return false;
     const inputHash = await hashPassword(password);
     return inputHash === creds.passwordHash;
   } catch (e) {
