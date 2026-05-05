@@ -250,9 +250,11 @@ const ServiceMarketplacePage = () => {
           <TabsTrigger value="suppliers" className="flex items-center gap-1.5">
             <Package className="h-4 w-4" /> Fournisseurs ({suppliers.length})
           </TabsTrigger>
-          <TabsTrigger value="orders" className="flex items-center gap-1.5">
-            <Package className="h-4 w-4" /> Mes commandes ({clientOrders.length})
-          </TabsTrigger>
+          {isClient && (
+            <TabsTrigger value="orders" className="flex items-center gap-1.5">
+              <Package className="h-4 w-4" /> Mes commandes ({clientOrders.length})
+            </TabsTrigger>
+          )}
           {isProvider && (
             <>
               <TabsTrigger value="my-services" className="flex items-center gap-1.5">
@@ -304,9 +306,13 @@ const ServiceMarketplacePage = () => {
                       {svc.location_name && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{svc.location_name}</span>}
                       {svc.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{svc.phone}</span>}
                     </div>
-                    <Button size="sm" className="w-full gradient-primary text-primary-foreground" onClick={() => { setSelectedService(svc); setShowOrderDialog(true); }}>
-                      <Lock className="h-3.5 w-3.5 mr-1.5" /> Commander (paiement sécurisé)
-                    </Button>
+                    {isClient ? (
+                      <Button size="sm" className="w-full gradient-primary text-primary-foreground" onClick={() => { setSelectedService(svc); setShowOrderDialog(true); }}>
+                        <Lock className="h-3.5 w-3.5 mr-1.5" /> Commander (paiement sécurisé)
+                      </Button>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground text-center italic">Réservé aux agriculteurs, éleveurs et coopératives</p>
+                    )}
                   </CardContent>
                 </Card>
               ))}
