@@ -72,7 +72,13 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
 
 export async function syncOnReconnect(): Promise<void> {
   const count = await getSyncQueueCount();
-  if (count === 0) return;
+  if (count === 0) {
+    // Still notify so UIs can refetch fresh server data after reconnect
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('koobnaaba:sync-completed'));
+    }
+    return;
+  }
 
   toast.info(`Synchronisation de ${count} modification(s)...`);
   const { synced, failed } = await processSyncQueue();
