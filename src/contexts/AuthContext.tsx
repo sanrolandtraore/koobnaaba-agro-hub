@@ -138,18 +138,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    // Listen for coming back online to re-validate
-    const handleOnline = () => {
-      if (isOfflineSession) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session?.user) {
-            setSession(session);
-            setUser(session.user);
-            setIsOfflineSession(false);
-            fetchProfile(session.user.id);
-            fetchRoles(session.user.id);
-          }
-        });
+    // Listen for coming back online to re-validate session & refresh data
+    const handleOnline = async () => {
+      try {
+        const { data: { session: fresh } } = await supabase.auth.getSession();
+        if (fresh?.user) {
+          setSession(fresh);
+          setUser(fresh.user);
+          setIsOfflineSession(false);
+          const p = await fetchProfile(fresh.user.id);
+          const r = await fetchRoles(fresh.user.id);
+          await cacheSession(fresh.user.id, fresh.user.email || '', p, r);
+        }
+      } catch (e) {
+        console.warn('Online re-validation failed:', e);
       }
     };
     window.addEventListener('online', handleOnline);
