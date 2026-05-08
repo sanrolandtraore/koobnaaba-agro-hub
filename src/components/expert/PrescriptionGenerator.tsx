@@ -89,7 +89,7 @@ export function PrescriptionGenerator() {
     doc.text("Signature de l'expert :", 130, y);
     doc.line(130, y + 14, 196, y + 14);
 
-    doc.save(`ordonnance-${clientName || "client"}-${today.replaceAll("/", "-")}.pdf`);
+    doc.save(`ordonnance-${clientName || "client"}-${today.replace(/\//g, "-")}.pdf`);
 
     // Save to DB
     if (user) {
