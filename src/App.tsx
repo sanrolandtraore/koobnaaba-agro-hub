@@ -63,6 +63,13 @@ const ExpertCartographyPage = lazy(() => import("./pages/dashboard/ExpertCartogr
 const ScoutingPage = lazy(() => import("./pages/dashboard/ScoutingPage"));
 const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
 const UserProfilePage = lazy(() => import("./pages/dashboard/UserProfilePage"));
+const ExpertToolboxPage = lazy(() => import("./pages/dashboard/expert/ExpertToolboxPage"));
+const ExpertDiagnosisPage = lazy(() => import("./pages/dashboard/expert/ExpertDiagnosisPage"));
+const ExpertCalculatorPage = lazy(() => import("./pages/dashboard/expert/ExpertCalculatorPage"));
+const ExpertPrescriptionsPage = lazy(() => import("./pages/dashboard/expert/ExpertPrescriptionsPage"));
+const CropLibraryPage = lazy(() => import("./pages/dashboard/expert/CropLibraryPage"));
+const ExpertClientsPage = lazy(() => import("./pages/dashboard/expert/ExpertClientsPage"));
+const ExpertAnalyticsPage = lazy(() => import("./pages/dashboard/expert/ExpertAnalyticsPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -139,6 +146,13 @@ const App = () => (
                 <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
                 <Route path="expert-cartography" element={<Suspense fallback={<PageLoader />}><ExpertCartographyPage /></Suspense>} />
                 <Route path="scouting" element={<Suspense fallback={<PageLoader />}><ScoutingPage /></Suspense>} />
+                <Route path="expert-toolbox" element={<Suspense fallback={<PageLoader />}><ExpertToolboxPage /></Suspense>} />
+                <Route path="expert-diagnosis" element={<Suspense fallback={<PageLoader />}><ExpertDiagnosisPage /></Suspense>} />
+                <Route path="expert-calculator" element={<Suspense fallback={<PageLoader />}><ExpertCalculatorPage /></Suspense>} />
+                <Route path="expert-prescriptions" element={<Suspense fallback={<PageLoader />}><ExpertPrescriptionsPage /></Suspense>} />
+                <Route path="crop-library" element={<Suspense fallback={<PageLoader />}><CropLibraryPage /></Suspense>} />
+                <Route path="expert-clients" element={<Suspense fallback={<PageLoader />}><ExpertClientsPage /></Suspense>} />
+                <Route path="expert-analytics" element={<Suspense fallback={<PageLoader />}><ExpertAnalyticsPage /></Suspense>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

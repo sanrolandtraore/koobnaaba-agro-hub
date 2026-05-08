@@ -340,6 +340,62 @@ export type Database = {
         }
         Relationships: []
       }
+      client_visits: {
+        Row: {
+          client_user_id: string
+          created_at: string
+          expert_id: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          next_visit_date: string | null
+          observations: string | null
+          parcel_id: string | null
+          recommendations: string | null
+          updated_at: string
+          visit_date: string
+          visit_type: string
+        }
+        Insert: {
+          client_user_id: string
+          created_at?: string
+          expert_id: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          next_visit_date?: string | null
+          observations?: string | null
+          parcel_id?: string | null
+          recommendations?: string | null
+          updated_at?: string
+          visit_date?: string
+          visit_type?: string
+        }
+        Update: {
+          client_user_id?: string
+          created_at?: string
+          expert_id?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          next_visit_date?: string | null
+          observations?: string | null
+          parcel_id?: string | null
+          recommendations?: string | null
+          updated_at?: string
+          visit_date?: string
+          visit_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_visits_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       climate_zones: {
         Row: {
           avg_rainfall_mm: number | null
@@ -1052,6 +1108,62 @@ export type Database = {
           },
         ]
       }
+      crop_diagnoses: {
+        Row: {
+          ai_response: Json
+          client_user_id: string | null
+          confidence: number | null
+          created_at: string
+          crop_key: string | null
+          diagnosis_summary: string | null
+          expert_id: string
+          id: string
+          image_path: string | null
+          parcel_id: string | null
+          symptoms_input: string | null
+          treatment_bio: string | null
+          treatment_chemical: string | null
+        }
+        Insert: {
+          ai_response?: Json
+          client_user_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          crop_key?: string | null
+          diagnosis_summary?: string | null
+          expert_id: string
+          id?: string
+          image_path?: string | null
+          parcel_id?: string | null
+          symptoms_input?: string | null
+          treatment_bio?: string | null
+          treatment_chemical?: string | null
+        }
+        Update: {
+          ai_response?: Json
+          client_user_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          crop_key?: string | null
+          diagnosis_summary?: string | null
+          expert_id?: string
+          id?: string
+          image_path?: string | null
+          parcel_id?: string | null
+          symptoms_input?: string | null
+          treatment_bio?: string | null
+          treatment_chemical?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crop_diagnoses_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crop_references: {
         Row: {
           avg_price_per_kg: number | null
@@ -1091,6 +1203,78 @@ export type Database = {
           spacing_m?: number | null
           type?: string
           variety?: string | null
+        }
+        Relationships: []
+      }
+      crop_technical_sheets: {
+        Row: {
+          category: string
+          climate_zones: string[] | null
+          common_diseases: string[] | null
+          common_pests: string[] | null
+          created_at: string
+          crop_key: string
+          cycle_days_max: number | null
+          cycle_days_min: number | null
+          id: string
+          itinerary: Json | null
+          name_en: string | null
+          name_fr: string
+          notes: string | null
+          npk_needs: Json | null
+          recommended_varieties: string[] | null
+          seasons: string[] | null
+          sources: string[] | null
+          sowing_calendar: Json | null
+          updated_at: string
+          water_needs_mm: number | null
+          yield_potential_t_ha: number | null
+        }
+        Insert: {
+          category: string
+          climate_zones?: string[] | null
+          common_diseases?: string[] | null
+          common_pests?: string[] | null
+          created_at?: string
+          crop_key: string
+          cycle_days_max?: number | null
+          cycle_days_min?: number | null
+          id?: string
+          itinerary?: Json | null
+          name_en?: string | null
+          name_fr: string
+          notes?: string | null
+          npk_needs?: Json | null
+          recommended_varieties?: string[] | null
+          seasons?: string[] | null
+          sources?: string[] | null
+          sowing_calendar?: Json | null
+          updated_at?: string
+          water_needs_mm?: number | null
+          yield_potential_t_ha?: number | null
+        }
+        Update: {
+          category?: string
+          climate_zones?: string[] | null
+          common_diseases?: string[] | null
+          common_pests?: string[] | null
+          created_at?: string
+          crop_key?: string
+          cycle_days_max?: number | null
+          cycle_days_min?: number | null
+          id?: string
+          itinerary?: Json | null
+          name_en?: string | null
+          name_fr?: string
+          notes?: string | null
+          npk_needs?: Json | null
+          recommended_varieties?: string[] | null
+          seasons?: string[] | null
+          sources?: string[] | null
+          sowing_calendar?: Json | null
+          updated_at?: string
+          water_needs_mm?: number | null
+          yield_potential_t_ha?: number | null
         }
         Relationships: []
       }
@@ -1314,6 +1498,45 @@ export type Database = {
           },
         ]
       }
+      expert_clients: {
+        Row: {
+          client_full_name: string
+          client_phone: string | null
+          client_user_id: string
+          created_at: string
+          expert_id: string
+          id: string
+          notes: string | null
+          since: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_full_name: string
+          client_phone?: string | null
+          client_user_id: string
+          created_at?: string
+          expert_id: string
+          id?: string
+          notes?: string | null
+          since?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_full_name?: string
+          client_phone?: string | null
+          client_user_id?: string
+          created_at?: string
+          expert_id?: string
+          id?: string
+          notes?: string | null
+          since?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       expert_parcels: {
         Row: {
           area_ha: number | null
@@ -1358,6 +1581,63 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      expert_prescriptions: {
+        Row: {
+          client_user_id: string
+          content: Json
+          created_at: string
+          diagnosis_id: string | null
+          expert_id: string
+          id: string
+          parcel_id: string | null
+          pdf_path: string | null
+          signed_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_user_id: string
+          content?: Json
+          created_at?: string
+          diagnosis_id?: string | null
+          expert_id: string
+          id?: string
+          parcel_id?: string | null
+          pdf_path?: string | null
+          signed_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_user_id?: string
+          content?: Json
+          created_at?: string
+          diagnosis_id?: string | null
+          expert_id?: string
+          id?: string
+          parcel_id?: string | null
+          pdf_path?: string | null
+          signed_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_prescriptions_diagnosis_id_fkey"
+            columns: ["diagnosis_id"]
+            isOneToOne: false
+            referencedRelation: "crop_diagnoses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expert_prescriptions_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       farms: {
         Row: {

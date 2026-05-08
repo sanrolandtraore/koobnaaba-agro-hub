@@ -6,7 +6,7 @@ import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
-  FolderOpen, Layers, Award, Store, Eye,
+  FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,11 +70,17 @@ export const cooperativeNav: NavItem[] = [
 
 export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/expert-toolbox", label: "Boîte à outils", icon: Sparkles },
+  { to: "/dashboard/expert-clients", label: "Mes clients", icon: Users },
+  { to: "/dashboard/expert-diagnosis", label: "Diagnostic IA", icon: Microscope },
+  { to: "/dashboard/expert-calculator", label: "Calculatrice", icon: Calculator },
+  { to: "/dashboard/expert-prescriptions", label: "Ordonnances", icon: FileText },
+  { to: "/dashboard/crop-library", label: "Fiches techniques", icon: BookOpen },
   { to: "/dashboard/scouting", label: "Scouting terrain", icon: Eye },
   { to: "/dashboard/expert-cartography", label: "Cartographie GPS", icon: MapPin },
   { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
-  { to: "/dashboard/analytics", label: "Rapports", icon: BarChart3 },
+  { to: "/dashboard/expert-analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
   { to: "/dashboard/export", label: "Export", icon: Download },
@@ -83,9 +89,14 @@ export const agentNav: NavItem[] = [
 export const partenaireNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/partner-profile", label: "Mon profil", icon: Handshake },
+  { to: "/dashboard/expert-toolbox", label: "Boîte à outils", icon: Sparkles },
+  { to: "/dashboard/expert-clients", label: "Mes clients", icon: Users },
+  { to: "/dashboard/expert-diagnosis", label: "Diagnostic IA", icon: Microscope },
+  { to: "/dashboard/expert-prescriptions", label: "Ordonnances", icon: FileText },
+  { to: "/dashboard/crop-library", label: "Fiches techniques", icon: BookOpen },
   { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
-  { to: "/dashboard/analytics", label: "Statistiques", icon: BarChart3 },
+  { to: "/dashboard/expert-analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
