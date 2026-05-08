@@ -63,6 +63,13 @@ const ExpertCartographyPage = lazy(() => import("./pages/dashboard/ExpertCartogr
 const ScoutingPage = lazy(() => import("./pages/dashboard/ScoutingPage"));
 const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
 const UserProfilePage = lazy(() => import("./pages/dashboard/UserProfilePage"));
+const ExpertToolboxPage = lazy(() => import("./pages/dashboard/expert/ExpertToolboxPage"));
+const ExpertDiagnosisPage = lazy(() => import("./pages/dashboard/expert/ExpertDiagnosisPage"));
+const ExpertCalculatorPage = lazy(() => import("./pages/dashboard/expert/ExpertCalculatorPage"));
+const ExpertPrescriptionsPage = lazy(() => import("./pages/dashboard/expert/ExpertPrescriptionsPage"));
+const CropLibraryPage = lazy(() => import("./pages/dashboard/expert/CropLibraryPage"));
+const ExpertClientsPage = lazy(() => import("./pages/dashboard/expert/ExpertClientsPage"));
+const ExpertAnalyticsPage = lazy(() => import("./pages/dashboard/expert/ExpertAnalyticsPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
