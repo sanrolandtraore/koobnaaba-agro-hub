@@ -6,7 +6,7 @@ import {
   Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
-  FolderOpen, Layers, Award, Store, Eye,
+  FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
