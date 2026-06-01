@@ -234,8 +234,12 @@ export type Database = {
           created_at: string
           farm_id: string
           father_id: string | null
+          group_label: string | null
+          group_size: number | null
           id: string
           identification_number: string | null
+          is_group: boolean
+          mortality_count: number
           mother_id: string | null
           name: string | null
           notes: string | null
@@ -253,8 +257,12 @@ export type Database = {
           created_at?: string
           farm_id: string
           father_id?: string | null
+          group_label?: string | null
+          group_size?: number | null
           id?: string
           identification_number?: string | null
+          is_group?: boolean
+          mortality_count?: number
           mother_id?: string | null
           name?: string | null
           notes?: string | null
@@ -272,8 +280,12 @@ export type Database = {
           created_at?: string
           farm_id?: string
           father_id?: string | null
+          group_label?: string | null
+          group_size?: number | null
           id?: string
           identification_number?: string | null
+          is_group?: boolean
+          mortality_count?: number
           mother_id?: string | null
           name?: string | null
           notes?: string | null
