@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -121,5 +121,75 @@
   }
   .shadow-primary {
     box-shadow: 0 10px 30px -10px hsl(142 45% 28% / 0.25);
+  }
+}
+
+/* ===== Livestock module scoped theme (sage & cream, Outfit + Figtree, bento) ===== */
+@layer base {
+  .livestock-theme {
+    --background: 60 20% 96%;       /* cream #f5f0e8 */
+    --foreground: 120 15% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 120 15% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 120 15% 14%;
+    --primary: 110 18% 48%;         /* sage #7d9b76 */
+    --primary-foreground: 60 20% 98%;
+    --secondary: 96 22% 72%;        /* light sage #a8c0a0 */
+    --secondary-foreground: 120 20% 14%;
+    --muted: 90 18% 88%;            /* #dce5d4 */
+    --muted-foreground: 120 8% 38%;
+    --accent: 96 22% 72%;
+    --accent-foreground: 120 20% 14%;
+    --border: 90 14% 84%;
+    --input: 90 14% 84%;
+    --ring: 110 18% 48%;
+    --radius: 1.25rem;
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Figtree', sans-serif;
+    font-family: var(--font-body);
+  }
+  .dark .livestock-theme {
+    --background: 120 12% 8%;
+    --foreground: 60 15% 92%;
+    --card: 120 10% 12%;
+    --card-foreground: 60 15% 92%;
+    --popover: 120 10% 12%;
+    --popover-foreground: 60 15% 92%;
+    --primary: 110 22% 58%;
+    --primary-foreground: 120 20% 10%;
+    --secondary: 96 18% 35%;
+    --secondary-foreground: 60 15% 92%;
+    --muted: 120 8% 18%;
+    --muted-foreground: 60 10% 65%;
+    --accent: 96 18% 35%;
+    --accent-foreground: 60 15% 92%;
+    --border: 120 8% 22%;
+    --input: 120 8% 22%;
+    --ring: 110 22% 58%;
+  }
+  .livestock-theme h1,
+  .livestock-theme h2,
+  .livestock-theme h3,
+  .livestock-theme h4 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer utilities {
+  .livestock-bento-tile {
+    @apply rounded-3xl border border-border bg-card p-5 transition-all duration-300;
+    box-shadow: 0 1px 2px hsl(110 18% 28% / 0.04), 0 8px 24px -12px hsl(110 18% 28% / 0.08);
+  }
+  .livestock-bento-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px hsl(110 18% 28% / 0.06), 0 16px 40px -16px hsl(110 18% 28% / 0.18);
+  }
+  .livestock-hero {
+    background:
+      radial-gradient(120% 80% at 0% 0%, hsl(96 30% 82% / 0.7), transparent 60%),
+      radial-gradient(100% 80% at 100% 0%, hsl(110 22% 70% / 0.45), transparent 55%),
+      linear-gradient(135deg, hsl(110 18% 48%), hsl(110 22% 32%));
   }
 }
