@@ -50,6 +50,7 @@ const CropPlanningPage = lazy(() => import("./pages/dashboard/CropPlanningPage")
 const ServicesPage = lazy(() => import("./pages/dashboard/ServicesPage"));
 const AgentDashboard = lazy(() => import("./pages/dashboard/AgentDashboard"));
 const RoleSettingsRouter = lazy(() => import("./pages/dashboard/RoleSettingsRouter"));
+const LivestockLayout = lazy(() => import("./pages/livestock/LivestockLayout"));
 const LivestockDashboardPage = lazy(() => import("./pages/livestock/LivestockDashboardPage"));
 const AnimalsPage = lazy(() => import("./pages/livestock/AnimalsPage"));
 const AnimalHealthPage = lazy(() => import("./pages/livestock/AnimalHealthPage"));
@@ -133,13 +134,15 @@ const App = () => (
                 <Route path="cooperative-cotisations" element={<Suspense fallback={<PageLoader />}><CooperativeCotisationsPage /></Suspense>} />
                 <Route path="cooperative-score" element={<Suspense fallback={<PageLoader />}><CooperativeScorePage /></Suspense>} />
                 <Route path="export" element={<Suspense fallback={<PageLoader />}><RoleExportRouter /></Suspense>} />
-                <Route path="animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
-                <Route path="animal-health" element={<Suspense fallback={<PageLoader />}><AnimalHealthPage /></Suspense>} />
-                <Route path="animal-feeding" element={<Suspense fallback={<PageLoader />}><AnimalFeedingPage /></Suspense>} />
-                <Route path="animal-reproduction" element={<Suspense fallback={<PageLoader />}><AnimalReproductionPage /></Suspense>} />
-                <Route path="livestock-dashboard" element={<Suspense fallback={<PageLoader />}><LivestockDashboardPage /></Suspense>} />
-                <Route path="livestock-finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
-                <Route path="livestock-services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
+                <Route element={<Suspense fallback={<PageLoader />}><LivestockLayout /></Suspense>}>
+                  <Route path="animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
+                  <Route path="animal-health" element={<Suspense fallback={<PageLoader />}><AnimalHealthPage /></Suspense>} />
+                  <Route path="animal-feeding" element={<Suspense fallback={<PageLoader />}><AnimalFeedingPage /></Suspense>} />
+                  <Route path="animal-reproduction" element={<Suspense fallback={<PageLoader />}><AnimalReproductionPage /></Suspense>} />
+                  <Route path="livestock-dashboard" element={<Suspense fallback={<PageLoader />}><LivestockDashboardPage /></Suspense>} />
+                  <Route path="livestock-finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
+                  <Route path="livestock-services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
+                </Route>
                 <Route path="partner-profile" element={<Suspense fallback={<PageLoader />}><PartnerProfilePage /></Suspense>} />
                 <Route path="partner-requests" element={<Suspense fallback={<PageLoader />}><PartnerRequestsPage /></Suspense>} />
                 <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
