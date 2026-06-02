@@ -1,10 +1,13 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOfflineData } from "@/hooks/useOfflineData";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Bug, Heart, Baby, DollarSign, AlertTriangle, WifiOff } from "lucide-react";
+import {
+  Heart, Baby, Wallet, AlertTriangle, WifiOff, ArrowUpRight,
+  Stethoscope, Wheat, Sprout, ShoppingCart, TrendingUp, TrendingDown, Bird, Fish,
+} from "lucide-react";
 
 const speciesLabels: Record<string, string> = {
   bovin: "Bovins",
@@ -13,6 +16,10 @@ const speciesLabels: Record<string, string> = {
   porcin: "Porcins",
   volaille: "Volaille",
   pisciculture: "Pisciculture",
+};
+
+const speciesEmoji: Record<string, string> = {
+  bovin: "🐄", ovin: "🐑", caprin: "🐐", porcin: "🐷", volaille: "🐔", pisciculture: "🐟",
 };
 
 const LivestockDashboardPage = () => {
@@ -25,7 +32,7 @@ const LivestockDashboardPage = () => {
 
   const { data: animals, loading: loadingAnimals, isOffline } = useOfflineData<any>({
     table: "animals",
-    select: "species, status",
+    select: "species, status, is_group, group_size",
     queryKey: "dashboard-animals-actif",
     filter: [{ column: "status", value: "actif" }],
   });
@@ -59,7 +66,12 @@ const LivestockDashboardPage = () => {
 
   const stats = useMemo(() => {
     const bySpecies: Record<string, number> = {};
-    animals.forEach((a: any) => { bySpecies[a.species] = (bySpecies[a.species] || 0) + 1; });
+    let totalHeads = 0;
+    animals.forEach((a: any) => {
+      const heads = a.is_group ? Number(a.group_size || 0) : 1;
+      bySpecies[a.species] = (bySpecies[a.species] || 0) + heads;
+      totalHeads += heads;
+    });
 
     const healthThisMonth = healthAll.filter((h: any) => h.event_date && h.event_date >= monthStart).length;
     const upcomingBirths = reproAll.filter((r: any) => r.expected_birth_date && !r.actual_birth_date).length;
@@ -67,110 +79,231 @@ const LivestockDashboardPage = () => {
     const totalSales = sales.reduce((s: number, e: any) => s + Number(e.total_amount || 0), 0);
 
     return {
-      totalAnimals: animals.length,
+      totalAnimals: totalHeads,
+      lots: animals.length,
       bySpecies,
       healthEventsThisMonth: healthThisMonth,
       upcomingBirths,
       totalExpenses,
       totalSales,
+      balance: totalSales - totalExpenses,
     };
   }, [animals, healthAll, reproAll, expenses, sales, monthStart]);
 
   const recentHealth = useMemo(
-    () => [...healthAll].sort((a: any, b: any) => (b.event_date || "").localeCompare(a.event_date || "")).slice(0, 5),
+    () => [...healthAll].sort((a: any, b: any) => (b.event_date || "").localeCompare(a.event_date || "")).slice(0, 4),
     [healthAll]
   );
 
   if (!user) return null;
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Bonjour";
+    if (h < 18) return "Bon après-midi";
+    return "Bonsoir";
+  })();
+
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-heading font-bold">Élevage — Tableau de bord</h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32" />)}
+        <Skeleton className="h-40 rounded-3xl" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 rounded-3xl" />)}
         </div>
       </div>
     );
   }
 
-  const statCards = [
-    { label: "Animaux actifs", value: stats.totalAnimals, icon: Bug, color: "text-emerald-600" },
-    { label: "Soins ce mois", value: stats.healthEventsThisMonth, icon: Heart, color: "text-red-500" },
-    { label: "Naissances attendues", value: stats.upcomingBirths, icon: Baby, color: "text-blue-500" },
-    { label: "Balance", value: `${(stats.totalSales - stats.totalExpenses).toLocaleString()} FCFA`, icon: DollarSign, color: "text-primary" },
+  const quickActions = [
+    { to: "/dashboard/animals", label: "Animaux", icon: Bird, tone: "bg-secondary/40" },
+    { to: "/dashboard/animal-health", label: "Santé", icon: Stethoscope, tone: "bg-rose-100 dark:bg-rose-950/40" },
+    { to: "/dashboard/animal-reproduction", label: "Reproduction", icon: Baby, tone: "bg-sky-100 dark:bg-sky-950/40" },
+    { to: "/dashboard/animal-feeding", label: "Alimentation", icon: Wheat, tone: "bg-amber-100 dark:bg-amber-950/40" },
+    { to: "/dashboard/livestock-finance", label: "Finances", icon: Wallet, tone: "bg-primary/15" },
+    { to: "/dashboard/livestock-services", label: "Services", icon: ShoppingCart, tone: "bg-muted" },
   ];
 
+  const speciesEntries = Object.entries(stats.bySpecies);
+  const topSpecies = speciesEntries.sort((a, b) => Number(b[1]) - Number(a[1]))[0];
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-heading font-bold">Élevage — Tableau de bord</h1>
-        {isOffline && (
-          <Badge variant="outline" className="text-xs">
-            <WifiOff className="h-3 w-3 mr-1" />Mode hors-ligne — données en cache
-          </Badge>
-        )}
-      </div>
+    <div className="space-y-5 max-w-6xl mx-auto">
+      {/* Hero header */}
+      <section className="livestock-hero rounded-[2rem] p-6 md:p-8 text-primary-foreground relative overflow-hidden">
+        <div className="absolute -right-10 -top-10 text-[10rem] opacity-10 select-none">
+          {topSpecies ? speciesEmoji[topSpecies[0]] : "🐄"}
+        </div>
+        <div className="relative">
+          <p className="text-sm opacity-80">{greeting} 👋</p>
+          <h1 className="text-2xl md:text-3xl font-bold mt-1">Votre élevage en un coup d'œil</h1>
+          <div className="mt-5 flex flex-wrap gap-3 items-end">
+            <div>
+              <p className="text-xs uppercase tracking-wider opacity-70">Cheptel total</p>
+              <p className="text-4xl md:text-5xl font-bold leading-none mt-1">{stats.totalAnimals}</p>
+              <p className="text-xs opacity-70 mt-1">{stats.lots} lot{stats.lots > 1 ? "s" : ""} actifs</p>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              {isOffline && (
+                <Badge variant="outline" className="bg-background/20 border-white/30 text-primary-foreground text-xs">
+                  <WifiOff className="h-3 w-3 mr-1" />Hors-ligne
+                </Badge>
+              )}
+              <Badge className="bg-background text-foreground hover:bg-background/90">
+                {stats.balance >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                {stats.balance.toLocaleString()} FCFA
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{s.label}</p>
-                  <p className="text-2xl font-bold">{s.value}</p>
-                </div>
-                <s.icon className={`h-8 w-8 ${s.color}`} />
-              </div>
-            </CardContent>
-          </Card>
+      {/* Quick actions strip */}
+      <section className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        {quickActions.map((a) => (
+          <Link
+            key={a.to}
+            to={a.to}
+            className={`${a.tone} rounded-2xl p-3 flex flex-col items-center justify-center gap-2 aspect-square text-center transition-all hover:scale-[1.03] hover:shadow-md`}
+          >
+            <a.icon className="h-6 w-6 text-foreground" />
+            <span className="text-[11px] md:text-xs font-medium leading-tight">{a.label}</span>
+          </Link>
         ))}
-      </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Répartition par espèce</CardTitle></CardHeader>
-          <CardContent>
-            {Object.entries(stats.bySpecies).length === 0 ? (
-              <p className="text-muted-foreground text-sm">Aucun animal enregistré</p>
-            ) : (
-              <div className="space-y-3">
-                {Object.entries(stats.bySpecies).map(([sp, count]) => (
-                  <div key={sp} className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{speciesLabels[sp] || sp}</span>
-                    <span className="text-sm font-bold">{count}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Bento grid */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[minmax(120px,auto)]">
+        {/* Soins ce mois */}
+        <Link to="/dashboard/animal-health" className="livestock-bento-tile md:col-span-2 group flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Soins ce mois</p>
+              <p className="text-3xl font-bold mt-1">{stats.healthEventsThisMonth}</p>
+            </div>
+            <div className="h-10 w-10 rounded-2xl bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center">
+              <Heart className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-3 group-hover:text-primary transition-colors">
+            Voir l'historique <ArrowUpRight className="h-3 w-3" />
+          </div>
+        </Link>
 
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Derniers événements santé</CardTitle></CardHeader>
-          <CardContent>
-            {recentHealth.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Aucun événement récent</p>
-            ) : (
-              <div className="space-y-3">
-                {recentHealth.map((h: any) => (
-                  <div key={h.id} className="flex items-start gap-3 text-sm">
-                    <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
-                    <div>
-                      <p className="font-medium">{h.event_type} — {h.animals?.name || "Animal"}</p>
-                      <p className="text-muted-foreground">
-                        {h.description || "Pas de détails"}
-                        {h.event_date && ` • ${new Date(h.event_date).toLocaleDateString("fr-FR")}`}
-                      </p>
+        {/* Naissances */}
+        <Link to="/dashboard/animal-reproduction" className="livestock-bento-tile group">
+          <div className="h-10 w-10 rounded-2xl bg-sky-100 dark:bg-sky-950/40 flex items-center justify-center">
+            <Baby className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+          </div>
+          <p className="text-3xl font-bold mt-3">{stats.upcomingBirths}</p>
+          <p className="text-xs text-muted-foreground mt-1">Naissances à venir</p>
+        </Link>
+
+        {/* Ventes */}
+        <Link to="/dashboard/livestock-finance" className="livestock-bento-tile group bg-primary text-primary-foreground border-primary">
+          <div className="h-10 w-10 rounded-2xl bg-background/20 flex items-center justify-center">
+            <Wallet className="h-5 w-5" />
+          </div>
+          <p className="text-2xl font-bold mt-3">{stats.totalSales.toLocaleString()}</p>
+          <p className="text-[11px] opacity-80 mt-1">FCFA de ventes</p>
+        </Link>
+
+        {/* Cheptel par espèce — large tile */}
+        <div className="livestock-bento-tile md:col-span-2 md:row-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Cheptel par espèce</p>
+              <h3 className="text-lg font-bold">Répartition</h3>
+            </div>
+            <Sprout className="h-5 w-5 text-primary" />
+          </div>
+          {speciesEntries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <Fish className="h-10 w-10 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">Aucun animal enregistré</p>
+              <Link to="/dashboard/animals" className="text-xs text-primary mt-2 underline">Ajouter un animal</Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {speciesEntries.map(([sp, count]) => {
+                const pct = stats.totalAnimals ? (Number(count) / stats.totalAnimals) * 100 : 0;
+                return (
+                  <div key={sp}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-medium flex items-center gap-2">
+                        <span className="text-base">{speciesEmoji[sp] || "🐾"}</span>
+                        {speciesLabels[sp] || sp}
+                      </span>
+                      <span className="text-sm font-bold tabular-nums">{Number(count)}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Dépenses */}
+        <div className="livestock-bento-tile">
+          <div className="h-10 w-10 rounded-2xl bg-muted flex items-center justify-center">
+            <TrendingDown className="h-5 w-5 text-foreground" />
+          </div>
+          <p className="text-xl font-bold mt-3 tabular-nums">{stats.totalExpenses.toLocaleString()}</p>
+          <p className="text-[11px] text-muted-foreground mt-1">FCFA dépenses</p>
+        </div>
+
+        {/* Balance */}
+        <div className={`livestock-bento-tile ${stats.balance >= 0 ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-rose-50 dark:bg-rose-950/30"}`}>
+          <div className="h-10 w-10 rounded-2xl bg-background flex items-center justify-center">
+            {stats.balance >= 0
+              ? <TrendingUp className="h-5 w-5 text-emerald-600" />
+              : <TrendingDown className="h-5 w-5 text-rose-600" />}
+          </div>
+          <p className="text-xl font-bold mt-3 tabular-nums">{stats.balance.toLocaleString()}</p>
+          <p className="text-[11px] text-muted-foreground mt-1">FCFA balance</p>
+        </div>
+      </section>
+
+      {/* Activité récente */}
+      <section className="livestock-bento-tile">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Activité récente</p>
+            <h3 className="text-lg font-bold">Derniers événements santé</h3>
+          </div>
+          <Link to="/dashboard/animal-health" className="text-xs text-primary hover:underline flex items-center gap-1">
+            Tout voir <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </div>
+        {recentHealth.length === 0 ? (
+          <p className="text-muted-foreground text-sm text-center py-4">Aucun événement récent</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {recentHealth.map((h: any) => (
+              <li key={h.id} className="py-3 flex items-start gap-3">
+                <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">
+                    {h.event_type} — {h.animals?.name || speciesLabels[h.animals?.species] || "Animal"}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {h.description || "Pas de détails"}
+                    {h.event_date && ` • ${new Date(h.event_date).toLocaleDateString("fr-FR")}`}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 };
