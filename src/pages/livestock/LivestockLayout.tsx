@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
  */
 const LivestockLayout = () => {
   return (
-    <div className="livestock-theme bg-background text-foreground -m-4 sm:-m-6 p-4 sm:p-6 min-h-full">
+    <div className="livestock-theme">
       <Outlet />
     </div>
   );
