@@ -238,7 +238,7 @@ const AnimalFeedingPage = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-semibold">{s.feed_name} {s._offline && <Badge variant="outline" className="text-xs">En attente</Badge>}</p>
-                        <p className="text-sm text-muted-foreground">{s.farms?.name}</p>
+                        {s.supplier && <p className="text-sm text-muted-foreground">{s.supplier}</p>}
                         <p className="text-sm mt-1">{Number(s.quantity_kg)} kg × {Number(s.unit_price).toLocaleString()} FCFA/kg</p>
                         {s.supplier && <p className="text-xs text-muted-foreground">Fournisseur: {s.supplier}</p>}
                       </div>
