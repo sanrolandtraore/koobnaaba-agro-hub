@@ -62,30 +62,30 @@ const buyers = ["Marché local", "Boucher", "Grossiste", "Particulier", "Restaur
 
 const LivestockFinancePage = () => {
   const { user } = useAuth();
+  const { farmId } = useDefaultLivestockFarm();
 
   const { data: expenses, loading: loadingExp, isOffline, insertRow: insertExpense, deleteRow: deleteExpense } = useOfflineData({
     table: "livestock_expenses",
-    select: "*, farms(name), animals(name)",
+    select: "*, animals(name)",
     orderBy: "expense_date",
   });
 
   const { data: sales, loading: loadingSale, insertRow: insertSale, deleteRow: deleteSale } = useOfflineData({
     table: "livestock_sales",
-    select: "*, farms(name), animals(name)",
+    select: "*, animals(name)",
     orderBy: "sale_date",
   });
 
-  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
   const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species', queryKey: 'finance-animals-actif', filter: [{ column: 'status', value: 'actif' }] });
   const [openExpense, setOpenExpense] = useState(false);
   const [openSale, setOpenSale] = useState(false);
 
   const [expForm, setExpForm] = useState({
-    farm_id: "", animal_id: "", category: "alimentation", description: "",
+    animal_id: "", category: "alimentation", description: "",
     amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "",
   });
   const [saleForm, setSaleForm] = useState({
-    farm_id: "", animal_id: "", sale_type: "animal", description: "",
+    animal_id: "", sale_type: "animal", description: "",
     quantity: "1", unit_price: "", buyer: "",
     sale_date: new Date().toISOString().split("T")[0], notes: "",
   });
