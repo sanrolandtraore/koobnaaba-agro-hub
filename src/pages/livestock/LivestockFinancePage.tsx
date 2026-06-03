@@ -235,13 +235,7 @@ const LivestockFinancePage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Vente élevage</DialogTitle></DialogHeader>
                 <form onSubmit={handleSaleSubmit} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label>Exploitation *</Label>
-                    <Select value={saleForm.farm_id} onValueChange={(v) => setSaleForm({ ...saleForm, farm_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+
                   <div className="space-y-1">
                     <Label>Type de vente *</Label>
                     <Select value={saleForm.sale_type} onValueChange={(v) => setSaleForm({ ...saleForm, sale_type: v, description: "" })}>
