@@ -182,7 +182,7 @@ const AnimalFeedingPage = () => {
                     <div>
                       <p className="font-medium">{f.feed_type} — {Number(f.quantity_kg)} kg {f._offline && <Badge variant="outline" className="text-xs">En attente</Badge>}</p>
                       <p className="text-sm text-muted-foreground">
-                        {f.animals?.name || "Groupe"} • {f.farms?.name} • {new Date(f.feeding_date).toLocaleDateString("fr-FR")}
+                        {f.animals?.name || "Groupe"} • {new Date(f.feeding_date).toLocaleDateString("fr-FR")}
                         {f.cost > 0 && ` • ${Number(f.cost).toLocaleString()} FCFA`}
                       </p>
                     </div>
