@@ -94,12 +94,12 @@ const LivestockFinancePage = () => {
 
   const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!expForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!expForm.description) { toast.error("Description requise"); return; }
     const amount = Number(expForm.amount);
     if (!amount || amount <= 0) { toast.error("Montant invalide"); return; }
     const result = await insertExpense({
-      farm_id: expForm.farm_id,
+      farm_id: farmId,
       animal_id: expForm.animal_id || null,
       category: expForm.category,
       description: expForm.description,
@@ -110,7 +110,7 @@ const LivestockFinancePage = () => {
     if (result) {
       toast.success("Dépense enregistrée ✓");
       setOpenExpense(false);
-      setExpForm({ farm_id: "", animal_id: "", category: "alimentation", description: "", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
+      setExpForm({ animal_id: "", category: "alimentation", description: "", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
     }
   };
 
