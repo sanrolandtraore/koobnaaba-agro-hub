@@ -222,7 +222,7 @@ const AnimalFeedingPage = () => {
                     </Select>
                   </div>
                   <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={stockForm.notes} onChange={(e) => setStockForm({ ...stockForm, notes: e.target.value })} /></div>
-                  <Button type="submit" className="w-full" disabled={!stockForm.farm_id || !stockForm.feed_name}>Enregistrer</Button>
+                  <Button type="submit" className="w-full" disabled={!farmId || !stockForm.feed_name}>Enregistrer</Button>
                 </form>
               </DialogContent>
             </Dialog>
