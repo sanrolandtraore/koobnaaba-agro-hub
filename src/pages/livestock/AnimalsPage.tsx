@@ -248,7 +248,7 @@ const AnimalsPage = () => {
                         {a.group_label || a.name || a.identification_number || "Sans nom"}
                         {a._offline && <Badge variant="outline" className="ml-2 text-xs">En attente</Badge>}
                       </p>
-                      <p className="text-sm text-muted-foreground">{a.farms?.name}</p>
+                      {a.breed && <p className="text-sm text-muted-foreground">{a.breed}</p>}
                     </div>
                     <div className="flex gap-1">
                       <Badge variant="outline">{speciesOptions.find((s) => s.value === a.species)?.label}</Badge>
