@@ -116,7 +116,7 @@ const LivestockFinancePage = () => {
 
   const handleSaleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!saleForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!saleForm.description) { toast.error("Description requise"); return; }
     const quantity = Number(saleForm.quantity);
     const unitPrice = Number(saleForm.unit_price);
@@ -124,7 +124,7 @@ const LivestockFinancePage = () => {
     if (!unitPrice || unitPrice <= 0) { toast.error("Prix unitaire invalide"); return; }
     const total = quantity * unitPrice;
     const result = await insertSale({
-      farm_id: saleForm.farm_id,
+      farm_id: farmId,
       animal_id: saleForm.animal_id || null,
       sale_type: saleForm.sale_type,
       description: saleForm.description,
@@ -138,7 +138,7 @@ const LivestockFinancePage = () => {
     if (result) {
       toast.success("Vente enregistrée ✓");
       setOpenSale(false);
-      setSaleForm({ farm_id: "", animal_id: "", sale_type: "animal", description: "", quantity: "1", unit_price: "", buyer: "", sale_date: new Date().toISOString().split("T")[0], notes: "" });
+      setSaleForm({ animal_id: "", sale_type: "animal", description: "", quantity: "1", unit_price: "", buyer: "", sale_date: new Date().toISOString().split("T")[0], notes: "" });
     }
   };
 
