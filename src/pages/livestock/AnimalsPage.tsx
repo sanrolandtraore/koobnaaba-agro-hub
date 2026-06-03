@@ -49,7 +49,7 @@ const breedsBySpecies: Record<string, string[]> = {
 };
 
 const emptyForm = {
-  farm_id: "", species: "bovin", is_group: false, group_label: "", group_size: "", mortality_count: "",
+  species: "bovin", is_group: false, group_label: "", group_size: "", mortality_count: "",
   name: "", identification_number: "",
   breed: "", sex: "inconnu", birth_date: "", acquisition_date: new Date().toISOString().split("T")[0],
   acquisition_cost: "", weight_kg: "", notes: "",
@@ -57,11 +57,11 @@ const emptyForm = {
 
 const AnimalsPage = () => {
   const { user } = useAuth();
+  const { farmId } = useDefaultLivestockFarm();
   const { data: animals, loading, isOffline, insertRow, deleteRow } = useOfflineData({
     table: 'animals',
-    select: '*, farms(name)',
+    select: '*',
   });
-  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
 
   const [open, setOpen] = useState(false);
   const [filterSpecies, setFilterSpecies] = useState<string>("all");
