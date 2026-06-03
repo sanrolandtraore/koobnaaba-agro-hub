@@ -164,7 +164,7 @@ const AnimalFeedingPage = () => {
                   </div>
                   <div className="space-y-1"><Label>Date</Label><Input type="date" value={feedForm.feeding_date} onChange={(e) => setFeedForm({ ...feedForm, feeding_date: e.target.value })} /></div>
                   <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={feedForm.notes} onChange={(e) => setFeedForm({ ...feedForm, notes: e.target.value })} /></div>
-                  <Button type="submit" className="w-full" disabled={!feedForm.farm_id || !feedForm.feed_type}>Enregistrer</Button>
+                  <Button type="submit" className="w-full" disabled={!farmId || !feedForm.feed_type}>Enregistrer</Button>
                 </form>
               </DialogContent>
             </Dialog>
