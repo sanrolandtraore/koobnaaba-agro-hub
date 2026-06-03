@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Trash2, Wheat, Package, WifiOff } from "lucide-react";
 import { useOfflineData } from "@/hooks/useOfflineData";
+import { useDefaultLivestockFarm } from "@/hooks/useDefaultLivestockFarm";
 
 const feedTypes = [
   { value: "Fourrage vert", label: "🌿 Fourrage vert" },
