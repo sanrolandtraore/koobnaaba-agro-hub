@@ -50,29 +50,22 @@ type ServiceRequest = {
 const LivestockServicesPage = () => {
   const { user } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
-  const [farms, setFarms] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     service_type: "",
     description: "",
     location: "",
-    farm_id: "",
     preferred_date: "",
     phone: "",
   });
 
   const fetchAll = async () => {
     if (!user) return;
-    const [rRes, fRes] = await Promise.all([
-      supabase.from("service_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("farms").select("id, name"),
-    ]);
-    // Filter to livestock service types only
+    const rRes = await supabase.from("service_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     const livestockTypes = LIVESTOCK_SERVICE_TYPES.map(s => s.value) as readonly string[];
     const allReqs = (rRes.data as ServiceRequest[]) || [];
     setRequests(allReqs.filter(r => livestockTypes.includes(r.service_type)));
-    setFarms(fRes.data || []);
     setLoading(false);
   };
 
@@ -91,7 +84,6 @@ const LivestockServicesPage = () => {
       service_type: form.service_type,
       description: form.description || null,
       location: form.location || null,
-      farm_id: form.farm_id || null,
       preferred_date: form.preferred_date || null,
       phone: form.phone || null,
     });
@@ -99,7 +91,7 @@ const LivestockServicesPage = () => {
       toast.error("Erreur: " + error.message);
     } else {
       toast.success("Demande envoyée avec succès !");
-      setForm({ service_type: "", description: "", location: "", farm_id: "", preferred_date: "", phone: "" });
+      setForm({ service_type: "", description: "", location: "", preferred_date: "", phone: "" });
       setOpen(false);
       fetchAll();
     }
