@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOfflineData } from "@/hooks/useOfflineData";
+import { useDefaultLivestockFarm } from "@/hooks/useDefaultLivestockFarm";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,30 +62,30 @@ const buyers = ["Marché local", "Boucher", "Grossiste", "Particulier", "Restaur
 
 const LivestockFinancePage = () => {
   const { user } = useAuth();
+  const { farmId } = useDefaultLivestockFarm();
 
   const { data: expenses, loading: loadingExp, isOffline, insertRow: insertExpense, deleteRow: deleteExpense } = useOfflineData({
     table: "livestock_expenses",
-    select: "*, farms(name), animals(name)",
+    select: "*, animals(name)",
     orderBy: "expense_date",
   });
 
   const { data: sales, loading: loadingSale, insertRow: insertSale, deleteRow: deleteSale } = useOfflineData({
     table: "livestock_sales",
-    select: "*, farms(name), animals(name)",
+    select: "*, animals(name)",
     orderBy: "sale_date",
   });
 
-  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
   const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species', queryKey: 'finance-animals-actif', filter: [{ column: 'status', value: 'actif' }] });
   const [openExpense, setOpenExpense] = useState(false);
   const [openSale, setOpenSale] = useState(false);
 
   const [expForm, setExpForm] = useState({
-    farm_id: "", animal_id: "", category: "alimentation", description: "",
+    animal_id: "", category: "alimentation", description: "",
     amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "",
   });
   const [saleForm, setSaleForm] = useState({
-    farm_id: "", animal_id: "", sale_type: "animal", description: "",
+    animal_id: "", sale_type: "animal", description: "",
     quantity: "1", unit_price: "", buyer: "",
     sale_date: new Date().toISOString().split("T")[0], notes: "",
   });
@@ -93,12 +94,12 @@ const LivestockFinancePage = () => {
 
   const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!expForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!expForm.description) { toast.error("Description requise"); return; }
     const amount = Number(expForm.amount);
     if (!amount || amount <= 0) { toast.error("Montant invalide"); return; }
     const result = await insertExpense({
-      farm_id: expForm.farm_id,
+      farm_id: farmId,
       animal_id: expForm.animal_id || null,
       category: expForm.category,
       description: expForm.description,
@@ -109,13 +110,13 @@ const LivestockFinancePage = () => {
     if (result) {
       toast.success("Dépense enregistrée ✓");
       setOpenExpense(false);
-      setExpForm({ farm_id: "", animal_id: "", category: "alimentation", description: "", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
+      setExpForm({ animal_id: "", category: "alimentation", description: "", amount: "", expense_date: new Date().toISOString().split("T")[0], notes: "" });
     }
   };
 
   const handleSaleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!saleForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!saleForm.description) { toast.error("Description requise"); return; }
     const quantity = Number(saleForm.quantity);
     const unitPrice = Number(saleForm.unit_price);
@@ -123,7 +124,7 @@ const LivestockFinancePage = () => {
     if (!unitPrice || unitPrice <= 0) { toast.error("Prix unitaire invalide"); return; }
     const total = quantity * unitPrice;
     const result = await insertSale({
-      farm_id: saleForm.farm_id,
+      farm_id: farmId,
       animal_id: saleForm.animal_id || null,
       sale_type: saleForm.sale_type,
       description: saleForm.description,
@@ -137,7 +138,7 @@ const LivestockFinancePage = () => {
     if (result) {
       toast.success("Vente enregistrée ✓");
       setOpenSale(false);
-      setSaleForm({ farm_id: "", animal_id: "", sale_type: "animal", description: "", quantity: "1", unit_price: "", buyer: "", sale_date: new Date().toISOString().split("T")[0], notes: "" });
+      setSaleForm({ animal_id: "", sale_type: "animal", description: "", quantity: "1", unit_price: "", buyer: "", sale_date: new Date().toISOString().split("T")[0], notes: "" });
     }
   };
 
@@ -174,13 +175,7 @@ const LivestockFinancePage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Dépense élevage</DialogTitle></DialogHeader>
                 <form onSubmit={handleExpenseSubmit} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label>Exploitation *</Label>
-                    <Select value={expForm.farm_id} onValueChange={(v) => setExpForm({ ...expForm, farm_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+
                   <div className="space-y-1">
                     <Label>Catégorie *</Label>
                     <Select value={expForm.category} onValueChange={(v) => setExpForm({ ...expForm, category: v, description: "" })}>
@@ -206,7 +201,7 @@ const LivestockFinancePage = () => {
                       <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="w-full" disabled={!expForm.farm_id || !expForm.description}>Enregistrer</Button>
+                  <Button type="submit" className="w-full" disabled={!farmId || !expForm.description}>Enregistrer</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -220,7 +215,7 @@ const LivestockFinancePage = () => {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="font-medium">{e.description} {e._offline && <span className="text-xs text-warning">(hors-ligne)</span>}</p>
-                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label || e.category} • {e.farms?.name} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
+                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label || e.category} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-destructive">{Number(e.amount).toLocaleString()} FCFA</span>
@@ -240,13 +235,7 @@ const LivestockFinancePage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Vente élevage</DialogTitle></DialogHeader>
                 <form onSubmit={handleSaleSubmit} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label>Exploitation *</Label>
-                    <Select value={saleForm.farm_id} onValueChange={(v) => setSaleForm({ ...saleForm, farm_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+
                   <div className="space-y-1">
                     <Label>Type de vente *</Label>
                     <Select value={saleForm.sale_type} onValueChange={(v) => setSaleForm({ ...saleForm, sale_type: v, description: "" })}>
@@ -282,7 +271,7 @@ const LivestockFinancePage = () => {
                       <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="w-full" disabled={!saleForm.farm_id || !saleForm.description}>Enregistrer</Button>
+                  <Button type="submit" className="w-full" disabled={!farmId || !saleForm.description}>Enregistrer</Button>
                 </form>
               </DialogContent>
             </Dialog>

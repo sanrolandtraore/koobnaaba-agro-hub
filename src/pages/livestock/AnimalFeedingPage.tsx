@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Trash2, Wheat, Package, WifiOff } from "lucide-react";
 import { useOfflineData } from "@/hooks/useOfflineData";
+import { useDefaultLivestockFarm } from "@/hooks/useDefaultLivestockFarm";
 
 const feedTypes = [
   { value: "Fourrage vert", label: "🌿 Fourrage vert" },
@@ -38,39 +39,39 @@ const suppliers = [
 ];
 
 const AnimalFeedingPage = () => {
+  const { farmId } = useDefaultLivestockFarm();
   const { data: feedings, loading: loadingFeedings, isOffline, insertRow: insertFeeding, deleteRow: deleteFeeding } = useOfflineData({
     table: 'animal_feedings',
-    select: '*, animals(name, species), farms(name)',
+    select: '*, animals(name, species)',
     orderBy: 'feeding_date',
   });
   const { data: stocks, loading: loadingStocks, insertRow: insertStock, deleteRow: deleteStock } = useOfflineData({
     table: 'feed_stocks',
-    select: '*, farms(name)',
+    select: '*',
     orderBy: 'feed_name',
     ascending: true,
   });
-  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
   const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species', queryKey: 'feeding-animals-actif', filter: [{ column: 'status', value: 'actif' }] });
 
   const [openFeeding, setOpenFeeding] = useState(false);
   const [openStock, setOpenStock] = useState(false);
 
   const [feedForm, setFeedForm] = useState({
-    animal_id: "", farm_id: "", feed_type: "", quantity_kg: "", cost: "",
+    animal_id: "", feed_type: "", quantity_kg: "", cost: "",
     feeding_date: new Date().toISOString().split("T")[0], notes: "",
   });
   const [stockForm, setStockForm] = useState({
-    farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "",
+    feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "",
   });
 
   const handleFeedingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!feedForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!feedForm.feed_type) { toast.error("Le type d'aliment est requis"); return; }
     if (!feedForm.quantity_kg || Number(feedForm.quantity_kg) <= 0) { toast.error("La quantité est requise"); return; }
     const result = await insertFeeding({
       animal_id: feedForm.animal_id || null,
-      farm_id: feedForm.farm_id,
+      farm_id: farmId,
       feed_type: feedForm.feed_type,
       quantity_kg: Number(feedForm.quantity_kg),
       cost: feedForm.cost ? Number(feedForm.cost) : 0,
@@ -80,17 +81,17 @@ const AnimalFeedingPage = () => {
     if (result) {
       toast.success("Alimentation enregistrée ✓");
       setOpenFeeding(false);
-      setFeedForm({ animal_id: "", farm_id: "", feed_type: "", quantity_kg: "", cost: "", feeding_date: new Date().toISOString().split("T")[0], notes: "" });
+      setFeedForm({ animal_id: "", feed_type: "", quantity_kg: "", cost: "", feeding_date: new Date().toISOString().split("T")[0], notes: "" });
     }
   };
 
   const handleStockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stockForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!stockForm.feed_name.trim()) { toast.error("Le nom de l'aliment est requis"); return; }
     if (!stockForm.quantity_kg || Number(stockForm.quantity_kg) <= 0) { toast.error("La quantité est requise"); return; }
     const result = await insertStock({
-      farm_id: stockForm.farm_id,
+      farm_id: farmId,
       feed_name: stockForm.feed_name,
       quantity_kg: Number(stockForm.quantity_kg),
       unit_price: stockForm.unit_price ? Number(stockForm.unit_price) : 0,
@@ -101,7 +102,7 @@ const AnimalFeedingPage = () => {
     if (result) {
       toast.success("Stock ajouté ✓");
       setOpenStock(false);
-      setStockForm({ farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "" });
+      setStockForm({ feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "" });
     }
   };
 
@@ -142,13 +143,7 @@ const AnimalFeedingPage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Alimentation</DialogTitle></DialogHeader>
                 <form onSubmit={handleFeedingSubmit} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label>Exploitation *</Label>
-                    <Select value={feedForm.farm_id} onValueChange={(v) => setFeedForm({ ...feedForm, farm_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+
                   <div className="space-y-1">
                     <Label>Animal (optionnel)</Label>
                     <Select value={feedForm.animal_id} onValueChange={(v) => setFeedForm({ ...feedForm, animal_id: v })}>
@@ -169,7 +164,7 @@ const AnimalFeedingPage = () => {
                   </div>
                   <div className="space-y-1"><Label>Date</Label><Input type="date" value={feedForm.feeding_date} onChange={(e) => setFeedForm({ ...feedForm, feeding_date: e.target.value })} /></div>
                   <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={feedForm.notes} onChange={(e) => setFeedForm({ ...feedForm, notes: e.target.value })} /></div>
-                  <Button type="submit" className="w-full" disabled={!feedForm.farm_id || !feedForm.feed_type}>Enregistrer</Button>
+                  <Button type="submit" className="w-full" disabled={!farmId || !feedForm.feed_type}>Enregistrer</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -187,7 +182,7 @@ const AnimalFeedingPage = () => {
                     <div>
                       <p className="font-medium">{f.feed_type} — {Number(f.quantity_kg)} kg {f._offline && <Badge variant="outline" className="text-xs">En attente</Badge>}</p>
                       <p className="text-sm text-muted-foreground">
-                        {f.animals?.name || "Groupe"} • {f.farms?.name} • {new Date(f.feeding_date).toLocaleDateString("fr-FR")}
+                        {f.animals?.name || "Groupe"} • {new Date(f.feeding_date).toLocaleDateString("fr-FR")}
                         {f.cost > 0 && ` • ${Number(f.cost).toLocaleString()} FCFA`}
                       </p>
                     </div>
@@ -207,13 +202,7 @@ const AnimalFeedingPage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Nouveau stock aliment</DialogTitle></DialogHeader>
                 <form onSubmit={handleStockSubmit} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label>Exploitation *</Label>
-                    <Select value={stockForm.farm_id} onValueChange={(v) => setStockForm({ ...stockForm, farm_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+
                   <div className="space-y-1">
                     <Label>Aliment *</Label>
                     <Select value={stockForm.feed_name} onValueChange={(v) => setStockForm({ ...stockForm, feed_name: v })}>
@@ -233,7 +222,7 @@ const AnimalFeedingPage = () => {
                     </Select>
                   </div>
                   <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={stockForm.notes} onChange={(e) => setStockForm({ ...stockForm, notes: e.target.value })} /></div>
-                  <Button type="submit" className="w-full" disabled={!stockForm.farm_id || !stockForm.feed_name}>Enregistrer</Button>
+                  <Button type="submit" className="w-full" disabled={!farmId || !stockForm.feed_name}>Enregistrer</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -249,7 +238,7 @@ const AnimalFeedingPage = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-semibold">{s.feed_name} {s._offline && <Badge variant="outline" className="text-xs">En attente</Badge>}</p>
-                        <p className="text-sm text-muted-foreground">{s.farms?.name}</p>
+                        {s.supplier && <p className="text-sm text-muted-foreground">{s.supplier}</p>}
                         <p className="text-sm mt-1">{Number(s.quantity_kg)} kg × {Number(s.unit_price).toLocaleString()} FCFA/kg</p>
                         {s.supplier && <p className="text-xs text-muted-foreground">Fournisseur: {s.supplier}</p>}
                       </div>

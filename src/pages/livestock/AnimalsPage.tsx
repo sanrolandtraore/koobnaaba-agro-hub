@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Trash2, Filter, WifiOff, Users } from "lucide-react";
 import { useOfflineData } from "@/hooks/useOfflineData";
+import { useDefaultLivestockFarm } from "@/hooks/useDefaultLivestockFarm";
 
 const speciesOptions = [
   { value: "bovin", label: "Bovin 🐄" },
@@ -48,7 +49,7 @@ const breedsBySpecies: Record<string, string[]> = {
 };
 
 const emptyForm = {
-  farm_id: "", species: "bovin", is_group: false, group_label: "", group_size: "", mortality_count: "",
+  species: "bovin", is_group: false, group_label: "", group_size: "", mortality_count: "",
   name: "", identification_number: "",
   breed: "", sex: "inconnu", birth_date: "", acquisition_date: new Date().toISOString().split("T")[0],
   acquisition_cost: "", weight_kg: "", notes: "",
@@ -56,11 +57,11 @@ const emptyForm = {
 
 const AnimalsPage = () => {
   const { user } = useAuth();
+  const { farmId } = useDefaultLivestockFarm();
   const { data: animals, loading, isOffline, insertRow, deleteRow } = useOfflineData({
     table: 'animals',
-    select: '*, farms(name)',
+    select: '*',
   });
-  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
 
   const [open, setOpen] = useState(false);
   const [filterSpecies, setFilterSpecies] = useState<string>("all");
@@ -73,12 +74,12 @@ const AnimalsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (form.is_group && (!form.group_size || Number(form.group_size) < 1)) {
       toast.error("Indiquez l'effectif du lot"); return;
     }
     const payload: any = {
-      farm_id: form.farm_id,
+      farm_id: farmId,
       species: form.species,
       is_group: form.is_group,
       group_label: form.is_group ? (form.group_label || null) : null,
@@ -146,13 +147,8 @@ const AnimalsPage = () => {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{form.is_group ? "Nouveau lot / groupe" : "Nouvel animal"}</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1">
-                  <Label>Exploitation *</Label>
-                  <Select value={form.farm_id} onValueChange={(v) => setForm({ ...form, farm_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                    <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+
+
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -227,7 +223,7 @@ const AnimalsPage = () => {
                   <div className="space-y-1"><Label>Poids {form.is_group ? "moyen " : ""}(kg)</Label><Input type="number" placeholder="0" value={form.weight_kg} onChange={(e) => setForm({ ...form, weight_kg: e.target.value })} /></div>
                 </div>
                 <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-                <Button type="submit" className="w-full" disabled={!form.farm_id}>Enregistrer</Button>
+                <Button type="submit" className="w-full" disabled={!farmId}>Enregistrer</Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -252,7 +248,7 @@ const AnimalsPage = () => {
                         {a.group_label || a.name || a.identification_number || "Sans nom"}
                         {a._offline && <Badge variant="outline" className="ml-2 text-xs">En attente</Badge>}
                       </p>
-                      <p className="text-sm text-muted-foreground">{a.farms?.name}</p>
+                      {a.breed && <p className="text-sm text-muted-foreground">{a.breed}</p>}
                     </div>
                     <div className="flex gap-1">
                       <Badge variant="outline">{speciesOptions.find((s) => s.value === a.species)?.label}</Badge>
