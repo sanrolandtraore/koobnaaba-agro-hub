@@ -271,7 +271,7 @@ const LivestockFinancePage = () => {
                       <SelectContent>{animals.map((a) => <SelectItem key={a.id} value={a.id}>{a.name || a.identification_number || a.id.slice(0, 8)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="w-full" disabled={!saleForm.farm_id || !saleForm.description}>Enregistrer</Button>
+                  <Button type="submit" className="w-full" disabled={!farmId || !saleForm.description}>Enregistrer</Button>
                 </form>
               </DialogContent>
             </Dialog>
