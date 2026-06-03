@@ -39,39 +39,39 @@ const suppliers = [
 ];
 
 const AnimalFeedingPage = () => {
+  const { farmId } = useDefaultLivestockFarm();
   const { data: feedings, loading: loadingFeedings, isOffline, insertRow: insertFeeding, deleteRow: deleteFeeding } = useOfflineData({
     table: 'animal_feedings',
-    select: '*, animals(name, species), farms(name)',
+    select: '*, animals(name, species)',
     orderBy: 'feeding_date',
   });
   const { data: stocks, loading: loadingStocks, insertRow: insertStock, deleteRow: deleteStock } = useOfflineData({
     table: 'feed_stocks',
-    select: '*, farms(name)',
+    select: '*',
     orderBy: 'feed_name',
     ascending: true,
   });
-  const { data: farms } = useOfflineData({ table: 'farms', select: 'id, name' });
   const { data: animals } = useOfflineData({ table: 'animals', select: 'id, name, identification_number, species', queryKey: 'feeding-animals-actif', filter: [{ column: 'status', value: 'actif' }] });
 
   const [openFeeding, setOpenFeeding] = useState(false);
   const [openStock, setOpenStock] = useState(false);
 
   const [feedForm, setFeedForm] = useState({
-    animal_id: "", farm_id: "", feed_type: "", quantity_kg: "", cost: "",
+    animal_id: "", feed_type: "", quantity_kg: "", cost: "",
     feeding_date: new Date().toISOString().split("T")[0], notes: "",
   });
   const [stockForm, setStockForm] = useState({
-    farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "",
+    feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "",
   });
 
   const handleFeedingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!feedForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!feedForm.feed_type) { toast.error("Le type d'aliment est requis"); return; }
     if (!feedForm.quantity_kg || Number(feedForm.quantity_kg) <= 0) { toast.error("La quantité est requise"); return; }
     const result = await insertFeeding({
       animal_id: feedForm.animal_id || null,
-      farm_id: feedForm.farm_id,
+      farm_id: farmId,
       feed_type: feedForm.feed_type,
       quantity_kg: Number(feedForm.quantity_kg),
       cost: feedForm.cost ? Number(feedForm.cost) : 0,
@@ -81,17 +81,17 @@ const AnimalFeedingPage = () => {
     if (result) {
       toast.success("Alimentation enregistrée ✓");
       setOpenFeeding(false);
-      setFeedForm({ animal_id: "", farm_id: "", feed_type: "", quantity_kg: "", cost: "", feeding_date: new Date().toISOString().split("T")[0], notes: "" });
+      setFeedForm({ animal_id: "", feed_type: "", quantity_kg: "", cost: "", feeding_date: new Date().toISOString().split("T")[0], notes: "" });
     }
   };
 
   const handleStockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stockForm.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (!stockForm.feed_name.trim()) { toast.error("Le nom de l'aliment est requis"); return; }
     if (!stockForm.quantity_kg || Number(stockForm.quantity_kg) <= 0) { toast.error("La quantité est requise"); return; }
     const result = await insertStock({
-      farm_id: stockForm.farm_id,
+      farm_id: farmId,
       feed_name: stockForm.feed_name,
       quantity_kg: Number(stockForm.quantity_kg),
       unit_price: stockForm.unit_price ? Number(stockForm.unit_price) : 0,
@@ -102,7 +102,7 @@ const AnimalFeedingPage = () => {
     if (result) {
       toast.success("Stock ajouté ✓");
       setOpenStock(false);
-      setStockForm({ farm_id: "", feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "" });
+      setStockForm({ feed_name: "", quantity_kg: "", unit_price: "", supplier: "", notes: "" });
     }
   };
 
