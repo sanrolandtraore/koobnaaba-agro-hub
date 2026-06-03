@@ -215,7 +215,7 @@ const LivestockFinancePage = () => {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="font-medium">{e.description} {e._offline && <span className="text-xs text-warning">(hors-ligne)</span>}</p>
-                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label || e.category} • {e.farms?.name} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
+                      <p className="text-sm text-muted-foreground">{expenseCategories.find((c) => c.value === e.category)?.label || e.category} • {new Date(e.expense_date).toLocaleDateString("fr-FR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-destructive">{Number(e.amount).toLocaleString()} FCFA</span>
