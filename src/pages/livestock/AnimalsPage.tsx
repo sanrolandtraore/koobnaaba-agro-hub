@@ -223,7 +223,7 @@ const AnimalsPage = () => {
                   <div className="space-y-1"><Label>Poids {form.is_group ? "moyen " : ""}(kg)</Label><Input type="number" placeholder="0" value={form.weight_kg} onChange={(e) => setForm({ ...form, weight_kg: e.target.value })} /></div>
                 </div>
                 <div className="space-y-1"><Label>Notes</Label><Input placeholder="Observations..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-                <Button type="submit" className="w-full" disabled={!form.farm_id}>Enregistrer</Button>
+                <Button type="submit" className="w-full" disabled={!farmId}>Enregistrer</Button>
               </form>
             </DialogContent>
           </Dialog>
