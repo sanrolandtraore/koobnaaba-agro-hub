@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Trash2, Filter, WifiOff, Users } from "lucide-react";
 import { useOfflineData } from "@/hooks/useOfflineData";
+import { useDefaultLivestockFarm } from "@/hooks/useDefaultLivestockFarm";
 
 const speciesOptions = [
   { value: "bovin", label: "Bovin 🐄" },
