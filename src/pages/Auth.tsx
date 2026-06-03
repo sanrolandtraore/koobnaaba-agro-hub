@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Lock, User, Wheat, Bug, Users, Handshake, Phone, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
+import { Lock, User, Wheat, Bug, Users, Handshake, Phone, Mail, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { hasOfflineCredentials } from "@/lib/offlineAuth";
@@ -29,17 +29,22 @@ const phoneToInternalId = (phone: string) => {
 };
 
 const cleanPhone = (phone: string) => phone.replace(/[^0-9+]/g, "");
+const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
 type AuthMode = "login" | "register" | "forgot";
+type IdMethod = "phone" | "email";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
+  const [idMethod, setIdMethod] = useState<IdMethod>("phone");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [resetPhone, setResetPhone] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [resetName, setResetName] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
   const [loading, setLoading] = useState(false);
@@ -64,16 +69,27 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (!phone.trim()) {
-      toast.error("Le numéro de téléphone est requis");
-      setLoading(false);
-      return;
+    // Build the auth identifier from chosen method
+    let authId = "";
+    if (idMethod === "phone") {
+      if (!phone.trim()) {
+        toast.error("Le numéro de téléphone est requis");
+        setLoading(false);
+        return;
+      }
+      authId = phoneToInternalId(phone);
+    } else {
+      if (!isValidEmail(email)) {
+        toast.error("Adresse email invalide");
+        setLoading(false);
+        return;
+      }
+      authId = email.trim().toLowerCase();
     }
-    const internalId = phoneToInternalId(phone);
 
     if (mode === "login") {
       if (!isOnline) {
-        const { error } = await signInOffline(internalId, password);
+        const { error } = await signInOffline(authId, password);
         if (error) toast.error(error.message);
         else {
           toast.success("Connexion hors-ligne réussie !");
@@ -83,10 +99,10 @@ const Auth = () => {
         return;
       }
 
-      const { error } = await signIn(internalId, password);
+      const { error } = await signIn(authId, password);
       if (error) {
         toast.error(error.message === "Invalid login credentials"
-          ? "Numéro ou mot de passe incorrect"
+          ? (idMethod === "phone" ? "Numéro ou mot de passe incorrect" : "Email ou mot de passe incorrect")
           : error.message);
       } else {
         toast.success("Connexion réussie !");
@@ -100,22 +116,32 @@ const Auth = () => {
         setLoading(false);
         return;
       }
-      const realPhone = cleanPhone(phone);
-      if (realPhone.length < 8) {
-        toast.error("Numéro de téléphone invalide");
-        setLoading(false);
-        return;
+      let phoneForProfile = "";
+      let emailForProfile = "";
+      if (idMethod === "phone") {
+        phoneForProfile = cleanPhone(phone);
+        if (phoneForProfile.length < 8) {
+          toast.error("Numéro de téléphone invalide");
+          setLoading(false);
+          return;
+        }
+      } else {
+        emailForProfile = email.trim().toLowerCase();
       }
 
-      const { error } = await signUp(internalId, password, fullName, selectedRole, realPhone, "");
+      const { error } = await signUp(authId, password, fullName, selectedRole, phoneForProfile, emailForProfile);
       if (error) {
         if (error.message?.includes("already registered")) {
-          toast.error("Ce numéro est déjà utilisé. Essayez de vous connecter.");
+          toast.error(idMethod === "phone"
+            ? "Ce numéro est déjà utilisé. Essayez de vous connecter."
+            : "Cet email est déjà utilisé. Essayez de vous connecter.");
         } else {
           toast.error(error.message);
         }
       } else {
-        toast.success("Inscription réussie ! Vous pouvez maintenant vous connecter.");
+        toast.success(idMethod === "email"
+          ? "Inscription réussie ! Vérifiez votre email pour confirmer votre compte."
+          : "Inscription réussie ! Vous pouvez maintenant vous connecter.");
         setMode("login");
       }
     }
@@ -124,6 +150,27 @@ const Auth = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (idMethod === "email") {
+      if (!isValidEmail(resetEmail)) {
+        toast.error("Adresse email invalide");
+        return;
+      }
+      setLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      if (error) toast.error(error.message);
+      else {
+        toast.success("Email de réinitialisation envoyé. Vérifiez votre boîte de réception.");
+        setMode("login");
+        setResetEmail("");
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Phone-based reset (verify by full name)
     if (!resetPhone.trim() || !resetName.trim()) {
       toast.error("Veuillez remplir tous les champs");
       return;
@@ -162,6 +209,21 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const MethodToggle = () => (
+    <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted/50 border border-border">
+      <button type="button" onClick={() => setIdMethod("phone")}
+        className={cn("flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all",
+          idMethod === "phone" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
+        <Phone className="h-4 w-4" /> Téléphone
+      </button>
+      <button type="button" onClick={() => setIdMethod("email")}
+        className={cn("flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all",
+          idMethod === "email" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
+        <Mail className="h-4 w-4" /> Email
+      </button>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen items-center justify-center gradient-hero p-4">
       <Card className="w-full max-w-lg border-border/50 shadow-warm animate-fade-in">
@@ -178,33 +240,46 @@ const Auth = () => {
                 {hasCachedCreds ? "Mode hors-ligne — connectez-vous avec vos identifiants enregistrés" : "Pas de connexion internet"}
               </span>
             ) : mode === "login"
-              ? "Connectez-vous avec votre numéro de téléphone"
+              ? `Connectez-vous avec votre ${idMethod === "phone" ? "numéro de téléphone" : "adresse email"}`
               : mode === "register"
-              ? "Créez votre compte avec votre numéro de téléphone"
+              ? `Créez votre compte avec votre ${idMethod === "phone" ? "numéro de téléphone" : "adresse email"}`
+              : idMethod === "email"
+              ? "Entrez votre email pour recevoir un lien de réinitialisation"
               : "Entrez votre numéro et votre nom complet"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <MethodToggle />
+
           {mode === "forgot" ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="resetPhone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
-                <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="resetName" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet (vérification)</Label>
-                <Input id="resetName" value={resetName} onChange={e => setResetName(e.target.value)} placeholder="Ouédraogo Abdoulaye" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
-                <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
-                <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-              </div>
+              {idMethod === "email" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="resetEmail" className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> Adresse email</Label>
+                  <Input id="resetEmail" type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="vous@example.com" required autoComplete="email" />
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="resetPhone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
+                    <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="resetName" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet (vérification)</Label>
+                    <Input id="resetName" value={resetName} onChange={e => setResetName(e.target.value)} placeholder="Ouédraogo Abdoulaye" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
+                    <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
+                    <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
+                  </div>
+                </>
+              )}
               <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
-                {loading ? "Chargement..." : "Réinitialiser le mot de passe"}
+                {loading ? "Chargement..." : idMethod === "email" ? "Envoyer le lien" : "Réinitialiser le mot de passe"}
               </Button>
               <button type="button" onClick={() => setMode("login")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto">
                 <ArrowLeft className="h-3 w-3" /> Retour à la connexion
@@ -236,10 +311,17 @@ const Auth = () => {
                   </>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
-                  <Input id="phone" type="tel" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+226 70 00 00 00" required autoComplete="tel" />
-                </div>
+                {idMethod === "phone" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
+                    <Input id="phone" type="tel" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+226 70 00 00 00" required autoComplete="tel" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> Adresse email</Label>
+                    <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="vous@example.com" required autoComplete="email" />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Mot de passe</Label>
