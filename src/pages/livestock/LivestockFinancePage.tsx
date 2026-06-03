@@ -175,13 +175,7 @@ const LivestockFinancePage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Dépense élevage</DialogTitle></DialogHeader>
                 <form onSubmit={handleExpenseSubmit} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label>Exploitation *</Label>
-                    <Select value={expForm.farm_id} onValueChange={(v) => setExpForm({ ...expForm, farm_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+
                   <div className="space-y-1">
                     <Label>Catégorie *</Label>
                     <Select value={expForm.category} onValueChange={(v) => setExpForm({ ...expForm, category: v, description: "" })}>
