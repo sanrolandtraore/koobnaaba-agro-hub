@@ -143,13 +143,7 @@ const AnimalFeedingPage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Alimentation</DialogTitle></DialogHeader>
                 <form onSubmit={handleFeedingSubmit} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label>Exploitation *</Label>
-                    <Select value={feedForm.farm_id} onValueChange={(v) => setFeedForm({ ...feedForm, farm_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+
                   <div className="space-y-1">
                     <Label>Animal (optionnel)</Label>
                     <Select value={feedForm.animal_id} onValueChange={(v) => setFeedForm({ ...feedForm, animal_id: v })}>
