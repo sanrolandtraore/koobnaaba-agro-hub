@@ -165,17 +165,7 @@ const LivestockServicesPage = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {farms.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Exploitation concernée</Label>
-                    <Select value={form.farm_id} onValueChange={v => setForm(f => ({ ...f, farm_id: v }))}>
-                      <SelectTrigger><SelectValue placeholder="Sélectionner (optionnel)" /></SelectTrigger>
-                      <SelectContent>
-                        {farms.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+
                 <div className="space-y-2">
                   <Label>Localisation</Label>
                   <Input placeholder="Village, commune…" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
