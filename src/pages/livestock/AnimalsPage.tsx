@@ -147,13 +147,8 @@ const AnimalsPage = () => {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{form.is_group ? "Nouveau lot / groupe" : "Nouvel animal"}</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1">
-                  <Label>Exploitation *</Label>
-                  <Select value={form.farm_id} onValueChange={(v) => setForm({ ...form, farm_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                    <SelectContent>{farms.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+
+
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
