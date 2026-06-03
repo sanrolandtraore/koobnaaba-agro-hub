@@ -74,12 +74,12 @@ const AnimalsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.farm_id) { toast.error("Veuillez sélectionner une exploitation"); return; }
+    if (!farmId) { toast.error("Initialisation en cours, réessayez"); return; }
     if (form.is_group && (!form.group_size || Number(form.group_size) < 1)) {
       toast.error("Indiquez l'effectif du lot"); return;
     }
     const payload: any = {
-      farm_id: form.farm_id,
+      farm_id: farmId,
       species: form.species,
       is_group: form.is_group,
       group_label: form.is_group ? (form.group_label || null) : null,
