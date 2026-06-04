@@ -33,7 +33,7 @@ const CalendarPage = lazy(() => import("./pages/dashboard/CalendarPage"));
 const AnalyticsPage = lazy(() => import("./pages/dashboard/AnalyticsPage"));
 const RoleExportRouter = lazy(() => import("./pages/dashboard/RoleExportRouter"));
 const AgentExportPage = lazy(() => import("./pages/dashboard/AgentExportPage"));
-const PartenaireExportPage = lazy(() => import("./pages/dashboard/PartenaireExportPage"));
+
 const MembersPage = lazy(() => import("./pages/dashboard/MembersPage"));
 const CollectesPage = lazy(() => import("./pages/dashboard/CollectesPage"));
 const CooperativeExportPage = lazy(() => import("./pages/dashboard/CooperativeExportPage"));
@@ -44,8 +44,6 @@ const CooperativeParcelsPage = lazy(() => import("./pages/dashboard/CooperativeP
 const CooperativeEquipmentPage = lazy(() => import("./pages/dashboard/CooperativeEquipmentPage"));
 const CooperativeDocumentsPage = lazy(() => import("./pages/dashboard/CooperativeDocumentsPage"));
 const CooperativeScorePage = lazy(() => import("./pages/dashboard/CooperativeScorePage"));
-const PartnerProfilePage = lazy(() => import("./pages/dashboard/PartnerProfilePage"));
-const PartnerRequestsPage = lazy(() => import("./pages/dashboard/PartnerRequestsPage"));
 const CropPlanningPage = lazy(() => import("./pages/dashboard/CropPlanningPage"));
 const ServicesPage = lazy(() => import("./pages/dashboard/ServicesPage"));
 const AgentDashboard = lazy(() => import("./pages/dashboard/AgentDashboard"));
@@ -143,8 +141,6 @@ const App = () => (
                   <Route path="livestock-finance" element={<Suspense fallback={<PageLoader />}><LivestockFinancePage /></Suspense>} />
                   <Route path="livestock-services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
                 </Route>
-                <Route path="partner-profile" element={<Suspense fallback={<PageLoader />}><PartnerProfilePage /></Suspense>} />
-                <Route path="partner-requests" element={<Suspense fallback={<PageLoader />}><PartnerRequestsPage /></Suspense>} />
                 <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
                 <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
                 <Route path="expert-cartography" element={<Suspense fallback={<PageLoader />}><ExpertCartographyPage /></Suspense>} />

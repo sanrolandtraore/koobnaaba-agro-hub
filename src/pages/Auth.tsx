@@ -17,7 +17,6 @@ const ROLES = [
   { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Gestion de cultures et parcelles" },
   { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Gestion d'élevage et troupeaux" },
   { value: "cooperative", label: "Coopérative", icon: Users, desc: "Gestion de membres et collectes" },
-  { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Financement et accompagnement" },
 ] as const;
 
 // Generate a stable internal identifier from phone number.
