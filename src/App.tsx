@@ -69,6 +69,10 @@ const ExpertPrescriptionsPage = lazy(() => import("./pages/dashboard/expert/Expe
 const CropLibraryPage = lazy(() => import("./pages/dashboard/expert/CropLibraryPage"));
 const ExpertClientsPage = lazy(() => import("./pages/dashboard/expert/ExpertClientsPage"));
 const ExpertAnalyticsPage = lazy(() => import("./pages/dashboard/expert/ExpertAnalyticsPage"));
+const FournisseursPage = lazy(() => import("./pages/dashboard/partenaire/FournisseursPage"));
+const AssurancePage = lazy(() => import("./pages/dashboard/partenaire/AssurancePage"));
+const ProgrammesPage = lazy(() => import("./pages/dashboard/partenaire/ProgrammesPage"));
+const ServicesBancairesPage = lazy(() => import("./pages/dashboard/partenaire/ServicesBancairesPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -152,6 +156,10 @@ const App = () => (
                 <Route path="crop-library" element={<Suspense fallback={<PageLoader />}><CropLibraryPage /></Suspense>} />
                 <Route path="expert-clients" element={<Suspense fallback={<PageLoader />}><ExpertClientsPage /></Suspense>} />
                 <Route path="expert-analytics" element={<Suspense fallback={<PageLoader />}><ExpertAnalyticsPage /></Suspense>} />
+                <Route path="partenaire-fournisseurs" element={<Suspense fallback={<PageLoader />}><FournisseursPage /></Suspense>} />
+                <Route path="partenaire-assurance" element={<Suspense fallback={<PageLoader />}><AssurancePage /></Suspense>} />
+                <Route path="partenaire-programmes" element={<Suspense fallback={<PageLoader />}><ProgrammesPage /></Suspense>} />
+                <Route path="partenaire-banques" element={<Suspense fallback={<PageLoader />}><ServicesBancairesPage /></Suspense>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
