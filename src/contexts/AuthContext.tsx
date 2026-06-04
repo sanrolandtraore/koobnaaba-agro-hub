@@ -163,7 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
-    const safeRole = role && ['agriculteur', 'eleveur', 'cooperative'].includes(role) ? role : 'agriculteur';
+    const safeRole = role && ['agriculteur', 'eleveur', 'cooperative', 'partenaire'].includes(role) ? role : 'agriculteur';
     const { error } = await supabase.auth.signUp({
       email,
       password,

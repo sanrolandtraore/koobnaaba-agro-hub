@@ -2224,6 +2224,51 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_entries: {
+        Row: {
+          category: string
+          contact_name: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          location: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          category: string
+          contact_name?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          category?: string
+          contact_name?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       plan_limits: {
         Row: {
           can_analytics: boolean | null

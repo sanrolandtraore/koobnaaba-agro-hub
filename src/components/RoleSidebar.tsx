@@ -68,6 +68,16 @@ export const cooperativeNav: NavItem[] = [
   { to: "/dashboard/export", label: "Export PDF/CSV", icon: Download },
 ];
 
+export const partenaireNav: NavItem[] = [
+  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/partenaire-fournisseurs", label: "Fournisseurs", icon: Package },
+  { to: "/dashboard/partenaire-assurance", label: "Assurance", icon: Award },
+  { to: "/dashboard/partenaire-programmes", label: "Programmes / Projets", icon: FolderOpen },
+  { to: "/dashboard/partenaire-banques", label: "Services bancaires agricoles", icon: Wallet },
+  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
+  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
+];
+
 export const agentNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dashboard/expert-toolbox", label: "Boîte à outils", icon: Sparkles },
@@ -93,6 +103,7 @@ export const roleLabels: Record<string, string> = {
   eleveur: "Éleveur",
   cooperative: "Coopérative",
   agent_technique: "Expert Agronome",
+  partenaire: "Partenaire",
   admin: "Administrateur",
   manager: "Gestionnaire",
   farmer: "Agriculteur",
@@ -104,6 +115,7 @@ export const roleIcons: Record<string, React.ElementType> = {
   eleveur: Beef,
   cooperative: Building2,
   agent_technique: Compass,
+  partenaire: Handshake,
   admin: LayoutDashboard,
   manager: LayoutDashboard,
   farmer: Wheat,
@@ -115,6 +127,7 @@ export function getNavForRole(role: string | null): { main: NavItem[] } {
     case "eleveur": return { main: eleveurNav };
     case "cooperative": return { main: cooperativeNav };
     case "agent_technique": return { main: agentNav };
+    case "partenaire": return { main: partenaireNav };
     case "agriculteur": return { main: agriculteurNav };
     case "admin":
     case "manager":
