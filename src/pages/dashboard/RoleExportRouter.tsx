@@ -4,7 +4,6 @@ import AgriculteurExportPage from "./AgriculteurExportPage";
 import EleveurExportPage from "./EleveurExportPage";
 import CooperativeExportPage from "./CooperativeExportPage";
 import AgentExportPage from "./AgentExportPage";
-import PartenaireExportPage from "./PartenaireExportPage";
 
 const RoleExportRouter = () => {
   const { primaryRole } = useAuth();
@@ -16,7 +15,6 @@ const RoleExportRouter = () => {
     case "eleveur": return <EleveurExportPage />;
     case "cooperative": return <CooperativeExportPage />;
     case "agent_technique": return <AgentExportPage />;
-    case "partenaire": return <PartenaireExportPage />;
     default: return <AgriculteurExportPage />;
   }
 };

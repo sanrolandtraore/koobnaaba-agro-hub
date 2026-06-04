@@ -78,7 +78,6 @@ export const agentNav: NavItem[] = [
   { to: "/dashboard/crop-library", label: "Fiches techniques", icon: BookOpen },
   { to: "/dashboard/scouting", label: "Scouting terrain", icon: Eye },
   { to: "/dashboard/expert-cartography", label: "Cartographie GPS", icon: MapPin },
-  { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
   { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/expert-analytics", label: "Statistiques", icon: BarChart3 },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
@@ -86,22 +85,6 @@ export const agentNav: NavItem[] = [
   { to: "/dashboard/export", label: "Export", icon: Download },
 ];
 
-export const partenaireNav: NavItem[] = [
-  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/partner-profile", label: "Mon profil", icon: Handshake },
-  { to: "/dashboard/expert-toolbox", label: "Boîte à outils", icon: Sparkles },
-  { to: "/dashboard/expert-clients", label: "Mes clients", icon: Users },
-  { to: "/dashboard/expert-diagnosis", label: "Diagnostic IA", icon: Microscope },
-  { to: "/dashboard/expert-prescriptions", label: "Ordonnances", icon: FileText },
-  { to: "/dashboard/crop-library", label: "Fiches techniques", icon: BookOpen },
-  { to: "/dashboard/partner-requests", label: "Demandes reçues", icon: ClipboardList },
-  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
-  { to: "/dashboard/expert-analytics", label: "Statistiques", icon: BarChart3 },
-  { to: "/dashboard/investment", label: "Investissements", icon: Calculator },
-  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
-  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export", label: "Rapports", icon: Download },
-];
 
 const fullNav: NavItem[] = [...agriculteurNav];
 
@@ -110,7 +93,6 @@ export const roleLabels: Record<string, string> = {
   eleveur: "Éleveur",
   cooperative: "Coopérative",
   agent_technique: "Expert Agronome",
-  partenaire: "Partenaire",
   admin: "Administrateur",
   manager: "Gestionnaire",
   farmer: "Agriculteur",
@@ -122,7 +104,6 @@ export const roleIcons: Record<string, React.ElementType> = {
   eleveur: Beef,
   cooperative: Building2,
   agent_technique: Compass,
-  partenaire: Handshake,
   admin: LayoutDashboard,
   manager: LayoutDashboard,
   farmer: Wheat,
@@ -134,7 +115,6 @@ export function getNavForRole(role: string | null): { main: NavItem[] } {
     case "eleveur": return { main: eleveurNav };
     case "cooperative": return { main: cooperativeNav };
     case "agent_technique": return { main: agentNav };
-    case "partenaire": return { main: partenaireNav };
     case "agriculteur": return { main: agriculteurNav };
     case "admin":
     case "manager":
