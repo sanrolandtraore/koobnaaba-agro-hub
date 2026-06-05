@@ -73,6 +73,7 @@ const FournisseursPage = lazy(() => import("./pages/dashboard/partenaire/Fournis
 const AssurancePage = lazy(() => import("./pages/dashboard/partenaire/AssurancePage"));
 const ProgrammesPage = lazy(() => import("./pages/dashboard/partenaire/ProgrammesPage"));
 const ServicesBancairesPage = lazy(() => import("./pages/dashboard/partenaire/ServicesBancairesPage"));
+const PartnersDirectoryPage = lazy(() => import("./pages/dashboard/PartnersDirectoryPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -160,6 +161,7 @@ const App = () => (
                 <Route path="partenaire-assurance" element={<Suspense fallback={<PageLoader />}><AssurancePage /></Suspense>} />
                 <Route path="partenaire-programmes" element={<Suspense fallback={<PageLoader />}><ProgrammesPage /></Suspense>} />
                 <Route path="partenaire-banques" element={<Suspense fallback={<PageLoader />}><ServicesBancairesPage /></Suspense>} />
+                <Route path="partners-directory" element={<Suspense fallback={<PageLoader />}><PartnersDirectoryPage /></Suspense>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

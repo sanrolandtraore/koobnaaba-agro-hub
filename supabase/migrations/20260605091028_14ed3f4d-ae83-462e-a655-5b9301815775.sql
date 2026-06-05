@@ -1,0 +1,1 @@
+CREATE POLICY "Anyone authenticated can browse partner entries" ON public.partner_entries FOR SELECT TO authenticated USING (true);
