@@ -38,7 +38,6 @@ export const agriculteurNav: NavItem[] = [
 
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/livestock-dashboard", label: "Tableau élevage", icon: Beef },
   { to: "/dashboard/animals", label: "Animaux", icon: Beef },
   { to: "/dashboard/animal-health", label: "Santé", icon: Heart },
   { to: "/dashboard/animal-reproduction", label: "Reproduction", icon: Baby },
@@ -46,7 +45,6 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/livestock-finance", label: "Comptabilité", icon: Wallet },
   { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
   { to: "/dashboard/livestock-services", label: "Services Vétérinaires", icon: ClipboardList },
-  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { to: "/dashboard/partners-directory", label: "Partenaires", icon: Handshake },
   { to: "/dashboard/pricing", label: "Premium", icon: Crown },
   { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
