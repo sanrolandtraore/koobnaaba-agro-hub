@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, Trash2, Navigation, Locate, RotateCcw } from "lucide-react";
+import { MapPin, Trash2, Navigation, RotateCcw, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface Coordinate {
@@ -13,6 +13,8 @@ interface GPSPolygonCaptureProps {
   onChange: (coords: Coordinate[]) => void;
   onCenterDetected?: (lat: number, lng: number) => void;
 }
+
+const MAX_POINTS = 4;
 
 // Haversine area calculation (client-side preview)
 function computeAreaHa(coords: Coordinate[]): number {
@@ -49,10 +51,12 @@ function computePerimeterM(coords: Coordinate[]): number {
 
 export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCaptureProps>(({ value, onChange, onCenterDetected }, ref) => {
   const [capturing, setCapturing] = useState(false);
-  const [autoMode, setAutoMode] = useState(false);
-  const watchRef = useRef<number | null>(null);
 
   const captureCurrentPosition = useCallback(() => {
+    if (value.length >= MAX_POINTS) {
+      toast.info(`Maximum ${MAX_POINTS} points atteint`);
+      return;
+    }
     if (!navigator.geolocation) {
       toast.error("GPS non disponible sur cet appareil");
       return;
@@ -64,11 +68,12 @@ export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCapt
           lat: Math.round(pos.coords.latitude * 1000000) / 1000000,
           lng: Math.round(pos.coords.longitude * 1000000) / 1000000,
         };
-        onChange([...value, newCoord]);
+        const next = [...value, newCoord].slice(0, MAX_POINTS);
+        onChange(next);
         if (value.length === 0 && onCenterDetected) {
           onCenterDetected(newCoord.lat, newCoord.lng);
         }
-        toast.success(`Point ${value.length + 1} capturé (±${Math.round(pos.coords.accuracy)}m)`);
+        toast.success(`Point ${next.length}/${MAX_POINTS} capturé (±${Math.round(pos.coords.accuracy)}m)`);
         setCapturing(false);
       },
       (err) => {
@@ -79,71 +84,28 @@ export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCapt
     );
   }, [value, onChange, onCenterDetected]);
 
-  // Auto-walk mode: captures points every 3 seconds
-  const toggleAutoMode = useCallback(() => {
-    if (autoMode && watchRef.current !== null) {
-      navigator.geolocation.clearWatch(watchRef.current);
-      watchRef.current = null;
-      setAutoMode(false);
-      toast.info(`Mode marche arrêté — ${value.length} points`);
-      return;
-    }
-    if (!navigator.geolocation) {
-      toast.error("GPS non disponible");
-      return;
-    }
-    setAutoMode(true);
-    toast.info("Mode marche activé — Marchez le long du contour du champ");
-    const currentPoints = [...value];
-    let lastLat = 0, lastLng = 0;
-    watchRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const lat = Math.round(pos.coords.latitude * 1000000) / 1000000;
-        const lng = Math.round(pos.coords.longitude * 1000000) / 1000000;
-        const dist = Math.sqrt((lat - lastLat) ** 2 + (lng - lastLng) ** 2) * 111000;
-        if (dist < 3 && lastLat !== 0) return;
-        lastLat = lat;
-        lastLng = lng;
-        currentPoints.push({ lat, lng });
-        onChange([...currentPoints]);
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 2000 }
-    );
-  }, [autoMode, value.length, onChange]);
-
-  useEffect(() => {
-    return () => {
-      if (watchRef.current !== null) {
-        navigator.geolocation.clearWatch(watchRef.current);
-      }
-    };
-  }, []);
-
   const removePoint = (index: number) => {
     onChange(value.filter((_, i) => i !== index));
   };
 
   const areaHa = computeAreaHa(value);
   const perimeterM = computePerimeterM(value);
+  const cornerLabels = ["Coin 1", "Coin 2", "Coin 3", "Coin 4"];
 
   return (
     <div ref={ref} className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-sm font-medium">Points GPS ({value.length})</span>
+        <span className="text-sm font-medium">Points GPS ({value.length}/{MAX_POINTS})</span>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={captureCurrentPosition} disabled={capturing || autoMode}>
-            {capturing ? <Navigation className="h-4 w-4 mr-1 animate-pulse" /> : <MapPin className="h-4 w-4 mr-1" />}
-            {capturing ? "Capture..." : "Point"}
-          </Button>
           <Button
             type="button"
-            variant={autoMode ? "destructive" : "secondary"}
+            variant="outline"
             size="sm"
-            onClick={toggleAutoMode}
+            onClick={captureCurrentPosition}
+            disabled={capturing || value.length >= MAX_POINTS}
           >
-            <Locate className="h-4 w-4 mr-1" />
-            {autoMode ? "Arrêter" : "Mode marche"}
+            {capturing ? <Navigation className="h-4 w-4 mr-1 animate-pulse" /> : <MapPin className="h-4 w-4 mr-1" />}
+            {capturing ? "Capture..." : value.length >= MAX_POINTS ? "Complet" : `Capturer ${cornerLabels[value.length]}`}
           </Button>
           {value.length > 0 && (
             <Button type="button" variant="ghost" size="sm" onClick={() => onChange([])}>
@@ -153,18 +115,16 @@ export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCapt
         </div>
       </div>
 
-      {autoMode && (
-        <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 text-sm text-primary animate-pulse">
-          🚶 Mode marche actif — Marchez le long du contour de votre champ. Les points sont capturés automatiquement.
-        </div>
-      )}
+      <div className="rounded-lg bg-muted/30 border p-3 text-xs text-muted-foreground">
+        Placez-vous successivement aux 4 coins de la parcelle et capturez un point à chaque coin pour déterminer la superficie.
+      </div>
 
       {value.length > 0 && (
-        <div className="rounded-lg border bg-muted/30 p-2 space-y-1 max-h-32 overflow-y-auto">
+        <div className="rounded-lg border bg-muted/30 p-2 space-y-1">
           {value.map((coord, i) => (
             <div key={i} className="flex items-center justify-between text-xs">
               <span className="font-mono">
-                P{i + 1}: {coord.lat}, {coord.lng}
+                {cornerLabels[i]}: {coord.lat}, {coord.lng}
               </span>
               <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removePoint(i)}>
                 <Trash2 className="h-3 w-3 text-destructive" />
@@ -177,7 +137,7 @@ export const GPSPolygonCapture = React.forwardRef<HTMLDivElement, GPSPolygonCapt
       {value.length >= 3 && (
         <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 space-y-1">
           <p className="text-sm font-medium text-primary flex items-center gap-1">
-            <Plus className="h-3 w-3" /> Polygone valide — {value.length} sommets
+            <Plus className="h-3 w-3" /> Polygone — {value.length} coins
           </p>
           <div className="flex gap-4 text-sm">
             <span><strong>{areaHa}</strong> ha</span>
