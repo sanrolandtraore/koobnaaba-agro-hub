@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,12 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Calculator, Wheat, Sprout, FlaskConical, Users, DollarSign, TrendingUp, Download, FileText } from "lucide-react";
+import { Calculator, Wheat, Sprout, FlaskConical, Users, DollarSign, TrendingUp, FileText, RotateCcw, Plus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Labour coefficients per ha (person-days)
+// Default labour coefficients per ha (used as suggestions; user can override freely)
 const labourCoefficients: Record<string, { labour_per_ha: number; daily_rate: number; phases: { name: string; days_per_ha: number }[] }> = {
   "Maïs": {
     labour_per_ha: 85, daily_rate: 2000,
@@ -66,7 +66,6 @@ const labourCoefficients: Record<string, { labour_per_ha: number; daily_rate: nu
   },
 };
 
-// Default for crops not in the map
 const defaultLabour = {
   labour_per_ha: 70, daily_rate: 2000,
   phases: [
@@ -81,16 +80,29 @@ const defaultLabour = {
 };
 
 const fmt = (n: number) => Math.round(n).toLocaleString("fr-FR");
+const numv = (v: string | number) => {
+  const n = typeof v === "number" ? v : parseFloat(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+type InputRow = { name: string; totalQty: number; unit: string; unitPrice: number };
+type PhaseRow = { name: string; totalDays: number; workers: number; dailyRate: number };
 
 const CropPlanningPage = () => {
   const [parcels, setParcels] = useState<any[]>([]);
   const [crops, setCrops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Selection
   const [selectedParcel, setSelectedParcel] = useState("");
   const [selectedCrop, setSelectedCrop] = useState("");
   const [manualArea, setManualArea] = useState("");
+
+  // Editable rows (free choice for farmer)
+  const [inputRows, setInputRows] = useState<InputRow[]>([]);
+  const [phaseRows, setPhaseRows] = useState<PhaseRow[]>([]);
+  // Editable yield / price overrides
+  const [yieldOverride, setYieldOverride] = useState<string>("");
+  const [priceOverride, setPriceOverride] = useState<string>("");
 
   useEffect(() => {
     Promise.all([
@@ -107,41 +119,81 @@ const CropPlanningPage = () => {
   const crop = crops.find(c => c.id === selectedCrop);
   const area = manualArea ? parseFloat(manualArea) : (parcel?.calculated_area_ha || parcel?.area_ha || 0);
 
-  // Compute inputs
-  const inputReqs = crop?.input_requirements || {};
-  const inputs = Object.entries(inputReqs).map(([name, v]: [string, any]) => {
-    const qtyPerHa = v.qty_per_ha || v.quantity_per_ha || 0;
-    const totalQty = Math.round(qtyPerHa * area * 100) / 100;
-    const unitPrice = v.unit_price || 0;
-    const totalCost = Math.round(totalQty * unitPrice);
-    return { name, qtyPerHa, unit: v.unit || "kg", totalQty, unitPrice, totalCost };
-  });
-  const totalInputCost = inputs.reduce((s, i) => s + i.totalCost, 0);
+  // Suggestions derived from crop + area
+  const suggestedInputs: InputRow[] = useMemo(() => {
+    if (!crop) return [];
+    const reqs = crop.input_requirements || {};
+    return Object.entries(reqs).map(([name, v]: [string, any]) => {
+      const qtyPerHa = v.qty_per_ha || v.quantity_per_ha || 0;
+      return {
+        name,
+        totalQty: Math.round(qtyPerHa * area * 100) / 100,
+        unit: v.unit || "kg",
+        unitPrice: v.unit_price || 0,
+      };
+    });
+  }, [crop, area]);
 
-  // Labour
-  const labourData = crop ? (labourCoefficients[crop.name] || defaultLabour) : defaultLabour;
-  const phases = labourData.phases.map(p => ({
-    ...p,
-    totalDays: Math.round(p.days_per_ha * area * 10) / 10,
-    cost: Math.round(p.days_per_ha * area * labourData.daily_rate),
-  }));
-  const totalLabourDays = phases.reduce((s, p) => s + p.totalDays, 0);
-  const totalLabourCost = phases.reduce((s, p) => s + p.cost, 0);
+  const suggestedPhases: PhaseRow[] = useMemo(() => {
+    const labourData = crop ? (labourCoefficients[crop.name] || defaultLabour) : defaultLabour;
+    return labourData.phases.map(p => ({
+      name: p.name,
+      totalDays: Math.round(p.days_per_ha * area * 10) / 10,
+      workers: 1,
+      dailyRate: labourData.daily_rate,
+    }));
+  }, [crop, area]);
 
-  // Yield & revenue
-  const expectedYield = crop ? Math.round((crop.avg_yield_per_ha || 0) * area) : 0;
-  const expectedRevenue = crop ? Math.round(expectedYield * (crop.avg_price_per_kg || 0)) : 0;
+  const resetToSuggestions = () => {
+    setInputRows(suggestedInputs);
+    setPhaseRows(suggestedPhases);
+    setYieldOverride("");
+    setPriceOverride("");
+    toast.success("Valeurs par défaut restaurées");
+  };
+
+  // Auto-load suggestions when crop/area change AND rows are empty
+  useEffect(() => {
+    if (crop && area > 0) {
+      setInputRows(suggestedInputs);
+      setPhaseRows(suggestedPhases);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCrop, area]);
+
+  // Computations from editable rows
+  const totalInputCost = inputRows.reduce((s, i) => s + i.totalQty * i.unitPrice, 0);
+  const totalLabourDays = phaseRows.reduce((s, p) => s + p.totalDays * p.workers, 0);
+  const totalLabourCost = phaseRows.reduce((s, p) => s + p.totalDays * p.workers * p.dailyRate, 0);
+
+  const effYieldPerHa = yieldOverride ? numv(yieldOverride) : (crop?.avg_yield_per_ha || 0);
+  const effPricePerKg = priceOverride ? numv(priceOverride) : (crop?.avg_price_per_kg || 0);
+  const expectedYield = Math.round(effYieldPerHa * area);
+  const expectedRevenue = Math.round(expectedYield * effPricePerKg);
   const plantCount = crop?.plants_per_ha ? Math.round(crop.plants_per_ha * area) : 0;
 
-  // Totals
   const totalBudget = totalInputCost + totalLabourCost;
   const profit = expectedRevenue - totalBudget;
   const roi = totalBudget > 0 ? Math.round(((expectedRevenue - totalBudget) / totalBudget) * 100) : 0;
-  const breakEvenKg = crop?.avg_price_per_kg ? Math.round(totalBudget / crop.avg_price_per_kg) : 0;
+  const breakEvenKg = effPricePerKg ? Math.round(totalBudget / effPricePerKg) : 0;
 
   const hasResult = area > 0 && crop;
 
-  // Export PDF
+  // Edit helpers
+  const updateInput = (i: number, patch: Partial<InputRow>) =>
+    setInputRows(rows => rows.map((r, idx) => idx === i ? { ...r, ...patch } : r));
+  const addInput = () =>
+    setInputRows(rows => [...rows, { name: "Nouvel intrant", totalQty: 0, unit: "kg", unitPrice: 0 }]);
+  const removeInput = (i: number) =>
+    setInputRows(rows => rows.filter((_, idx) => idx !== i));
+
+  const updatePhase = (i: number, patch: Partial<PhaseRow>) =>
+    setPhaseRows(rows => rows.map((r, idx) => idx === i ? { ...r, ...patch } : r));
+  const addPhase = () =>
+    setPhaseRows(rows => [...rows, { name: "Nouvelle phase", totalDays: 0, workers: 1, dailyRate: 2000 }]);
+  const removePhase = (i: number) =>
+    setPhaseRows(rows => rows.filter((_, idx) => idx !== i));
+
   const exportPDF = () => {
     if (!hasResult) return;
     const doc = new jsPDF();
@@ -151,7 +203,6 @@ const CropPlanningPage = () => {
     doc.text(`Culture: ${crop.name}${crop.variety ? ` (${crop.variety})` : ""} | Parcelle: ${parcel?.name || "Manuel"} | Superficie: ${area} ha`, 14, 26);
     doc.text(`Généré le ${new Date().toLocaleDateString("fr")}`, 14, 32);
 
-    // KPIs
     doc.setFontSize(11);
     doc.text(`Rendement estimé: ${fmt(expectedYield)} kg`, 14, 42);
     doc.text(`Revenu estimé: ${fmt(expectedRevenue)} FCFA`, 14, 48);
@@ -160,23 +211,21 @@ const CropPlanningPage = () => {
     doc.text(`Seuil rentabilité: ${fmt(breakEvenKg)} kg`, 14, 66);
     if (plantCount) doc.text(`Nombre de plants: ${fmt(plantCount)}`, 14, 72);
 
-    // Inputs table
     autoTable(doc, {
       startY: 80,
-      head: [["Intrant", "Dose/ha", "Unité", "Total", "Prix unit.", "Coût total (FCFA)"]],
-      body: inputs.map(i => [i.name, i.qtyPerHa, i.unit, i.totalQty, fmt(i.unitPrice), fmt(i.totalCost)]),
-      foot: [["", "", "", "", "TOTAL INTRANTS", fmt(totalInputCost)]],
+      head: [["Intrant", "Quantité", "Unité", "Prix unit.", "Coût total (FCFA)"]],
+      body: inputRows.map(i => [i.name, i.totalQty, i.unit, fmt(i.unitPrice), fmt(i.totalQty * i.unitPrice)]),
+      foot: [["", "", "", "TOTAL INTRANTS", fmt(totalInputCost)]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [34, 120, 74] },
     });
 
     const y1 = (doc as any).lastAutoTable?.finalY || 140;
-    // Labour table
     autoTable(doc, {
       startY: y1 + 8,
-      head: [["Phase", "Jours/ha", "Total jours", "Coût (FCFA)"]],
-      body: phases.map(p => [p.name, p.days_per_ha, p.totalDays, fmt(p.cost)]),
-      foot: [["", "", fmt(totalLabourDays) + " jours", fmt(totalLabourCost)]],
+      head: [["Phase", "Jours", "Ouvriers", "Taux/jour", "Coût (FCFA)"]],
+      body: phaseRows.map(p => [p.name, p.totalDays, p.workers, fmt(p.dailyRate), fmt(p.totalDays * p.workers * p.dailyRate)]),
+      foot: [["", "", "", "TOTAL MO", fmt(totalLabourCost)]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [34, 120, 74] },
     });
@@ -200,15 +249,14 @@ const CropPlanningPage = () => {
           Planification & Calcul automatique
         </h1>
         <p className="text-muted-foreground mt-1">
-          Calculez automatiquement les intrants, la main d'œuvre et la rentabilité à partir de la superficie GPS
+          Les valeurs sont pré-remplies à titre indicatif. Vous pouvez librement modifier les quantités d'intrants, le nombre de jours, d'ouvriers et les prix.
         </p>
       </div>
 
-      {/* Selection */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Paramètres</CardTitle>
-          <CardDescription>Choisissez la parcelle et la culture pour lancer le calcul</CardDescription>
+          <CardDescription>Choisissez la parcelle et la culture pour démarrer</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -249,12 +297,39 @@ const CropPlanningPage = () => {
               />
             </div>
           </div>
+
+          {hasResult && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t">
+              <div className="space-y-2">
+                <Label className="text-xs">Rendement attendu (kg/ha)</Label>
+                <Input
+                  type="number" step="any"
+                  value={yieldOverride}
+                  onChange={e => setYieldOverride(e.target.value)}
+                  placeholder={`Suggéré: ${crop?.avg_yield_per_ha || 0}`}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Prix de vente (FCFA/kg)</Label>
+                <Input
+                  type="number" step="any"
+                  value={priceOverride}
+                  onChange={e => setPriceOverride(e.target.value)}
+                  placeholder={`Suggéré: ${crop?.avg_price_per_kg || 0}`}
+                />
+              </div>
+              <div className="space-y-2 flex items-end">
+                <Button variant="outline" size="sm" onClick={resetToSuggestions} className="w-full">
+                  <RotateCcw className="h-4 w-4 mr-1" /> Restaurer les valeurs suggérées
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {hasResult && (
         <>
-          {/* KPI Cards */}
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
             <Card className="border-primary/20">
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -301,91 +376,141 @@ const CropPlanningPage = () => {
             </Card>
           </div>
 
-          {/* Details */}
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Intrants */}
+            {/* Intrants éditables */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <FlaskConical className="h-5 w-5 text-primary" />
-                    Intrants nécessaires
+                    Intrants & semences
                   </CardTitle>
-                  <CardDescription>Calculés automatiquement à partir de {area} ha</CardDescription>
+                  <CardDescription>Modifiez librement les quantités et prix selon votre choix</CardDescription>
                 </div>
+                <Button size="sm" variant="outline" onClick={addInput}>
+                  <Plus className="h-4 w-4 mr-1" /> Ajouter
+                </Button>
               </CardHeader>
               <CardContent>
-                {inputs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4">Aucune donnée d'intrants pour cette culture</p>
+                {inputRows.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4">Aucun intrant — cliquez sur « Ajouter »</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Intrant</TableHead>
-                        <TableHead className="text-right">Dose/ha</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="text-right">Coût (FCFA)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {inputs.map(i => (
-                        <TableRow key={i.name}>
-                          <TableCell className="font-medium">{i.name}</TableCell>
-                          <TableCell className="text-right">{i.qtyPerHa} {i.unit}</TableCell>
-                          <TableCell className="text-right font-mono">{i.totalQty} {i.unit}</TableCell>
-                          <TableCell className="text-right font-bold">{fmt(i.totalCost)}</TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Intrant</TableHead>
+                          <TableHead className="text-right">Quantité</TableHead>
+                          <TableHead>Unité</TableHead>
+                          <TableHead className="text-right">Prix unit.</TableHead>
+                          <TableHead className="text-right">Coût</TableHead>
+                          <TableHead></TableHead>
                         </TableRow>
-                      ))}
-                      <TableRow className="bg-muted/50 font-bold">
-                        <TableCell colSpan={3}>Total intrants</TableCell>
-                        <TableCell className="text-right">{fmt(totalInputCost)} FCFA</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {inputRows.map((i, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>
+                              <Input value={i.name} onChange={e => updateInput(idx, { name: e.target.value })} className="h-8" />
+                            </TableCell>
+                            <TableCell>
+                              <Input type="number" step="any" value={i.totalQty}
+                                onChange={e => updateInput(idx, { totalQty: numv(e.target.value) })} className="h-8 w-24 text-right" />
+                            </TableCell>
+                            <TableCell>
+                              <Input value={i.unit} onChange={e => updateInput(idx, { unit: e.target.value })} className="h-8 w-16" />
+                            </TableCell>
+                            <TableCell>
+                              <Input type="number" step="any" value={i.unitPrice}
+                                onChange={e => updateInput(idx, { unitPrice: numv(e.target.value) })} className="h-8 w-24 text-right" />
+                            </TableCell>
+                            <TableCell className="text-right font-bold whitespace-nowrap">{fmt(i.totalQty * i.unitPrice)}</TableCell>
+                            <TableCell>
+                              <Button size="icon" variant="ghost" onClick={() => removeInput(idx)} className="h-7 w-7">
+                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-muted/50 font-bold">
+                          <TableCell colSpan={4}>Total intrants</TableCell>
+                          <TableCell className="text-right">{fmt(totalInputCost)} FCFA</TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Main d'œuvre */}
+            {/* Main d'œuvre éditable */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5 text-secondary" />
-                  Main d'œuvre estimée
-                </CardTitle>
-                <CardDescription>Basé sur {labourData.daily_rate.toLocaleString("fr-FR")} FCFA/jour</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="h-5 w-5 text-secondary" />
+                    Main d'œuvre
+                  </CardTitle>
+                  <CardDescription>Choisissez librement le nombre de jours, d'ouvriers et le taux</CardDescription>
+                </div>
+                <Button size="sm" variant="outline" onClick={addPhase}>
+                  <Plus className="h-4 w-4 mr-1" /> Ajouter
+                </Button>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Phase</TableHead>
-                      <TableHead className="text-right">Jours/ha</TableHead>
-                      <TableHead className="text-right">Total jours</TableHead>
-                      <TableHead className="text-right">Coût (FCFA)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {phases.map(p => (
-                      <TableRow key={p.name}>
-                        <TableCell className="font-medium">{p.name}</TableCell>
-                        <TableCell className="text-right">{p.days_per_ha}</TableCell>
-                        <TableCell className="text-right font-mono">{p.totalDays}</TableCell>
-                        <TableCell className="text-right font-bold">{fmt(p.cost)}</TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Phase</TableHead>
+                        <TableHead className="text-right">Jours</TableHead>
+                        <TableHead className="text-right">Ouvriers</TableHead>
+                        <TableHead className="text-right">Taux/jour</TableHead>
+                        <TableHead className="text-right">Coût</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
-                    ))}
-                    <TableRow className="bg-muted/50 font-bold">
-                      <TableCell colSpan={2}>Total main d'œuvre</TableCell>
-                      <TableCell className="text-right">{fmt(totalLabourDays)} j</TableCell>
-                      <TableCell className="text-right">{fmt(totalLabourCost)} FCFA</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {phaseRows.map((p, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>
+                            <Input value={p.name} onChange={e => updatePhase(idx, { name: e.target.value })} className="h-8" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" step="any" value={p.totalDays}
+                              onChange={e => updatePhase(idx, { totalDays: numv(e.target.value) })} className="h-8 w-20 text-right" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" step="1" min="1" value={p.workers}
+                              onChange={e => updatePhase(idx, { workers: numv(e.target.value) })} className="h-8 w-20 text-right" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" step="any" value={p.dailyRate}
+                              onChange={e => updatePhase(idx, { dailyRate: numv(e.target.value) })} className="h-8 w-24 text-right" />
+                          </TableCell>
+                          <TableCell className="text-right font-bold whitespace-nowrap">{fmt(p.totalDays * p.workers * p.dailyRate)}</TableCell>
+                          <TableCell>
+                            <Button size="icon" variant="ghost" onClick={() => removePhase(idx)} className="h-7 w-7">
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow className="bg-muted/50 font-bold">
+                        <TableCell colSpan={2}>Total</TableCell>
+                        <TableCell className="text-right">{fmt(totalLabourDays)} j·h</TableCell>
+                        <TableCell></TableCell>
+                        <TableCell className="text-right">{fmt(totalLabourCost)} FCFA</TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Summary + Export */}
           <Card className="border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Récapitulatif budgétaire</CardTitle>
