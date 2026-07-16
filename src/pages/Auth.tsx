@@ -17,7 +17,7 @@ const ROLES = [
   { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Cultures & parcelles" },
   { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Élevage & troupeaux" },
   { value: "cooperative", label: "Coopérative", icon: Users, desc: "Membres & collectes" },
-  { value: "expert", label: "Expert agronome", icon: GraduationCap, desc: "Conseil & diagnostic" },
+  { value: "agent_technique", label: "Expert agronome", icon: GraduationCap, desc: "Conseil & diagnostic" },
   { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Fournisseurs, banques…" },
 ] as const;
 
