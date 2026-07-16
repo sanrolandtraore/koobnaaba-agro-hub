@@ -38,7 +38,7 @@ serve(async (req) => {
       );
     }
 
-    const { identifier, new_password, full_name } = body;
+    const { identifier, new_password, full_name, role } = body;
 
     if (!identifier || typeof identifier !== "string" ||
         !new_password || typeof new_password !== "string" ||
@@ -48,6 +48,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const ALLOWED = ["agriculteur", "eleveur", "cooperative", "partenaire", "agent_technique"];
+    const scopedRole = typeof role === "string" && ALLOWED.includes(role) ? role : null;
 
     // Rate limiting by IP + identifier
     const clientIp = req.headers.get("x-forwarded-for") || "unknown";
