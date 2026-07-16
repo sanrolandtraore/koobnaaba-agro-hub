@@ -38,7 +38,7 @@ serve(async (req) => {
       );
     }
 
-    const { identifier, new_password, full_name } = body;
+    const { identifier, new_password, full_name, role } = body;
 
     if (!identifier || typeof identifier !== "string" ||
         !new_password || typeof new_password !== "string" ||
@@ -48,6 +48,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const ALLOWED = ["agriculteur", "eleveur", "cooperative", "partenaire", "agent_technique"];
+    const scopedRole = typeof role === "string" && ALLOWED.includes(role) ? role : null;
 
     // Rate limiting by IP + identifier
     const clientIp = req.headers.get("x-forwarded-for") || "unknown";
@@ -94,13 +97,27 @@ serve(async (req) => {
       .from("profiles")
       .select("user_id, full_name")
       .eq("phone", cleaned)
-      .limit(5);
+      .limit(20);
 
     if (profiles && profiles.length > 0) {
-      const match = profiles.find(
+      const nameMatches = profiles.filter(
         (p: any) => p.full_name.toLowerCase().trim() === full_name.toLowerCase().trim()
       );
-      if (match) userId = match.user_id;
+      if (nameMatches.length > 0) {
+        if (scopedRole) {
+          // Restrict to the account tied to the requested module
+          const ids = nameMatches.map((p: any) => p.user_id);
+          const { data: roleRows } = await supabaseAdmin
+            .from("user_roles")
+            .select("user_id")
+            .in("user_id", ids)
+            .eq("role", scopedRole)
+            .limit(1);
+          if (roleRows && roleRows.length > 0) userId = roleRows[0].user_id;
+        } else if (nameMatches.length === 1) {
+          userId = nameMatches[0].user_id;
+        }
+      }
     }
 
     // Audit log (always, regardless of outcome)

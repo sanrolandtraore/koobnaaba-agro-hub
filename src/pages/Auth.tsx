@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Lock, User, Wheat, Bug, Users, Handshake, Phone, Mail, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
+import { Lock, User, Wheat, Bug, Users, Handshake, Phone, Mail, ArrowLeft, KeyRound, WifiOff, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { hasOfflineCredentials } from "@/lib/offlineAuth";
@@ -14,22 +14,36 @@ import { hasPin } from "@/lib/pinAuth";
 import logo from "@/assets/logo.png";
 
 const ROLES = [
-  { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Gestion de cultures et parcelles" },
-  { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Gestion d'élevage et troupeaux" },
-  { value: "cooperative", label: "Coopérative", icon: Users, desc: "Gestion de membres et collectes" },
-  { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Fournisseurs, assurance, programmes, banques" },
+  { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Cultures & parcelles" },
+  { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Élevage & troupeaux" },
+  { value: "cooperative", label: "Coopérative", icon: Users, desc: "Membres & collectes" },
+  { value: "agent_technique", label: "Expert agronome", icon: GraduationCap, desc: "Conseil & diagnostic" },
+  { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Fournisseurs, banques…" },
 ] as const;
 
-// Generate a stable internal identifier from phone number.
-// The "@koobnaaba.local" suffix is a technical requirement of Supabase Auth
-// and is never displayed to the user.
-const phoneToInternalId = (phone: string) => {
-  const cleaned = phone.replace(/[^0-9+]/g, "");
-  return `${cleaned}@koobnaaba.local`;
-};
+const ALLOWED_ROLES = ROLES.map(r => r.value) as string[];
 
+// Build a role-scoped internal identifier so each module can have its own account
+// even when sharing the same phone number or email inbox.
 const cleanPhone = (phone: string) => phone.replace(/[^0-9+]/g, "");
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+
+const phoneToInternalId = (phone: string, role: string) => {
+  const cleaned = cleanPhone(phone);
+  const safeRole = ALLOWED_ROLES.includes(role) ? role : "agriculteur";
+  return `${safeRole}.${cleaned}@koobnaaba.local`;
+};
+
+// Namespace real emails using plus-addressing so the same inbox can register
+// several module-scoped accounts (delivery still lands in the base inbox).
+const emailToInternalId = (email: string, role: string) => {
+  const raw = email.trim().toLowerCase();
+  const safeRole = ALLOWED_ROLES.includes(role) ? role : "agriculteur";
+  const [local, domain] = raw.split("@");
+  if (!local || !domain) return raw;
+  const base = local.split("+")[0];
+  return `${base}+koobnaaba_${safeRole}@${domain}`;
+};
 
 type AuthMode = "login" | "register" | "forgot";
 type IdMethod = "phone" | "email";
@@ -65,27 +79,27 @@ const Auth = () => {
     };
   }, []);
 
+  const buildAuthId = (): string | null => {
+    if (idMethod === "phone") {
+      if (!phone.trim()) {
+        toast.error("Le numéro de téléphone est requis");
+        return null;
+      }
+      return phoneToInternalId(phone, selectedRole);
+    }
+    if (!isValidEmail(email)) {
+      toast.error("Adresse email invalide");
+      return null;
+    }
+    return emailToInternalId(email, selectedRole);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Build the auth identifier from chosen method
-    let authId = "";
-    if (idMethod === "phone") {
-      if (!phone.trim()) {
-        toast.error("Le numéro de téléphone est requis");
-        setLoading(false);
-        return;
-      }
-      authId = phoneToInternalId(phone);
-    } else {
-      if (!isValidEmail(email)) {
-        toast.error("Adresse email invalide");
-        setLoading(false);
-        return;
-      }
-      authId = email.trim().toLowerCase();
-    }
+    const authId = buildAuthId();
+    if (!authId) { setLoading(false); return; }
 
     if (mode === "login") {
       if (!isOnline) {
@@ -102,7 +116,7 @@ const Auth = () => {
       const { error } = await signIn(authId, password);
       if (error) {
         toast.error(error.message === "Invalid login credentials"
-          ? (idMethod === "phone" ? "Numéro ou mot de passe incorrect" : "Email ou mot de passe incorrect")
+          ? "Identifiants incorrects pour ce module. Vérifiez votre profil sélectionné."
           : error.message);
       } else {
         toast.success("Connexion réussie !");
@@ -132,9 +146,7 @@ const Auth = () => {
       const { error } = await signUp(authId, password, fullName, selectedRole, phoneForProfile, emailForProfile);
       if (error) {
         if (error.message?.includes("already registered")) {
-          toast.error(idMethod === "phone"
-            ? "Ce numéro est déjà utilisé. Essayez de vous connecter."
-            : "Cet email est déjà utilisé. Essayez de vous connecter.");
+          toast.error(`Un compte ${selectedRole} existe déjà avec ces identifiants. Connectez-vous ou choisissez un autre module.`);
         } else {
           toast.error(error.message);
         }
@@ -157,9 +169,10 @@ const Auth = () => {
         return;
       }
       setLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim().toLowerCase(), {
-        redirectTo: `${window.location.origin}/auth`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        emailToInternalId(resetEmail, selectedRole),
+        { redirectTo: `${window.location.origin}/auth` }
+      );
       if (error) toast.error(error.message);
       else {
         toast.success("Email de réinitialisation envoyé. Vérifiez votre boîte de réception.");
@@ -170,7 +183,6 @@ const Auth = () => {
       return;
     }
 
-    // Phone-based reset (verify by full name)
     if (!resetPhone.trim() || !resetName.trim()) {
       toast.error("Veuillez remplir tous les champs");
       return;
@@ -191,6 +203,7 @@ const Auth = () => {
           identifier: cleanPhone(resetPhone),
           new_password: newPassword,
           full_name: resetName.trim(),
+          role: selectedRole,
         },
       });
       if (error) toast.error("Erreur de connexion au serveur");
@@ -224,6 +237,25 @@ const Auth = () => {
     </div>
   );
 
+  const RolePicker = ({ compact = false }: { compact?: boolean }) => (
+    <div className="space-y-2">
+      <Label className="text-sm font-semibold">
+        {mode === "login" ? "Choisissez le module à ouvrir" : "Votre profil"}
+      </Label>
+      <div className={cn("grid gap-2", compact ? "grid-cols-3 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-3")}>
+        {ROLES.map(({ value, label, icon: Icon, desc }) => (
+          <button key={value} type="button" onClick={() => setSelectedRole(value)}
+            className={cn("flex flex-col items-center gap-1.5 rounded-xl border-2 p-2 sm:p-3 text-center transition-all",
+              selectedRole === value ? "border-primary bg-primary/5 shadow-primary" : "border-border hover:border-primary/40 hover:bg-muted/50")}>
+            <Icon className={cn("h-5 w-5", selectedRole === value ? "text-primary" : "text-muted-foreground")} />
+            <span className="text-[11px] sm:text-xs font-semibold leading-tight">{label}</span>
+            {!compact && <span className="text-[10px] text-muted-foreground leading-tight hidden sm:block">{desc}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen items-center justify-center gradient-hero p-4">
       <Card className="w-full max-w-lg border-border/50 shadow-warm animate-fade-in">
@@ -240,16 +272,17 @@ const Auth = () => {
                 {hasCachedCreds ? "Mode hors-ligne — connectez-vous avec vos identifiants enregistrés" : "Pas de connexion internet"}
               </span>
             ) : mode === "login"
-              ? `Connectez-vous avec votre ${idMethod === "phone" ? "numéro de téléphone" : "adresse email"}`
+              ? "Chaque module a son propre compte. Sélectionnez-le puis connectez-vous."
               : mode === "register"
-              ? `Créez votre compte avec votre ${idMethod === "phone" ? "numéro de téléphone" : "adresse email"}`
-              : idMethod === "email"
-              ? "Entrez votre email pour recevoir un lien de réinitialisation"
-              : "Entrez votre numéro et votre nom complet"}
+              ? "Créez un compte dédié à votre module."
+              : "Sélectionnez le module concerné pour réinitialiser son mot de passe"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <MethodToggle />
+
+          {/* Module picker visible in every mode */}
+          <RolePicker compact={mode !== "register"} />
 
           {mode === "forgot" ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
@@ -289,26 +322,10 @@ const Auth = () => {
             <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === "register" && (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Votre profil</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {ROLES.map(({ value, label, icon: Icon, desc }) => (
-                          <button key={value} type="button" onClick={() => setSelectedRole(value)}
-                            className={cn("flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all",
-                              selectedRole === value ? "border-primary bg-primary/5 shadow-primary" : "border-border hover:border-primary/40 hover:bg-muted/50")}>
-                            <Icon className={cn("h-6 w-6", selectedRole === value ? "text-primary" : "text-muted-foreground")} />
-                            <span className="text-xs font-semibold leading-tight">{label}</span>
-                            <span className="text-[10px] text-muted-foreground leading-tight hidden sm:block">{desc}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet</Label>
-                      <Input id="name" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ouédraogo Abdoulaye" required />
-                    </div>
-                  </>
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet</Label>
+                    <Input id="name" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ouédraogo Abdoulaye" required />
+                  </div>
                 )}
 
                 {idMethod === "phone" ? (
