@@ -11,104 +11,107 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCooperativeRole } from "@/hooks/useCooperativeRole";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
-export type NavItem = { to: string; label: string; icon: React.ElementType };
+export type NavItem = { to: string; labelKey: string; icon: React.ElementType };
 
 export const agriculteurNav: NavItem[] = [
-  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/farms", label: "Exploitations", icon: MapPin },
-  { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin },
-  { to: "/dashboard/crop-planning", label: "Planification", icon: Calculator },
-  { to: "/dashboard/crop-cycles", label: "Cycles culturaux", icon: Wheat },
-  { to: "/dashboard/activities", label: "Activités", icon: Activity },
-  { to: "/dashboard/harvests", label: "Récoltes & Lots", icon: Package },
-  { to: "/dashboard/calendar", label: "Calendrier", icon: CalendarDays },
-  { to: "/dashboard/workers", label: "Main d'œuvre", icon: Users },
-  { to: "/dashboard/equipment", label: "Équipements", icon: Wrench },
-  { to: "/dashboard/costs", label: "Coûts", icon: DollarSign },
-  { to: "/dashboard/investment", label: "Investissement", icon: Calculator },
-  { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
-  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
-  { to: "/dashboard/services", label: "Services Experts", icon: ClipboardList },
-  { to: "/dashboard/partners-directory", label: "Partenaires", icon: Handshake },
-  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
-  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export", label: "Export", icon: Download },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard/farms", labelKey: "nav.farms", icon: MapPin },
+  { to: "/dashboard/parcels", labelKey: "nav.parcels", icon: MapPin },
+  { to: "/dashboard/crop-planning", labelKey: "nav.planning", icon: Calculator },
+  { to: "/dashboard/crop-cycles", labelKey: "nav.cropCycles", icon: Wheat },
+  { to: "/dashboard/activities", labelKey: "nav.activities", icon: Activity },
+  { to: "/dashboard/harvests", labelKey: "nav.harvests", icon: Package },
+  { to: "/dashboard/calendar", labelKey: "nav.calendar", icon: CalendarDays },
+  { to: "/dashboard/workers", labelKey: "nav.workers", icon: Users },
+  { to: "/dashboard/equipment", labelKey: "nav.equipment", icon: Wrench },
+  { to: "/dashboard/costs", labelKey: "nav.costs", icon: DollarSign },
+  { to: "/dashboard/investment", labelKey: "nav.investment", icon: Calculator },
+  { to: "/dashboard/analytics", labelKey: "nav.analytics", icon: BarChart3 },
+  { to: "/dashboard/marketplace", labelKey: "nav.marketplace", icon: Store },
+  { to: "/dashboard/services", labelKey: "nav.expertServices", icon: ClipboardList },
+  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
+  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
+  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
+  { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
 ];
 
 export const eleveurNav: NavItem[] = [
-  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/animals", label: "Animaux", icon: Beef },
-  { to: "/dashboard/animal-health", label: "Santé", icon: Heart },
-  { to: "/dashboard/animal-reproduction", label: "Reproduction", icon: Baby },
-  { to: "/dashboard/animal-feeding", label: "Alimentation", icon: Utensils },
-  { to: "/dashboard/livestock-finance", label: "Comptabilité", icon: Wallet },
-  { to: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
-  { to: "/dashboard/livestock-services", label: "Services Vétérinaires", icon: ClipboardList },
-  { to: "/dashboard/partners-directory", label: "Partenaires", icon: Handshake },
-  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
-  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export", label: "Export", icon: Download },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard/animals", labelKey: "nav.animals", icon: Beef },
+  { to: "/dashboard/animal-health", labelKey: "nav.health", icon: Heart },
+  { to: "/dashboard/animal-reproduction", labelKey: "nav.reproduction", icon: Baby },
+  { to: "/dashboard/animal-feeding", labelKey: "nav.feeding", icon: Utensils },
+  { to: "/dashboard/livestock-finance", labelKey: "nav.accounting", icon: Wallet },
+  { to: "/dashboard/analytics", labelKey: "nav.analytics", icon: BarChart3 },
+  { to: "/dashboard/livestock-services", labelKey: "nav.vetServices", icon: ClipboardList },
+  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
+  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
+  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
+  { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
 ];
 
 export const cooperativeNav: NavItem[] = [
-  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/cooperative-profile", label: "Profil coopérative", icon: Building2 },
-  { to: "/dashboard/members", label: "Membres", icon: Users },
-  { to: "/dashboard/collectes", label: "Collectes", icon: Package },
-  { to: "/dashboard/cooperative-cotisations", label: "Cotisations & Fonds", icon: Wallet },
-  { to: "/dashboard/cooperative-finance", label: "Ventes & Répartitions", icon: DollarSign },
-  { to: "/dashboard/cooperative-parcels", label: "Parcelles groupées", icon: Layers },
-  { to: "/dashboard/cooperative-equipment", label: "Mécanisation", icon: Wrench },
-  { to: "/dashboard/cooperative-documents", label: "Documents", icon: FolderOpen },
-  { to: "/dashboard/cooperative-score", label: "Score coopérative", icon: Award },
-  { to: "/dashboard/partners-directory", label: "Partenaires", icon: Handshake },
-  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
-  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export", label: "Export PDF/CSV", icon: Download },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard/cooperative-profile", labelKey: "nav.coopProfile", icon: Building2 },
+  { to: "/dashboard/members", labelKey: "nav.members", icon: Users },
+  { to: "/dashboard/collectes", labelKey: "nav.collectes", icon: Package },
+  { to: "/dashboard/cooperative-cotisations", labelKey: "nav.cotisations", icon: Wallet },
+  { to: "/dashboard/cooperative-finance", labelKey: "nav.salesDistribution", icon: DollarSign },
+  { to: "/dashboard/cooperative-parcels", labelKey: "nav.groupParcels", icon: Layers },
+  { to: "/dashboard/cooperative-equipment", labelKey: "nav.mechanization", icon: Wrench },
+  { to: "/dashboard/cooperative-documents", labelKey: "nav.documents", icon: FolderOpen },
+  { to: "/dashboard/cooperative-score", labelKey: "nav.coopScore", icon: Award },
+  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
+  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
+  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
+  { to: "/dashboard/export", labelKey: "nav.exportPdfCsv", icon: Download },
 ];
 
 export const partenaireNav: NavItem[] = [
-  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/partenaire-fournisseurs", label: "Fournisseurs", icon: Package },
-  { to: "/dashboard/partenaire-assurance", label: "Assurance", icon: Award },
-  { to: "/dashboard/partenaire-programmes", label: "Programmes / Projets", icon: FolderOpen },
-  { to: "/dashboard/partenaire-banques", label: "Services bancaires agricoles", icon: Wallet },
-  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
-  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard/partenaire-fournisseurs", labelKey: "nav.suppliers", icon: Package },
+  { to: "/dashboard/partenaire-assurance", labelKey: "nav.insurance", icon: Award },
+  { to: "/dashboard/partenaire-programmes", labelKey: "nav.programs", icon: FolderOpen },
+  { to: "/dashboard/partenaire-banques", labelKey: "nav.banking", icon: Wallet },
+  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
+  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
 ];
 
 export const agentNav: NavItem[] = [
-  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/expert-toolbox", label: "Boîte à outils", icon: Sparkles },
-  { to: "/dashboard/expert-clients", label: "Mes clients", icon: Users },
-  { to: "/dashboard/expert-diagnosis", label: "Diagnostic IA", icon: Microscope },
-  { to: "/dashboard/expert-calculator", label: "Calculatrice", icon: Calculator },
-  { to: "/dashboard/expert-prescriptions", label: "Ordonnances", icon: FileText },
-  { to: "/dashboard/crop-library", label: "Fiches techniques", icon: BookOpen },
-  { to: "/dashboard/scouting", label: "Scouting terrain", icon: Eye },
-  { to: "/dashboard/expert-cartography", label: "Cartographie GPS", icon: MapPin },
-  { to: "/dashboard/marketplace", label: "Marketplace", icon: Store },
-  { to: "/dashboard/partners-directory", label: "Partenaires", icon: Handshake },
-  { to: "/dashboard/expert-analytics", label: "Statistiques", icon: BarChart3 },
-  { to: "/dashboard/pricing", label: "Premium", icon: Crown },
-  { to: "/dashboard/settings", label: "Paramètres", icon: Settings },
-  { to: "/dashboard/export", label: "Export", icon: Download },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard/expert-toolbox", labelKey: "nav.toolbox", icon: Sparkles },
+  { to: "/dashboard/expert-clients", labelKey: "nav.myClients", icon: Users },
+  { to: "/dashboard/expert-diagnosis", labelKey: "nav.aiDiagnosis", icon: Microscope },
+  { to: "/dashboard/expert-calculator", labelKey: "nav.calculator", icon: Calculator },
+  { to: "/dashboard/expert-prescriptions", labelKey: "nav.prescriptions", icon: FileText },
+  { to: "/dashboard/crop-library", labelKey: "nav.technicalSheets", icon: BookOpen },
+  { to: "/dashboard/scouting", labelKey: "nav.scouting", icon: Eye },
+  { to: "/dashboard/expert-cartography", labelKey: "nav.gpsMapping", icon: MapPin },
+  { to: "/dashboard/marketplace", labelKey: "nav.marketplace", icon: Store },
+  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
+  { to: "/dashboard/expert-analytics", labelKey: "nav.statistics", icon: BarChart3 },
+  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
+  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
+  { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
 ];
 
 
 const fullNav: NavItem[] = [...agriculteurNav];
 
-export const roleLabels: Record<string, string> = {
-  agriculteur: "Agriculteur",
-  eleveur: "Éleveur",
-  cooperative: "Coopérative",
-  agent_technique: "Expert Agronome",
-  partenaire: "Partenaire",
-  admin: "Administrateur",
-  manager: "Gestionnaire",
-  farmer: "Agriculteur",
-  viewer: "Observateur",
+/** Translation keys for each role label (see `roles.*` in the locale files). */
+export const roleLabelKeys: Record<string, string> = {
+  agriculteur: "roles.agriculteur",
+  eleveur: "roles.eleveur",
+  cooperative: "roles.cooperative",
+  agent_technique: "roles.agent_technique",
+  partenaire: "roles.partenaire",
+  admin: "roles.admin",
+  manager: "roles.manager",
+  farmer: "roles.farmer",
+  viewer: "roles.viewer",
 };
 
 export const roleIcons: Record<string, React.ElementType> = {
@@ -145,6 +148,7 @@ interface SidebarContentProps {
 
 export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   const { profile, signOut, primaryRole } = useAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const { isCoopMember, isReadOnly, memberRole } = useCooperativeRole();
 
@@ -161,12 +165,12 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
         <div className="flex flex-col">
           <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
             <RoleIcon className="h-3 w-3" />
-            {isCoopMember ? "Coopérative" : roleLabels[primaryRole || "agriculteur"]}
+            {t(isCoopMember ? "roles.cooperative" : roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
           </span>
           {isReadOnly && (
             <Badge variant="outline" className="text-[9px] mt-1 gap-1 border-sidebar-foreground/20 text-sidebar-foreground/50">
               <Eye className="h-2.5 w-2.5" />
-              Lecture seule
+              {t("common.readOnly")}
             </Badge>
           )}
         </div>
@@ -174,7 +178,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {nav.main.map(({ to, label, icon: Icon }) => (
+        {nav.main.map(({ to, labelKey, icon: Icon }) => (
           <Link
             key={to}
             to={to}
@@ -187,13 +191,14 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {label}
+            {t(labelKey)}
           </Link>
         ))}
       </nav>
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-4">
+        <LanguageSelector className="mb-2 w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
         <Link
           to="/dashboard/profile"
           onClick={onNavigate}
@@ -202,7 +207,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent shrink-0">
             <User className="h-4 w-4 text-sidebar-accent-foreground" />
           </div>
-          <span className="text-sm font-medium truncate">{profile?.full_name || "Utilisateur"}</span>
+          <span className="text-sm font-medium truncate">{profile?.full_name || t("common.user")}</span>
         </Link>
         <Button
           variant="ghost"
@@ -211,7 +216,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
           onClick={() => { onNavigate?.(); signOut(); }}
         >
           <LogOut className="h-4 w-4 mr-2" />
-          Déconnexion
+          {t("common.logout")}
         </Button>
       </div>
     </div>
