@@ -99,16 +99,17 @@ export const agentNav: NavItem[] = [
 
 const fullNav: NavItem[] = [...agriculteurNav];
 
-export const roleLabels: Record<string, string> = {
-  agriculteur: "Agriculteur",
-  eleveur: "Éleveur",
-  cooperative: "Coopérative",
-  agent_technique: "Expert Agronome",
-  partenaire: "Partenaire",
-  admin: "Administrateur",
-  manager: "Gestionnaire",
-  farmer: "Agriculteur",
-  viewer: "Observateur",
+/** Translation keys for each role label (see `roles.*` in the locale files). */
+export const roleLabelKeys: Record<string, string> = {
+  agriculteur: "roles.agriculteur",
+  eleveur: "roles.eleveur",
+  cooperative: "roles.cooperative",
+  agent_technique: "roles.agent_technique",
+  partenaire: "roles.partenaire",
+  admin: "roles.admin",
+  manager: "roles.manager",
+  farmer: "roles.farmer",
+  viewer: "roles.viewer",
 };
 
 export const roleIcons: Record<string, React.ElementType> = {
