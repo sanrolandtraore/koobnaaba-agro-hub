@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCooperativeRole } from "@/hooks/useCooperativeRole";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export type NavItem = { to: string; labelKey: string; icon: React.ElementType };
 
@@ -146,6 +148,7 @@ interface SidebarContentProps {
 
 export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   const { profile, signOut, primaryRole } = useAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const { isCoopMember, isReadOnly, memberRole } = useCooperativeRole();
 
@@ -162,12 +165,12 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
         <div className="flex flex-col">
           <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
             <RoleIcon className="h-3 w-3" />
-            {isCoopMember ? "Coopérative" : roleLabels[primaryRole || "agriculteur"]}
+            {t(isCoopMember ? "roles.cooperative" : roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
           </span>
           {isReadOnly && (
             <Badge variant="outline" className="text-[9px] mt-1 gap-1 border-sidebar-foreground/20 text-sidebar-foreground/50">
               <Eye className="h-2.5 w-2.5" />
-              Lecture seule
+              {t("common.readOnly")}
             </Badge>
           )}
         </div>
@@ -175,7 +178,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {nav.main.map(({ to, label, icon: Icon }) => (
+        {nav.main.map(({ to, labelKey, icon: Icon }) => (
           <Link
             key={to}
             to={to}
@@ -188,13 +191,14 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {label}
+            {t(labelKey)}
           </Link>
         ))}
       </nav>
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-4">
+        <LanguageSelector className="mb-2 w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
         <Link
           to="/dashboard/profile"
           onClick={onNavigate}
@@ -203,7 +207,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent shrink-0">
             <User className="h-4 w-4 text-sidebar-accent-foreground" />
           </div>
-          <span className="text-sm font-medium truncate">{profile?.full_name || "Utilisateur"}</span>
+          <span className="text-sm font-medium truncate">{profile?.full_name || t("common.user")}</span>
         </Link>
         <Button
           variant="ghost"
@@ -212,7 +216,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
           onClick={() => { onNavigate?.(); signOut(); }}
         >
           <LogOut className="h-4 w-4 mr-2" />
-          Déconnexion
+          {t("common.logout")}
         </Button>
       </div>
     </div>
