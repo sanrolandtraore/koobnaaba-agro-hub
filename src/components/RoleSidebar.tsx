@@ -91,23 +91,8 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
 ];
 
-export const agentNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/expert-toolbox", labelKey: "nav.toolbox", icon: Sparkles },
-  { to: "/dashboard/expert-clients", labelKey: "nav.myClients", icon: Users },
-  { to: "/dashboard/expert-diagnosis", labelKey: "nav.aiDiagnosis", icon: Microscope },
-  { to: "/dashboard/expert-calculator", labelKey: "nav.calculator", icon: Calculator },
-  { to: "/dashboard/expert-prescriptions", labelKey: "nav.prescriptions", icon: FileText },
-  { to: "/dashboard/crop-library", labelKey: "nav.technicalSheets", icon: BookOpen },
-  { to: "/dashboard/scouting", labelKey: "nav.scouting", icon: Eye },
-  { to: "/dashboard/expert-cartography", labelKey: "nav.gpsMapping", icon: MapPin },
-  { to: "/dashboard/marketplace", labelKey: "nav.marketplace", icon: Store },
-  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
-  { to: "/dashboard/expert-analytics", labelKey: "nav.statistics", icon: BarChart3 },
-  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
-  { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
-];
+/** Ancien module Expert agronome : fusionné dans le module Agriculture & Agronomie. */
+export const agentNav: NavItem[] = agriculteurNav;
 
 
 const fullNav: NavItem[] = [...agriculteurNav];
@@ -117,13 +102,14 @@ export const roleLabelKeys: Record<string, string> = {
   agriculteur: "roles.agriculteur",
   eleveur: "roles.eleveur",
   cooperative: "roles.cooperative",
-  agent_technique: "roles.agent_technique",
+  agent_technique: "roles.agriculteur",
   partenaire: "roles.partenaire",
   admin: "roles.admin",
   manager: "roles.manager",
   farmer: "roles.farmer",
   viewer: "roles.viewer",
 };
+
 
 export const roleIcons: Record<string, React.ElementType> = {
   agriculteur: Wheat,
