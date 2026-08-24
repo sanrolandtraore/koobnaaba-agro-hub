@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Lock, User, Wheat, Bug, Users, Handshake, Phone, Mail, ArrowLeft, KeyRound, WifiOff, GraduationCap } from "lucide-react";
+import { Lock, User, Wheat, Bug, Users, Handshake, Phone, Mail, ArrowLeft, KeyRound, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { hasOfflineCredentials } from "@/lib/offlineAuth";
@@ -14,14 +14,14 @@ import { hasPin } from "@/lib/pinAuth";
 import logo from "@/assets/logo.png";
 
 const ROLES = [
-  { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Cultures & parcelles" },
+  { value: "agriculteur", label: "Agriculture & Agronomie", icon: Wheat, desc: "Cultures, parcelles & conseil agronomique" },
   { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Élevage & troupeaux" },
   { value: "cooperative", label: "Coopérative", icon: Users, desc: "Membres & collectes" },
-  { value: "agent_technique", label: "Expert agronome", icon: GraduationCap, desc: "Conseil & diagnostic" },
   { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Fournisseurs, banques…" },
 ] as const;
 
-const ALLOWED_ROLES = ROLES.map(r => r.value) as string[];
+// `agent_technique` reste accepté pour les comptes historiques (module fusionné avec Agriculture).
+const ALLOWED_ROLES = [...ROLES.map(r => r.value), "agent_technique"] as string[];
 
 // Build a role-scoped internal identifier so each module can have its own account
 // even when sharing the same phone number or email inbox.

@@ -16,6 +16,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 
 export type NavItem = { to: string; labelKey: string; icon: React.ElementType };
 
+/** Module unifié « Agriculture & Agronomie » : production végétale + outils agronomiques. */
 export const agriculteurNav: NavItem[] = [
   { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
   { to: "/dashboard/farms", labelKey: "nav.farms", icon: MapPin },
@@ -29,6 +30,15 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/equipment", labelKey: "nav.equipment", icon: Wrench },
   { to: "/dashboard/costs", labelKey: "nav.costs", icon: DollarSign },
   { to: "/dashboard/investment", labelKey: "nav.investment", icon: Calculator },
+  // Outils agronomiques (ex-module Expert agronome)
+  { to: "/dashboard/expert-toolbox", labelKey: "nav.toolbox", icon: Sparkles },
+  { to: "/dashboard/expert-diagnosis", labelKey: "nav.aiDiagnosis", icon: Microscope },
+  { to: "/dashboard/expert-calculator", labelKey: "nav.calculator", icon: Calculator },
+  { to: "/dashboard/expert-prescriptions", labelKey: "nav.prescriptions", icon: FileText },
+  { to: "/dashboard/crop-library", labelKey: "nav.technicalSheets", icon: BookOpen },
+  { to: "/dashboard/scouting", labelKey: "nav.scouting", icon: Eye },
+  { to: "/dashboard/expert-cartography", labelKey: "nav.gpsMapping", icon: MapPin },
+  { to: "/dashboard/expert-clients", labelKey: "nav.myClients", icon: Users },
   { to: "/dashboard/analytics", labelKey: "nav.analytics", icon: BarChart3 },
   { to: "/dashboard/marketplace", labelKey: "nav.marketplace", icon: Store },
   { to: "/dashboard/services", labelKey: "nav.expertServices", icon: ClipboardList },
@@ -37,6 +47,7 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
   { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
 ];
+
 
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
@@ -80,23 +91,8 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
 ];
 
-export const agentNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/expert-toolbox", labelKey: "nav.toolbox", icon: Sparkles },
-  { to: "/dashboard/expert-clients", labelKey: "nav.myClients", icon: Users },
-  { to: "/dashboard/expert-diagnosis", labelKey: "nav.aiDiagnosis", icon: Microscope },
-  { to: "/dashboard/expert-calculator", labelKey: "nav.calculator", icon: Calculator },
-  { to: "/dashboard/expert-prescriptions", labelKey: "nav.prescriptions", icon: FileText },
-  { to: "/dashboard/crop-library", labelKey: "nav.technicalSheets", icon: BookOpen },
-  { to: "/dashboard/scouting", labelKey: "nav.scouting", icon: Eye },
-  { to: "/dashboard/expert-cartography", labelKey: "nav.gpsMapping", icon: MapPin },
-  { to: "/dashboard/marketplace", labelKey: "nav.marketplace", icon: Store },
-  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
-  { to: "/dashboard/expert-analytics", labelKey: "nav.statistics", icon: BarChart3 },
-  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
-  { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
-];
+/** Ancien module Expert agronome : fusionné dans le module Agriculture & Agronomie. */
+export const agentNav: NavItem[] = agriculteurNav;
 
 
 const fullNav: NavItem[] = [...agriculteurNav];
@@ -106,7 +102,7 @@ export const roleLabelKeys: Record<string, string> = {
   agriculteur: "roles.agriculteur",
   eleveur: "roles.eleveur",
   cooperative: "roles.cooperative",
-  agent_technique: "roles.agent_technique",
+  agent_technique: "roles.agriculteur",
   partenaire: "roles.partenaire",
   admin: "roles.admin",
   manager: "roles.manager",
@@ -114,11 +110,12 @@ export const roleLabelKeys: Record<string, string> = {
   viewer: "roles.viewer",
 };
 
+
 export const roleIcons: Record<string, React.ElementType> = {
   agriculteur: Wheat,
   eleveur: Beef,
   cooperative: Building2,
-  agent_technique: Compass,
+  agent_technique: Wheat,
   partenaire: Handshake,
   admin: LayoutDashboard,
   manager: LayoutDashboard,

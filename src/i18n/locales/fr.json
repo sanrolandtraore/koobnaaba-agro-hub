@@ -38,10 +38,9 @@
     "backHome": "Retour à l'accueil"
   },
   "roles": {
-    "agriculteur": "Agriculteur",
+    "agriculteur": "Agriculture & Agronomie",
     "eleveur": "Éleveur",
     "cooperative": "Coopérative",
-    "agent_technique": "Expert Agronome",
     "partenaire": "Partenaire",
     "admin": "Administrateur",
     "manager": "Gestionnaire",

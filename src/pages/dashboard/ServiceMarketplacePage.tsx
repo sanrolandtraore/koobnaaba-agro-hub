@@ -94,7 +94,7 @@ type InputSupplier = {
 
 const ServiceMarketplacePage = () => {
   const { user, primaryRole } = useAuth();
-  const isProvider = primaryRole === "agent_technique";
+  const isProvider = primaryRole === "agent_technique" || primaryRole === "agriculteur" || primaryRole === "partenaire";
   const isClient = primaryRole === "agriculteur" || primaryRole === "eleveur" || primaryRole === "cooperative";
 
   const [services, setServices] = useState<MarketService[]>([]);

@@ -32,7 +32,6 @@ const HarvestsPage = lazy(() => import("./pages/dashboard/HarvestsPage"));
 const CalendarPage = lazy(() => import("./pages/dashboard/CalendarPage"));
 const AnalyticsPage = lazy(() => import("./pages/dashboard/AnalyticsPage"));
 const RoleExportRouter = lazy(() => import("./pages/dashboard/RoleExportRouter"));
-const AgentExportPage = lazy(() => import("./pages/dashboard/AgentExportPage"));
 
 const MembersPage = lazy(() => import("./pages/dashboard/MembersPage"));
 const CollectesPage = lazy(() => import("./pages/dashboard/CollectesPage"));
@@ -46,7 +45,6 @@ const CooperativeDocumentsPage = lazy(() => import("./pages/dashboard/Cooperativ
 const CooperativeScorePage = lazy(() => import("./pages/dashboard/CooperativeScorePage"));
 const CropPlanningPage = lazy(() => import("./pages/dashboard/CropPlanningPage"));
 const ServicesPage = lazy(() => import("./pages/dashboard/ServicesPage"));
-const AgentDashboard = lazy(() => import("./pages/dashboard/AgentDashboard"));
 const RoleSettingsRouter = lazy(() => import("./pages/dashboard/RoleSettingsRouter"));
 const LivestockLayout = lazy(() => import("./pages/livestock/LivestockLayout"));
 const LivestockDashboardPage = lazy(() => import("./pages/livestock/LivestockDashboardPage"));
