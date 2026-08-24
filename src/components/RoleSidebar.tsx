@@ -115,7 +115,7 @@ export const roleIcons: Record<string, React.ElementType> = {
   agriculteur: Wheat,
   eleveur: Beef,
   cooperative: Building2,
-  agent_technique: Compass,
+  agent_technique: Wheat,
   partenaire: Handshake,
   admin: LayoutDashboard,
   manager: LayoutDashboard,
