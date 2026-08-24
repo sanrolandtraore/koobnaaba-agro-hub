@@ -38,10 +38,9 @@
     "backHome": "Back to home"
   },
   "roles": {
-    "agriculteur": "Farmer",
+    "agriculteur": "Farming & Agronomy",
     "eleveur": "Livestock farmer",
     "cooperative": "Cooperative",
-    "agent_technique": "Agronomist expert",
     "partenaire": "Partner",
     "admin": "Administrator",
     "manager": "Manager",
