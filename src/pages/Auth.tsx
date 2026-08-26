@@ -16,7 +16,7 @@ import logo from "@/assets/logo.png";
 const ROLES = [
   { value: "agriculteur", label: "Expert Agronome", icon: Wheat, desc: "Cultures, parcelles & conseil agronomique" },
   { value: "eleveur", label: "Éleveur", icon: Bug, desc: "Élevage & troupeaux" },
-  { value: "cooperative", label: "Coopérative", icon: Users, desc: "Membres & collectes" },
+  { value: "formation", label: "Éducation & Formation", icon: GraduationCap, desc: "Cours élevage & cultures" },
   { value: "partenaire", label: "Partenaire", icon: Handshake, desc: "Fournisseurs, banques…" },
 ] as const;
 

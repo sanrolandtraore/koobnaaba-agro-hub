@@ -86,7 +86,6 @@ const SERVICE_CATEGORIES = [
     services: [
       { value: "formation", label: "Formations techniques", icon: GraduationCap, desc: "Sessions de formation sur les bonnes pratiques agricoles et techniques modernes." },
       { value: "formation_gestion", label: "Formation en gestion", icon: GraduationCap, desc: "Comptabilité simplifiée, gestion financière de l'exploitation et tenue de cahiers." },
-      { value: "conseil_cooperatif", label: "Conseil aux coopératives", icon: Users, desc: "Structuration, gouvernance, gestion coopérative et mobilisation des membres." },
       { value: "champ_ecole", label: "Champ école paysan (CEP)", icon: GraduationCap, desc: "Animation de champs écoles pour l'apprentissage pratique en groupe des innovations agricoles." },
     ],
   },

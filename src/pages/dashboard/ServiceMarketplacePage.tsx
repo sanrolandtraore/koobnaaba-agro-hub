@@ -95,7 +95,7 @@ type InputSupplier = {
 const ServiceMarketplacePage = () => {
   const { user, primaryRole } = useAuth();
   const isProvider = primaryRole === "agent_technique" || primaryRole === "agriculteur" || primaryRole === "partenaire";
-  const isClient = primaryRole === "agriculteur" || primaryRole === "eleveur" || primaryRole === "cooperative";
+  const isClient = primaryRole === "agriculteur" || primaryRole === "eleveur";
 
   const [services, setServices] = useState<MarketService[]>([]);
   const [myOrders, setMyOrders] = useState<MarketOrder[]>([]);
@@ -311,7 +311,7 @@ const ServiceMarketplacePage = () => {
                         <Lock className="h-3.5 w-3.5 mr-1.5" /> Commander (paiement sécurisé)
                       </Button>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground text-center italic">Réservé aux agriculteurs, éleveurs et coopératives</p>
+                      <p className="text-[11px] text-muted-foreground text-center italic">Réservé aux agriculteurs et éleveurs</p>
                     )}
                   </CardContent>
                 </Card>

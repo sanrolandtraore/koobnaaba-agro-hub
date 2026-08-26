@@ -13,19 +13,18 @@ import { Check, Crown, Smartphone, Loader2 } from "lucide-react";
 const FREE_FEATURES = [
   "3 parcelles max",
   "10 animaux max",
-  "5 membres coopérative max",
   "Tableau de bord basique",
   "Saisie et suivi des données",
   "Mode hors-ligne",
 ];
 
 const PREMIUM_FEATURES = [
-  "Parcelles, animaux, membres illimités",
+  "Parcelles et animaux illimités",
   "Export PDF & CSV de toutes les données",
   "Assistant vocal IA",
   "Analyses avancées & simulations",
   "Dossier de financement automatique",
-  "Score coopérative complet",
+  "Accès complet au centre de formation",
   "Support prioritaire",
 ];
 
