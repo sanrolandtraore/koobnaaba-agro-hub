@@ -3,14 +3,13 @@ import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
-  Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
+  GraduationCap, Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCooperativeRole } from "@/hooks/useCooperativeRole";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
 
@@ -42,6 +41,7 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/analytics", labelKey: "nav.analytics", icon: BarChart3 },
   { to: "/dashboard/marketplace", labelKey: "nav.marketplace", icon: Store },
   { to: "/dashboard/services", labelKey: "nav.expertServices", icon: ClipboardList },
+  { to: "/dashboard/education", labelKey: "nav.education", icon: GraduationCap },
   { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
   { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
@@ -58,27 +58,18 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/livestock-finance", labelKey: "nav.accounting", icon: Wallet },
   { to: "/dashboard/analytics", labelKey: "nav.analytics", icon: BarChart3 },
   { to: "/dashboard/livestock-services", labelKey: "nav.vetServices", icon: ClipboardList },
+  { to: "/dashboard/education", labelKey: "nav.education", icon: GraduationCap },
   { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
   { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
   { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
 ];
 
-export const cooperativeNav: NavItem[] = [
+export const formationNav: NavItem[] = [
   { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/cooperative-profile", labelKey: "nav.coopProfile", icon: Building2 },
-  { to: "/dashboard/members", labelKey: "nav.members", icon: Users },
-  { to: "/dashboard/collectes", labelKey: "nav.collectes", icon: Package },
-  { to: "/dashboard/cooperative-cotisations", labelKey: "nav.cotisations", icon: Wallet },
-  { to: "/dashboard/cooperative-finance", labelKey: "nav.salesDistribution", icon: DollarSign },
-  { to: "/dashboard/cooperative-parcels", labelKey: "nav.groupParcels", icon: Layers },
-  { to: "/dashboard/cooperative-equipment", labelKey: "nav.mechanization", icon: Wrench },
-  { to: "/dashboard/cooperative-documents", labelKey: "nav.documents", icon: FolderOpen },
-  { to: "/dashboard/cooperative-score", labelKey: "nav.coopScore", icon: Award },
+  { to: "/dashboard/education", labelKey: "nav.education", icon: GraduationCap },
   { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
-  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
-  { to: "/dashboard/export", labelKey: "nav.exportPdfCsv", icon: Download },
 ];
 
 export const partenaireNav: NavItem[] = [
@@ -101,7 +92,7 @@ const fullNav: NavItem[] = [...agriculteurNav];
 export const roleLabelKeys: Record<string, string> = {
   agriculteur: "roles.agriculteur",
   eleveur: "roles.eleveur",
-  cooperative: "roles.cooperative",
+  formation: "roles.formation",
   agent_technique: "roles.agriculteur",
   partenaire: "roles.partenaire",
   admin: "roles.admin",
@@ -114,7 +105,7 @@ export const roleLabelKeys: Record<string, string> = {
 export const roleIcons: Record<string, React.ElementType> = {
   agriculteur: Wheat,
   eleveur: Beef,
-  cooperative: Building2,
+  formation: GraduationCap,
   agent_technique: Wheat,
   partenaire: Handshake,
   admin: LayoutDashboard,
@@ -126,7 +117,7 @@ export const roleIcons: Record<string, React.ElementType> = {
 export function getNavForRole(role: string | null): { main: NavItem[] } {
   switch (role) {
     case "eleveur": return { main: eleveurNav };
-    case "cooperative": return { main: cooperativeNav };
+    case "formation": return { main: formationNav };
     case "agent_technique": return { main: agentNav };
     case "partenaire": return { main: partenaireNav };
     case "agriculteur": return { main: agriculteurNav };
@@ -147,10 +138,8 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   const { profile, signOut, primaryRole } = useAuth();
   const { t } = useTranslation();
   const location = useLocation();
-  const { isCoopMember, isReadOnly, memberRole } = useCooperativeRole();
 
-  // If user is a cooperative member, show cooperative nav
-  const effectiveRole = isCoopMember ? "cooperative" : primaryRole;
+  const effectiveRole = primaryRole;
   const nav = getNavForRole(effectiveRole);
   const RoleIcon = roleIcons[effectiveRole || "agriculteur"] || Wheat;
 
@@ -162,12 +151,8 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
         <div className="flex flex-col">
           <span className="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider flex items-center gap-1">
             <RoleIcon className="h-3 w-3" />
-            {t(isCoopMember ? "roles.cooperative" : roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
+            {t(roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
           </span>
-          {isReadOnly && (
-            <Badge variant="outline" className="text-[9px] mt-1 gap-1 border-sidebar-foreground/20 text-sidebar-foreground/50">
-              <Eye className="h-2.5 w-2.5" />
-              {t("common.readOnly")}
             </Badge>
           )}
         </div>

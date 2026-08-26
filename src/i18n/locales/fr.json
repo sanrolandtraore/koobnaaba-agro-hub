@@ -40,12 +40,12 @@
   "roles": {
     "agriculteur": "Expert Agronome",
     "eleveur": "Éleveur",
-    "cooperative": "Coopérative",
     "partenaire": "Partenaire",
     "admin": "Administrateur",
     "manager": "Gestionnaire",
     "farmer": "Agriculteur",
-    "viewer": "Observateur"
+    "viewer": "Observateur",
+    "formation": "Éducation & Formation"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -74,15 +74,6 @@
     "feeding": "Alimentation",
     "accounting": "Comptabilité",
     "vetServices": "Services Vétérinaires",
-    "coopProfile": "Profil coopérative",
-    "members": "Membres",
-    "collectes": "Collectes",
-    "cotisations": "Cotisations & Fonds",
-    "salesDistribution": "Ventes & Répartitions",
-    "groupParcels": "Parcelles groupées",
-    "mechanization": "Mécanisation",
-    "documents": "Documents",
-    "coopScore": "Score coopérative",
     "suppliers": "Fournisseurs",
     "insurance": "Assurance",
     "programs": "Programmes / Projets",
@@ -95,6 +86,7 @@
     "technicalSheets": "Fiches techniques",
     "scouting": "Scouting terrain",
     "gpsMapping": "Cartographie GPS",
-    "statistics": "Statistiques"
+    "statistics": "Statistiques",
+    "education": "Formations"
   }
 }

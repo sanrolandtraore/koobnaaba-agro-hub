@@ -33,16 +33,8 @@ const CalendarPage = lazy(() => import("./pages/dashboard/CalendarPage"));
 const AnalyticsPage = lazy(() => import("./pages/dashboard/AnalyticsPage"));
 const RoleExportRouter = lazy(() => import("./pages/dashboard/RoleExportRouter"));
 
-const MembersPage = lazy(() => import("./pages/dashboard/MembersPage"));
-const CollectesPage = lazy(() => import("./pages/dashboard/CollectesPage"));
-const CooperativeExportPage = lazy(() => import("./pages/dashboard/CooperativeExportPage"));
-const CooperativeFinancePage = lazy(() => import("./pages/dashboard/CooperativeFinancePage"));
-const CooperativeProfilePage = lazy(() => import("./pages/dashboard/CooperativeProfilePage"));
-const CooperativeCotisationsPage = lazy(() => import("./pages/dashboard/CooperativeCotisationsPage"));
-const CooperativeParcelsPage = lazy(() => import("./pages/dashboard/CooperativeParcelsPage"));
-const CooperativeEquipmentPage = lazy(() => import("./pages/dashboard/CooperativeEquipmentPage"));
-const CooperativeDocumentsPage = lazy(() => import("./pages/dashboard/CooperativeDocumentsPage"));
-const CooperativeScorePage = lazy(() => import("./pages/dashboard/CooperativeScorePage"));
+const EducationCatalogPage = lazy(() => import("./pages/dashboard/education/EducationCatalogPage"));
+const CourseDetailPage = lazy(() => import("./pages/dashboard/education/CourseDetailPage"));
 const CropPlanningPage = lazy(() => import("./pages/dashboard/CropPlanningPage"));
 const ServicesPage = lazy(() => import("./pages/dashboard/ServicesPage"));
 const RoleSettingsRouter = lazy(() => import("./pages/dashboard/RoleSettingsRouter"));
@@ -58,7 +50,6 @@ const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
 const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
 const ExpertCartographyPage = lazy(() => import("./pages/dashboard/ExpertCartographyPage"));
 const ScoutingPage = lazy(() => import("./pages/dashboard/ScoutingPage"));
-const JoinCooperativePage = lazy(() => import("./pages/dashboard/JoinCooperativePage"));
 const UserProfilePage = lazy(() => import("./pages/dashboard/UserProfilePage"));
 const ExpertToolboxPage = lazy(() => import("./pages/dashboard/expert/ExpertToolboxPage"));
 const ExpertDiagnosisPage = lazy(() => import("./pages/dashboard/expert/ExpertDiagnosisPage"));
@@ -125,15 +116,8 @@ const App = () => (
                 <Route path="services" element={<Suspense fallback={<PageLoader />}><ServicesPage /></Suspense>} />
                 <Route path="settings" element={<Suspense fallback={<PageLoader />}><RoleSettingsRouter /></Suspense>} />
                 <Route path="pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
-                <Route path="members" element={<Suspense fallback={<PageLoader />}><MembersPage /></Suspense>} />
-                <Route path="collectes" element={<Suspense fallback={<PageLoader />}><CollectesPage /></Suspense>} />
-                <Route path="cooperative-profile" element={<Suspense fallback={<PageLoader />}><CooperativeProfilePage /></Suspense>} />
-                <Route path="cooperative-finance" element={<Suspense fallback={<PageLoader />}><CooperativeFinancePage /></Suspense>} />
-                <Route path="cooperative-parcels" element={<Suspense fallback={<PageLoader />}><CooperativeParcelsPage /></Suspense>} />
-                <Route path="cooperative-equipment" element={<Suspense fallback={<PageLoader />}><CooperativeEquipmentPage /></Suspense>} />
-                <Route path="cooperative-documents" element={<Suspense fallback={<PageLoader />}><CooperativeDocumentsPage /></Suspense>} />
-                <Route path="cooperative-cotisations" element={<Suspense fallback={<PageLoader />}><CooperativeCotisationsPage /></Suspense>} />
-                <Route path="cooperative-score" element={<Suspense fallback={<PageLoader />}><CooperativeScorePage /></Suspense>} />
+                <Route path="education" element={<Suspense fallback={<PageLoader />}><EducationCatalogPage /></Suspense>} />
+                <Route path="education/:slug" element={<Suspense fallback={<PageLoader />}><CourseDetailPage /></Suspense>} />
                 <Route path="export" element={<Suspense fallback={<PageLoader />}><RoleExportRouter /></Suspense>} />
                 <Route element={<Suspense fallback={<PageLoader />}><LivestockLayout /></Suspense>}>
                   <Route path="animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
@@ -145,7 +129,6 @@ const App = () => (
                   <Route path="livestock-services" element={<Suspense fallback={<PageLoader />}><LivestockServicesPage /></Suspense>} />
                 </Route>
                 <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
-                <Route path="join-cooperative" element={<Suspense fallback={<PageLoader />}><JoinCooperativePage /></Suspense>} />
                 <Route path="expert-cartography" element={<Suspense fallback={<PageLoader />}><ExpertCartographyPage /></Suspense>} />
                 <Route path="scouting" element={<Suspense fallback={<PageLoader />}><ScoutingPage /></Suspense>} />
                 <Route path="expert-toolbox" element={<Suspense fallback={<PageLoader />}><ExpertToolboxPage /></Suspense>} />
