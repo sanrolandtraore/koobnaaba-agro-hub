@@ -26,7 +26,7 @@ const ConditionsUtilisation = () => (
       <h2 className="text-xl font-semibold text-foreground mt-8">2. Description du service</h2>
       <p>
         KoobNaaba est une plateforme numérique de gestion agricole qui permet aux agriculteurs, éleveurs, 
-        coopératives et partenaires de :
+        experts agronomes et partenaires de :
       </p>
       <ul className="text-muted-foreground">
         <li>Gérer leurs exploitations agricoles et parcelles</li>
@@ -34,7 +34,7 @@ const ConditionsUtilisation = () => (
         <li>Planifier et optimiser les activités agricoles</li>
         <li>Gérer les coûts et la comptabilité</li>
         <li>Accéder à un marketplace de services agricoles</li>
-        <li>Collaborer au sein de coopératives</li>
+        <li>Suivre des formations en agriculture et élevage</li>
       </ul>
 
       <h2 className="text-xl font-semibold text-foreground mt-8">3. Inscription et compte</h2>

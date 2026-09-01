@@ -54,7 +54,7 @@ const PolitiqueConfidentialite = () => (
         Vos données ne sont jamais vendues à des tiers. Elles peuvent être partagées avec :
       </p>
       <ul className="text-muted-foreground">
-        <li>Les membres de votre coopérative (données coopératives uniquement)</li>
+        <li>Les partenaires dont vous sollicitez les services (données strictement nécessaires)</li>
         <li>Nos sous-traitants techniques (hébergement, maintenance) soumis à des obligations de confidentialité</li>
         <li>Les autorités compétentes en cas d'obligation légale</li>
       </ul>
