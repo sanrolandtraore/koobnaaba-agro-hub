@@ -153,9 +153,8 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
             <RoleIcon className="h-3 w-3" />
             {t(roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
           </span>
-            </Badge>
-          )}
         </div>
+
       </div>
 
       {/* Nav */}
