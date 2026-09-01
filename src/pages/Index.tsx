@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import logo from "@/assets/logo.png";
 import galleryFarmField from "@/assets/gallery/farm-field.jpg";
 import galleryLivestock from "@/assets/gallery/livestock.jpg";
-import galleryCooperative from "@/assets/gallery/cooperative.jpg";
+import galleryFormation from "@/assets/gallery/formation.jpg";
 import galleryHarvest from "@/assets/gallery/harvest.jpg";
 import galleryDigital from "@/assets/gallery/digital-farming.jpg";
 import galleryIrrigation from "@/assets/gallery/irrigation.jpg";
@@ -33,7 +33,7 @@ const galleryItems: { src: string; title: string; desc: string; type: "image" | 
   { src: videoHarvest, title: "Récolte en action", desc: "Scènes de récolte sous le soleil doré", type: "video" },
   { src: galleryLivestock, title: "Élevage bovin au Sahel", desc: "Troupeau en pâturage naturel", type: "image" },
   { src: videoLivestock, title: "Vie pastorale", desc: "Le quotidien de l'élevage en savane", type: "video" },
-  { src: galleryCooperative, title: "Séance de formation", desc: "Producteurs en session d'apprentissage", type: "image" },
+  { src: galleryFormation, title: "Séance de formation", desc: "Producteurs en session d'apprentissage", type: "image" },
   { src: galleryHarvest, title: "Marché de produits frais", desc: "Diversité des cultures locales", type: "image" },
   { src: videoIrrigation, title: "Irrigation moderne", desc: "Systèmes d'arrosage en fonctionnement", type: "video" },
   { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain", type: "image" },
