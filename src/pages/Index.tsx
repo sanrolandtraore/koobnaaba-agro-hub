@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import logo from "@/assets/logo.png";
 import galleryFarmField from "@/assets/gallery/farm-field.jpg";
 import galleryLivestock from "@/assets/gallery/livestock.jpg";
-import galleryCooperative from "@/assets/gallery/cooperative.jpg";
+import galleryFormation from "@/assets/gallery/formation.jpg";
 import galleryHarvest from "@/assets/gallery/harvest.jpg";
 import galleryDigital from "@/assets/gallery/digital-farming.jpg";
 import galleryIrrigation from "@/assets/gallery/irrigation.jpg";
@@ -33,7 +33,7 @@ const galleryItems: { src: string; title: string; desc: string; type: "image" | 
   { src: videoHarvest, title: "Récolte en action", desc: "Scènes de récolte sous le soleil doré", type: "video" },
   { src: galleryLivestock, title: "Élevage bovin au Sahel", desc: "Troupeau en pâturage naturel", type: "image" },
   { src: videoLivestock, title: "Vie pastorale", desc: "Le quotidien de l'élevage en savane", type: "video" },
-  { src: galleryCooperative, title: "Réunion de coopérative", desc: "Producteurs échangeant sur la récolte", type: "image" },
+  { src: galleryFormation, title: "Séance de formation", desc: "Producteurs en session d'apprentissage", type: "image" },
   { src: galleryHarvest, title: "Marché de produits frais", desc: "Diversité des cultures locales", type: "image" },
   { src: videoIrrigation, title: "Irrigation moderne", desc: "Systèmes d'arrosage en fonctionnement", type: "video" },
   { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain", type: "image" },
@@ -305,7 +305,7 @@ const Index = () => {
                 <strong className="text-foreground">KoobNaaba</strong> est une startup agritech basée à <strong className="text-foreground">Ouagadougou, Burkina Faso</strong>, dédiée à la modernisation de l'agriculture en Afrique de l'Ouest.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Notre mission : fournir aux agriculteurs, éleveurs et coopératives des outils numériques simples et accessibles pour gérer leurs exploitations, optimiser leurs rendements et améliorer leurs revenus.
+                Notre mission : fournir aux agriculteurs, éleveurs et experts agronomes des outils et formations numériques simples et accessibles pour gérer leurs exploitations, optimiser leurs rendements et améliorer leurs revenus.
               </p>
               <p className="text-muted-foreground leading-relaxed">
                 Fondée par des passionnés du monde rural, notre équipe combine expertise agricole locale et innovation technologique pour répondre aux défis concrets du terrain.
@@ -315,7 +315,7 @@ const Index = () => {
               {[
                 { value: "🌍", label: "Conçu en Afrique, pour l'Afrique" },
                 { value: "📱", label: "Accessible hors connexion" },
-                { value: "🤝", label: "Support coopératives & éleveurs" },
+                { value: "🤝", label: "Formations agriculture & élevage" },
                 { value: "🔒", label: "Données sécurisées" },
               ].map(({ value, label }) => (
                 <div key={label} className="bg-card rounded-xl p-4 border border-border text-center shadow-sm">

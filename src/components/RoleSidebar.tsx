@@ -9,7 +9,6 @@ import {
   FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
 
@@ -153,9 +152,8 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
             <RoleIcon className="h-3 w-3" />
             {t(roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
           </span>
-            </Badge>
-          )}
         </div>
+
       </div>
 
       {/* Nav */}
