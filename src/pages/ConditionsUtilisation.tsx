@@ -44,12 +44,12 @@ const ConditionsUtilisation = () => (
         Toute activité réalisée depuis un compte est sous la responsabilité du titulaire.
       </p>
 
-      <h2 className="text-xl font-semibold text-foreground mt-8">4. Abonnements et tarification</h2>
+      <h2 className="text-xl font-semibold text-foreground mt-8">4. Accès au service</h2>
       <p>
-        KoobNaaba propose une offre gratuite avec des fonctionnalités de base et des abonnements 
-        Premium offrant des fonctionnalités avancées. Les tarifs sont exprimés en Francs CFA (FCFA). 
-        Les paiements sont effectués via les moyens de paiement disponibles sur la plateforme.
+        KoobNaaba est proposé gratuitement : toutes les fonctionnalités de la plateforme sont
+        accessibles sans abonnement ni frais.
       </p>
+
 
       <h2 className="text-xl font-semibold text-foreground mt-8">5. Propriété des données</h2>
       <p>

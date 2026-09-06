@@ -4,7 +4,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
   GraduationCap, Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
-  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Crown,
+  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
 } from "lucide-react";
@@ -42,7 +42,6 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/services", labelKey: "nav.expertServices", icon: ClipboardList },
   { to: "/dashboard/education", labelKey: "nav.education", icon: GraduationCap },
   { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
-  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
   { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
 ];
@@ -59,7 +58,6 @@ export const eleveurNav: NavItem[] = [
   { to: "/dashboard/livestock-services", labelKey: "nav.vetServices", icon: ClipboardList },
   { to: "/dashboard/education", labelKey: "nav.education", icon: GraduationCap },
   { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
-  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
   { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
 ];
@@ -77,7 +75,6 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/partenaire-assurance", labelKey: "nav.insurance", icon: Award },
   { to: "/dashboard/partenaire-programmes", labelKey: "nav.programs", icon: FolderOpen },
   { to: "/dashboard/partenaire-banques", labelKey: "nav.banking", icon: Wallet },
-  { to: "/dashboard/pricing", labelKey: "nav.premium", icon: Crown },
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
 ];
 

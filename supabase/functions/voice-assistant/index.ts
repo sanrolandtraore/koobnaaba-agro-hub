@@ -36,24 +36,6 @@ serve(async (req) => {
 
     const userId = user.id;
 
-    // Check subscription - AI is premium-only
-    const { data: subData } = await supabase
-      .from("user_subscriptions")
-      .select("plan, status, expires_at")
-      .eq("user_id", userId)
-      .eq("status", "active")
-      .maybeSingle();
-
-    const isPremium = subData?.plan === "premium" && 
-      (!subData.expires_at || new Date(subData.expires_at) > new Date());
-
-    if (!isPremium) {
-      return new Response(JSON.stringify({ error: "Cette fonctionnalité nécessite un abonnement Premium." }), {
-        status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const { transcript, context } = await req.json();
     if (!transcript || typeof transcript !== "string" || transcript.length > 5000) {
       return new Response(JSON.stringify({ error: "Transcription invalide" }), {

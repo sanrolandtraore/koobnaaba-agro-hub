@@ -46,7 +46,6 @@ const AnimalReproductionPage = lazy(() => import("./pages/livestock/AnimalReprod
 const AnimalFeedingPage = lazy(() => import("./pages/livestock/AnimalFeedingPage"));
 const LivestockFinancePage = lazy(() => import("./pages/livestock/LivestockFinancePage"));
 const LivestockServicesPage = lazy(() => import("./pages/livestock/LivestockServicesPage"));
-const PricingPage = lazy(() => import("./pages/dashboard/PricingPage"));
 const ServiceMarketplacePage = lazy(() => import("./pages/dashboard/ServiceMarketplacePage"));
 const ExpertCartographyPage = lazy(() => import("./pages/dashboard/ExpertCartographyPage"));
 const ScoutingPage = lazy(() => import("./pages/dashboard/ScoutingPage"));
@@ -115,7 +114,6 @@ const App = () => (
                 <Route path="crop-planning" element={<Suspense fallback={<PageLoader />}><CropPlanningPage /></Suspense>} />
                 <Route path="services" element={<Suspense fallback={<PageLoader />}><ServicesPage /></Suspense>} />
                 <Route path="settings" element={<Suspense fallback={<PageLoader />}><RoleSettingsRouter /></Suspense>} />
-                <Route path="pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
                 <Route path="education" element={<Suspense fallback={<PageLoader />}><EducationCatalogPage /></Suspense>} />
                 <Route path="education/:slug" element={<Suspense fallback={<PageLoader />}><CourseDetailPage /></Suspense>} />
                 <Route path="export" element={<Suspense fallback={<PageLoader />}><RoleExportRouter /></Suspense>} />
