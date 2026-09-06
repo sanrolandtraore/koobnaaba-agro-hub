@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
-  MapPin, Plus, Trash2, Navigation, Locate, RotateCcw, Save,
+  MapPin, Trash2, Navigation, RotateCcw, Save,
   Bug, Droplets, Leaf, AlertTriangle, Camera, StickyNote, Layers,
   Ruler, Target, Image as ImageIcon, X,
 } from "lucide-react";
@@ -57,6 +57,9 @@ const OBSERVATION_TYPES = [
   { value: "manque_engrais", label: "Manque d'engrais", icon: Leaf, color: "#84cc16" },
   { value: "autre", label: "Autre observation", icon: AlertTriangle, color: "#6366f1" },
 ];
+
+const MAX_POINTS = 4;
+const CORNER_LABELS = ["Coin 1", "Coin 2", "Coin 3", "Coin 4"];
 
 const SEVERITY_LEVELS = [
   { value: "faible", label: "Faible", color: "bg-green-100 text-green-800" },
@@ -114,8 +117,6 @@ const ExpertCartographyPage = () => {
   // Drawing state
   const [drawingMode, setDrawingMode] = useState<"none" | "polygon" | "marker">("none");
   const [polygonPoints, setPolygonPoints] = useState<Coordinate[]>([]);
-  const [autoWalk, setAutoWalk] = useState(false);
-  const watchRef = useRef<number | null>(null);
 
   // Data state
   const [observations, setObservations] = useState<FieldObservation[]>([]);
@@ -188,7 +189,7 @@ const ExpertCartographyPage = () => {
     const handler = (e: Event) => {
       const { lat, lng } = (e as CustomEvent).detail;
       if (drawingMode === "polygon") {
-        setPolygonPoints(prev => [...prev, { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 }]);
+        setPolygonPoints(prev => prev.length >= MAX_POINTS ? prev : [...prev, { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 }]);
       } else if (drawingMode === "marker") {
         setNewObsCoord({ lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 });
         setShowObsDialog(true);
@@ -243,7 +244,7 @@ const ExpertCartographyPage = () => {
       }
       polygonPoints.forEach((c, i) => {
         L.circleMarker([c.lat, c.lng], { radius: 6, color: "#22784a", fillColor: "#22784a", fillOpacity: 0.8, weight: 2 })
-          .addTo(drawLayerRef.current!).bindTooltip(`P${i + 1}`, { permanent: true, direction: "top", className: "text-xs" });
+          .addTo(drawLayerRef.current!).bindTooltip(CORNER_LABELS[i] || `P${i + 1}`, { permanent: true, direction: "top", className: "text-xs" });
       });
     }
 
@@ -265,47 +266,20 @@ const ExpertCartographyPage = () => {
     });
   }, [polygonPoints, parcels, selectedParcel]);
 
-  // ─── Auto-walk mode ───
-  const toggleAutoWalk = () => {
-    if (autoWalk && watchRef.current !== null) {
-      navigator.geolocation.clearWatch(watchRef.current);
-      watchRef.current = null;
-      setAutoWalk(false);
-      toast.info(`Mode marche arrêté — ${polygonPoints.length} points`);
-      return;
-    }
-    if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
-    setAutoWalk(true);
-    setDrawingMode("polygon");
-    toast.info("Mode marche activé — Marchez le long du contour");
-    let lastLat = 0, lastLng = 0;
-    watchRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
-        const lng = Math.round(pos.coords.longitude * 1e6) / 1e6;
-        const dist = Math.sqrt((lat - lastLat) ** 2 + (lng - lastLng) ** 2) * 111000;
-        if (dist < 3 && lastLat !== 0) return;
-        lastLat = lat; lastLng = lng;
-        setPolygonPoints(prev => [...prev, { lat, lng }]);
-        mapInstance.current?.setView([lat, lng], 18);
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 2000 }
-    );
-  };
-
-  useEffect(() => () => { if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current); }, []);
-
-  // ─── Capture single GPS point ───
+  // ─── Capture a corner with GPS ───
   const captureGPSPoint = () => {
     if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
+    if (drawingMode === "polygon" && polygonPoints.length >= MAX_POINTS) {
+      toast.info("Les 4 coins sont déjà enregistrés");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coord = { lat: Math.round(pos.coords.latitude * 1e6) / 1e6, lng: Math.round(pos.coords.longitude * 1e6) / 1e6 };
         if (drawingMode === "polygon") {
-          setPolygonPoints(prev => [...prev, coord]);
+          setPolygonPoints(prev => prev.length >= MAX_POINTS ? prev : [...prev, coord]);
           mapInstance.current?.setView([coord.lat, coord.lng], 17);
-          toast.success(`Point capturé (±${Math.round(pos.coords.accuracy)}m)`);
+          toast.success(`${CORNER_LABELS[polygonPoints.length]} capturé (±${Math.round(pos.coords.accuracy)}m)`);
         } else {
           setNewObsCoord(coord);
           setShowObsDialog(true);
@@ -316,6 +290,7 @@ const ExpertCartographyPage = () => {
       { enableHighAccuracy: true, timeout: 15000 }
     );
   };
+
 
   // ─── Save Parcel ───
   const saveParcel = async () => {
@@ -422,7 +397,7 @@ const ExpertCartographyPage = () => {
           <MapPin className="h-6 w-6 text-primary" /> Cartographie GPS
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Dessinez les parcelles, mesurez les superficies et marquez les points d'observation
+          Mesurez un champ avec 4 coins GPS, obtenez la superficie en hectares et réutilisez-la dans les calculs
         </p>
       </div>
 
@@ -435,7 +410,7 @@ const ExpertCartographyPage = () => {
               variant={drawingMode === "polygon" ? "default" : "outline"}
               onClick={() => { setDrawingMode(drawingMode === "polygon" ? "none" : "polygon"); setPolygonPoints([]); }}
             >
-              <Layers className="h-4 w-4 mr-1" /> Dessiner parcelle
+              <Layers className="h-4 w-4 mr-1" /> Mesurer un champ (4 coins)
             </Button>
             <Button
               size="sm"
@@ -446,14 +421,10 @@ const ExpertCartographyPage = () => {
             </Button>
             <div className="border-l border-border mx-1" />
             {drawingMode === "polygon" && (
-              <>
-                <Button size="sm" variant="outline" onClick={captureGPSPoint}>
-                  <Navigation className="h-4 w-4 mr-1" /> Point GPS
-                </Button>
-                <Button size="sm" variant={autoWalk ? "destructive" : "secondary"} onClick={toggleAutoWalk}>
-                  <Locate className="h-4 w-4 mr-1" /> {autoWalk ? "Arrêter" : "Mode marche"}
-                </Button>
-              </>
+              <Button size="sm" onClick={captureGPSPoint} disabled={polygonPoints.length >= MAX_POINTS}>
+                <Navigation className="h-4 w-4 mr-1" />
+                {polygonPoints.length >= MAX_POINTS ? "4 coins enregistrés" : `Je suis au ${CORNER_LABELS[polygonPoints.length]}`}
+              </Button>
             )}
             {drawingMode === "marker" && (
               <Button size="sm" variant="outline" onClick={captureGPSPoint}>
@@ -466,28 +437,29 @@ const ExpertCartographyPage = () => {
                   <RotateCcw className="h-4 w-4 mr-1" /> Effacer
                 </Button>
                 {polygonPoints.length >= 3 && (
-                  <Button size="sm" onClick={() => setShowParcelDialog(true)}>
-                    <Save className="h-4 w-4 mr-1" /> Sauvegarder ({areaHa} ha)
+                  <Button size="sm" variant="secondary" onClick={() => setShowParcelDialog(true)}>
+                    <Save className="h-4 w-4 mr-1" /> Enregistrer ({areaHa} ha)
                   </Button>
                 )}
               </>
             )}
           </div>
           {drawingMode === "polygon" && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Cliquez sur la carte pour ajouter des sommets, ou utilisez le GPS • {polygonPoints.length} points · {areaHa} ha · {perimeterM.toLocaleString("fr-FR")} m
-            </p>
+            <div className="mt-2 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Placez-vous à chaque coin du champ et appuyez sur le bouton (ou touchez le coin sur la carte). 4 coins suffisent.
+              </p>
+              <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 text-sm">
+                <strong>{polygonPoints.length}/{MAX_POINTS}</strong> coins · Superficie : <strong>{areaHa} ha</strong> · {perimeterM.toLocaleString("fr-FR")} m de tour
+              </div>
+            </div>
           )}
           {drawingMode === "marker" && (
             <p className="text-xs text-muted-foreground mt-2">
               Cliquez sur la carte pour placer une observation géolocalisée
             </p>
           )}
-          {autoWalk && (
-            <div className="rounded-lg bg-primary/10 border border-primary/20 p-2 text-sm text-primary animate-pulse mt-2">
-              🚶 Mode marche actif — Marchez le long du contour du champ
-            </div>
-          )}
+
         </CardContent>
       </Card>
 

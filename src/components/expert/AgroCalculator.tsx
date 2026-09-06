@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,32 @@ const num = (v: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+interface SavedParcel { id: string; name: string; area_ha: number | null; }
+
 export function AgroCalculator() {
+  // Parcelles mesurées au GPS (4 coins)
+  const [parcels, setParcels] = useState<SavedParcel[]>([]);
+  const [selectedParcel, setSelectedParcel] = useState<string>("");
+
+  useEffect(() => {
+    supabase
+      .from("expert_parcels")
+      .select("id, name, area_ha")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setParcels((data as SavedParcel[]) || []));
+  }, []);
+
+  const applyParcel = (id: string) => {
+    setSelectedParcel(id);
+    const p = parcels.find(x => x.id === id);
+    if (p?.area_ha) {
+      const a = String(p.area_ha);
+      setSurfaceHa(a);
+      setSurfaceEau(a);
+      setM2(String(Math.round(p.area_ha * 10000)));
+    }
+  };
+
   // Densité de semis
   const [pmg, setPmg] = useState("25"); // g pour 1000 grains
   const [grainsM2, setGrainsM2] = useState("250");
@@ -43,6 +69,21 @@ export function AgroCalculator() {
   const yieldKgHa = (num(plantsM2) * 10000 * num(grainsParPlante) * num(pmgYield)) / 1_000_000;
 
   return (
+    <div className="space-y-3">
+      {parcels.length > 0 && (
+        <Card className="p-4 space-y-2">
+          <Label>Utiliser un champ mesuré au GPS</Label>
+          <Select value={selectedParcel} onValueChange={applyParcel}>
+            <SelectTrigger><SelectValue placeholder="Choisir un champ enregistré" /></SelectTrigger>
+            <SelectContent>
+              {parcels.map(p => (
+                <SelectItem key={p.id} value={p.id}>{p.name} — {p.area_ha ?? 0} ha</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">La superficie du champ est appliquée automatiquement aux calculs.</p>
+        </Card>
+      )}
     <Tabs defaultValue="density">
       <TabsList className="w-full grid grid-cols-5">
         <TabsTrigger value="density" className="text-xs">Semis</TabsTrigger>
@@ -113,5 +154,6 @@ export function AgroCalculator() {
         </Card>
       </TabsContent>
     </Tabs>
+    </div>
   );
 }
