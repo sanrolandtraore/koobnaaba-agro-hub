@@ -58,6 +58,9 @@ const OBSERVATION_TYPES = [
   { value: "autre", label: "Autre observation", icon: AlertTriangle, color: "#6366f1" },
 ];
 
+const MAX_POINTS = 4;
+const CORNER_LABELS = ["Coin 1", "Coin 2", "Coin 3", "Coin 4"];
+
 const SEVERITY_LEVELS = [
   { value: "faible", label: "Faible", color: "bg-green-100 text-green-800" },
   { value: "moyen", label: "Moyen", color: "bg-yellow-100 text-yellow-800" },
@@ -114,8 +117,6 @@ const ExpertCartographyPage = () => {
   // Drawing state
   const [drawingMode, setDrawingMode] = useState<"none" | "polygon" | "marker">("none");
   const [polygonPoints, setPolygonPoints] = useState<Coordinate[]>([]);
-  const [autoWalk, setAutoWalk] = useState(false);
-  const watchRef = useRef<number | null>(null);
 
   // Data state
   const [observations, setObservations] = useState<FieldObservation[]>([]);
@@ -188,7 +189,7 @@ const ExpertCartographyPage = () => {
     const handler = (e: Event) => {
       const { lat, lng } = (e as CustomEvent).detail;
       if (drawingMode === "polygon") {
-        setPolygonPoints(prev => [...prev, { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 }]);
+        setPolygonPoints(prev => prev.length >= MAX_POINTS ? prev : [...prev, { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 }]);
       } else if (drawingMode === "marker") {
         setNewObsCoord({ lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 });
         setShowObsDialog(true);
@@ -243,7 +244,7 @@ const ExpertCartographyPage = () => {
       }
       polygonPoints.forEach((c, i) => {
         L.circleMarker([c.lat, c.lng], { radius: 6, color: "#22784a", fillColor: "#22784a", fillOpacity: 0.8, weight: 2 })
-          .addTo(drawLayerRef.current!).bindTooltip(`P${i + 1}`, { permanent: true, direction: "top", className: "text-xs" });
+          .addTo(drawLayerRef.current!).bindTooltip(CORNER_LABELS[i] || `P${i + 1}`, { permanent: true, direction: "top", className: "text-xs" });
       });
     }
 
