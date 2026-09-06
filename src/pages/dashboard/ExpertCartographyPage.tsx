@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
-  MapPin, Plus, Trash2, Navigation, Locate, RotateCcw, Save,
+  MapPin, Trash2, Navigation, RotateCcw, Save,
   Bug, Droplets, Leaf, AlertTriangle, Camera, StickyNote, Layers,
   Ruler, Target, Image as ImageIcon, X,
 } from "lucide-react";
@@ -397,7 +397,7 @@ const ExpertCartographyPage = () => {
           <MapPin className="h-6 w-6 text-primary" /> Cartographie GPS
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Dessinez les parcelles, mesurez les superficies et marquez les points d'observation
+          Mesurez un champ avec 4 coins GPS, obtenez la superficie en hectares et réutilisez-la dans les calculs
         </p>
       </div>
 
