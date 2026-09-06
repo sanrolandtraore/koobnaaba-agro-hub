@@ -410,7 +410,7 @@ const ExpertCartographyPage = () => {
               variant={drawingMode === "polygon" ? "default" : "outline"}
               onClick={() => { setDrawingMode(drawingMode === "polygon" ? "none" : "polygon"); setPolygonPoints([]); }}
             >
-              <Layers className="h-4 w-4 mr-1" /> Dessiner parcelle
+              <Layers className="h-4 w-4 mr-1" /> Mesurer un champ (4 coins)
             </Button>
             <Button
               size="sm"
@@ -421,14 +421,10 @@ const ExpertCartographyPage = () => {
             </Button>
             <div className="border-l border-border mx-1" />
             {drawingMode === "polygon" && (
-              <>
-                <Button size="sm" variant="outline" onClick={captureGPSPoint}>
-                  <Navigation className="h-4 w-4 mr-1" /> Point GPS
-                </Button>
-                <Button size="sm" variant={autoWalk ? "destructive" : "secondary"} onClick={toggleAutoWalk}>
-                  <Locate className="h-4 w-4 mr-1" /> {autoWalk ? "Arrêter" : "Mode marche"}
-                </Button>
-              </>
+              <Button size="sm" onClick={captureGPSPoint} disabled={polygonPoints.length >= MAX_POINTS}>
+                <Navigation className="h-4 w-4 mr-1" />
+                {polygonPoints.length >= MAX_POINTS ? "4 coins enregistrés" : `Je suis au ${CORNER_LABELS[polygonPoints.length]}`}
+              </Button>
             )}
             {drawingMode === "marker" && (
               <Button size="sm" variant="outline" onClick={captureGPSPoint}>
@@ -441,28 +437,29 @@ const ExpertCartographyPage = () => {
                   <RotateCcw className="h-4 w-4 mr-1" /> Effacer
                 </Button>
                 {polygonPoints.length >= 3 && (
-                  <Button size="sm" onClick={() => setShowParcelDialog(true)}>
-                    <Save className="h-4 w-4 mr-1" /> Sauvegarder ({areaHa} ha)
+                  <Button size="sm" variant="secondary" onClick={() => setShowParcelDialog(true)}>
+                    <Save className="h-4 w-4 mr-1" /> Enregistrer ({areaHa} ha)
                   </Button>
                 )}
               </>
             )}
           </div>
           {drawingMode === "polygon" && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Cliquez sur la carte pour ajouter des sommets, ou utilisez le GPS • {polygonPoints.length} points · {areaHa} ha · {perimeterM.toLocaleString("fr-FR")} m
-            </p>
+            <div className="mt-2 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Placez-vous à chaque coin du champ et appuyez sur le bouton (ou touchez le coin sur la carte). 4 coins suffisent.
+              </p>
+              <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 text-sm">
+                <strong>{polygonPoints.length}/{MAX_POINTS}</strong> coins · Superficie : <strong>{areaHa} ha</strong> · {perimeterM.toLocaleString("fr-FR")} m de tour
+              </div>
+            </div>
           )}
           {drawingMode === "marker" && (
             <p className="text-xs text-muted-foreground mt-2">
               Cliquez sur la carte pour placer une observation géolocalisée
             </p>
           )}
-          {autoWalk && (
-            <div className="rounded-lg bg-primary/10 border border-primary/20 p-2 text-sm text-primary animate-pulse mt-2">
-              🚶 Mode marche actif — Marchez le long du contour du champ
-            </div>
-          )}
+
         </CardContent>
       </Card>
 
