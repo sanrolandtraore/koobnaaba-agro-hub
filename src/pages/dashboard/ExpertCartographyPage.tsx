@@ -265,47 +265,20 @@ const ExpertCartographyPage = () => {
     });
   }, [polygonPoints, parcels, selectedParcel]);
 
-  // ─── Auto-walk mode ───
-  const toggleAutoWalk = () => {
-    if (autoWalk && watchRef.current !== null) {
-      navigator.geolocation.clearWatch(watchRef.current);
-      watchRef.current = null;
-      setAutoWalk(false);
-      toast.info(`Mode marche arrêté — ${polygonPoints.length} points`);
-      return;
-    }
-    if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
-    setAutoWalk(true);
-    setDrawingMode("polygon");
-    toast.info("Mode marche activé — Marchez le long du contour");
-    let lastLat = 0, lastLng = 0;
-    watchRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
-        const lng = Math.round(pos.coords.longitude * 1e6) / 1e6;
-        const dist = Math.sqrt((lat - lastLat) ** 2 + (lng - lastLng) ** 2) * 111000;
-        if (dist < 3 && lastLat !== 0) return;
-        lastLat = lat; lastLng = lng;
-        setPolygonPoints(prev => [...prev, { lat, lng }]);
-        mapInstance.current?.setView([lat, lng], 18);
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 2000 }
-    );
-  };
-
-  useEffect(() => () => { if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current); }, []);
-
-  // ─── Capture single GPS point ───
+  // ─── Capture a corner with GPS ───
   const captureGPSPoint = () => {
     if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
+    if (drawingMode === "polygon" && polygonPoints.length >= MAX_POINTS) {
+      toast.info("Les 4 coins sont déjà enregistrés");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coord = { lat: Math.round(pos.coords.latitude * 1e6) / 1e6, lng: Math.round(pos.coords.longitude * 1e6) / 1e6 };
         if (drawingMode === "polygon") {
-          setPolygonPoints(prev => [...prev, coord]);
+          setPolygonPoints(prev => prev.length >= MAX_POINTS ? prev : [...prev, coord]);
           mapInstance.current?.setView([coord.lat, coord.lng], 17);
-          toast.success(`Point capturé (±${Math.round(pos.coords.accuracy)}m)`);
+          toast.success(`${CORNER_LABELS[polygonPoints.length]} capturé (±${Math.round(pos.coords.accuracy)}m)`);
         } else {
           setNewObsCoord(coord);
           setShowObsDialog(true);
@@ -316,6 +289,7 @@ const ExpertCartographyPage = () => {
       { enableHighAccuracy: true, timeout: 15000 }
     );
   };
+
 
   // ─── Save Parcel ───
   const saveParcel = async () => {
