@@ -34,22 +34,28 @@ const CropCyclesPage = () => {
   const { data: crops } = useOfflineData({ table: 'crop_references', select: '*' });
 
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ parcel_id: "", crop_reference_id: "", season: "", start_date: "", end_date: "", status: "planning" });
+  const emptyForm = { parcel_id: "", crop_reference_id: "", season: "", start_date: "", end_date: "", status: "planning", expected_yield_kg: "", price_per_kg: "" };
+  const [form, setForm] = useState(emptyForm);
+
+  // Suggestion de rendement basée sur la référence, mais l'utilisateur saisit ses vraies valeurs
+  const selectedParcel = parcels.find((p: any) => p.id === form.parcel_id);
+  const selectedCrop = crops.find((c: any) => c.id === form.crop_reference_id);
+  const suggestedYield = selectedParcel && selectedCrop?.avg_yield_per_ha
+    ? Math.round((selectedParcel.area_ha || 0) * selectedCrop.avg_yield_per_ha)
+    : null;
+  const suggestedPrice = selectedCrop?.avg_price_per_kg || null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.parcel_id) { toast.error("Veuillez sélectionner une parcelle"); return; }
     if (!form.season) { toast.error("Veuillez sélectionner une saison"); return; }
     if (!form.start_date) { toast.error("La date de début est requise"); return; }
-    const parcel = parcels.find((p: any) => p.id === form.parcel_id);
-    const crop = crops.find((c: any) => c.id === form.crop_reference_id);
 
-    let expected_yield_kg: number | null = null;
-    let expected_revenue: number | null = null;
-    if (parcel && crop && (crop as any).avg_yield_per_ha) {
-      expected_yield_kg = ((parcel as any).area_ha || 0) * (crop as any).avg_yield_per_ha;
-      if ((crop as any).avg_price_per_kg) expected_revenue = expected_yield_kg * (crop as any).avg_price_per_kg;
-    }
+    // Priorité aux vraies valeurs saisies par l'utilisateur ; sinon suggestion de référence
+    const yieldKg = form.expected_yield_kg ? parseFloat(form.expected_yield_kg) : suggestedYield;
+    const priceKg = form.price_per_kg ? parseFloat(form.price_per_kg) : suggestedPrice;
+    const expected_yield_kg = yieldKg && yieldKg > 0 ? yieldKg : null;
+    const expected_revenue = expected_yield_kg && priceKg ? Math.round(expected_yield_kg * priceKg) : null;
 
     const result = await insertRow({
       parcel_id: form.parcel_id,
@@ -63,7 +69,7 @@ const CropCyclesPage = () => {
     });
     if (result) {
       toast.success("Cycle cultural créé !");
-      setForm({ parcel_id: "", crop_reference_id: "", season: "", start_date: "", end_date: "", status: "planning" });
+      setForm(emptyForm);
       setOpen(false);
     }
   };
