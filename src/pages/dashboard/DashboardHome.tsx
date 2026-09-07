@@ -59,11 +59,11 @@ const DashboardHome = () => {
 
   const stats = useMemo(() => {
     const activeCycles = cycles.filter((c: any) => c.status === "active");
-    const totalArea = parcels.reduce((s: number, p: any) => s + Number(p.area_hectares || 0), 0);
+    const totalArea = parcels.reduce((s: number, p: any) => s + Number(p.area_ha || 0), 0);
     const totalCosts = costs.reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
     const costsThisMonth = costs.filter((c: any) => c.date && c.date >= monthStart)
       .reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
-    const totalHarvests = harvests.reduce((s: number, h: any) => s + Number(h.quantity || 0), 0);
+    const totalHarvests = harvests.reduce((s: number, h: any) => s + Number(h.quantity_kg || 0), 0);
     const byCrop: Record<string, number> = {};
     activeCycles.forEach((c: any) => {
       const name = c.crop_references?.name || "Autre";
