@@ -25,7 +25,7 @@ const DashboardHome = () => {
 
   const { data: parcels, loading: l2 } = useOfflineData<any>({
     table: "parcels",
-    select: "id, name, area_hectares",
+    select: "id, name, area_ha",
     queryKey: "dashboard-parcels",
   });
 
@@ -43,7 +43,7 @@ const DashboardHome = () => {
 
   const { data: harvests, loading: l5 } = useOfflineData<any>({
     table: "harvests",
-    select: "id, quantity, unit, harvest_date",
+    select: "id, quantity_kg, harvest_date",
     queryKey: "dashboard-harvests",
   });
 
