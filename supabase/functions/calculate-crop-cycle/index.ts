@@ -181,13 +181,15 @@ Deno.serve(async (req) => {
     }
 
     // ===== 4. Yield projection with climate coefficient =====
-    let expected_yield_kg: number | null = null;
-    let expected_revenue: number | null = null;
-    if (crop?.avg_yield_per_ha && area > 0) {
+    // Ne jamais écraser les vraies valeurs saisies par l'utilisateur :
+    // on ne calcule que si le cycle n'a pas encore de rendement/revenu renseigné.
+    let expected_yield_kg: number | null = cycle.expected_yield_kg ?? null;
+    let expected_revenue: number | null = cycle.expected_revenue ?? null;
+    if (expected_yield_kg === null && crop?.avg_yield_per_ha && area > 0) {
       expected_yield_kg = Math.round(crop.avg_yield_per_ha * area * climateCoeff);
-      if (crop?.avg_price_per_kg) {
-        expected_revenue = Math.round(expected_yield_kg * crop.avg_price_per_kg);
-      }
+    }
+    if (expected_revenue === null && expected_yield_kg !== null && crop?.avg_price_per_kg) {
+      expected_revenue = Math.round(expected_yield_kg * crop.avg_price_per_kg);
     }
 
     // ===== 5. Update crop cycle =====
