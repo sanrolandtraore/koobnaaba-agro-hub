@@ -143,6 +143,18 @@ const CropCyclesPage = () => {
                 <div className="space-y-2"><Label>Date début *</Label><Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} required /></div>
                 <div className="space-y-2"><Label>Date fin</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Rendement attendu (kg)</Label>
+                  <Input type="number" step="any" min="0" value={form.expected_yield_kg} onChange={(e) => setForm({ ...form, expected_yield_kg: e.target.value })} placeholder={suggestedYield ? `Suggéré : ${suggestedYield.toLocaleString("fr-FR")}` : "Ex: 1500"} />
+                  <p className="text-xs text-muted-foreground">Votre estimation réelle</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Prix de vente (FCFA/kg)</Label>
+                  <Input type="number" step="any" min="0" value={form.price_per_kg} onChange={(e) => setForm({ ...form, price_per_kg: e.target.value })} placeholder={suggestedPrice ? `Suggéré : ${suggestedPrice.toLocaleString("fr-FR")}` : "Ex: 250"} />
+                  <p className="text-xs text-muted-foreground">Le vrai prix du marché</p>
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label>Statut</Label>
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
