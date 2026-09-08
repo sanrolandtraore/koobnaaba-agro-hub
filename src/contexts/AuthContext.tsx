@@ -93,23 +93,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsOfflineSession(false);
-        if (session?.user) {
-          setTimeout(async () => {
-            const p = await fetchProfile(session.user.id);
-            const r = await fetchRoles(session.user.id);
-            await cacheSession(session.user.id, session.user.email || '', p, r);
-          }, 0);
-        } else {
+      async (event, session) => {
+        if (!session) {
+          // Ne jamais déconnecter l'utilisateur sans son accord :
+          // si le jeton expire ou ne peut pas être rafraîchi, on bascule
+          // sur la session locale au lieu de le renvoyer à l'écran de connexion.
+          if (!explicitSignOutRef.current) {
+            const restored = await tryOfflineRestore(true);
+            if (restored) {
+              setSession(null);
+              setLoading(false);
+              return;
+            }
+          }
+          setSession(null);
+          setUser(null);
+          setIsOfflineSession(false);
           setProfile(null);
           setRoles([]);
+          setLoading(false);
+          return;
         }
+        setSession(session);
+        setUser(session.user);
+        setIsOfflineSession(false);
+        setTimeout(async () => {
+          const p = await fetchProfile(session.user.id);
+          const r = await fetchRoles(session.user.id);
+          await cacheSession(session.user.id, session.user.email || '', p, r);
+        }, 0);
         setLoading(false);
       }
     );
+
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
