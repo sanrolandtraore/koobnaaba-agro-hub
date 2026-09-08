@@ -134,9 +134,10 @@ export async function getOfflineSession(): Promise<OfflineSession | null> {
   const entry = await db.get('cachedData', SESSION_KEY);
   if (!entry?.data?.[0]) return null;
   const session = entry.data[0] as OfflineSession;
-  // Expire after 30 days
-  if (Date.now() - session.savedAt > 30 * 24 * 60 * 60 * 1000) return null;
+  // La session locale n'expire pas : l'utilisateur reste connecté
+  // jusqu'à ce qu'il se déconnecte lui-même.
   return session;
+
 }
 
 export async function clearOfflineSession(): Promise<void> {

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { saveOfflineSession, getOfflineSession, clearOfflineSession } from "@/lib/offlineDb";
@@ -35,6 +35,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [isOfflineSession, setIsOfflineSession] = useState(false);
+  // Vrai uniquement quand l'utilisateur clique lui-même sur « Se déconnecter »
+  const explicitSignOutRef = useRef(false);
+
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -93,23 +96,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsOfflineSession(false);
-        if (session?.user) {
-          setTimeout(async () => {
-            const p = await fetchProfile(session.user.id);
-            const r = await fetchRoles(session.user.id);
-            await cacheSession(session.user.id, session.user.email || '', p, r);
-          }, 0);
-        } else {
+      async (event, session) => {
+        if (!session) {
+          // Ne jamais déconnecter l'utilisateur sans son accord :
+          // si le jeton expire ou ne peut pas être rafraîchi, on bascule
+          // sur la session locale au lieu de le renvoyer à l'écran de connexion.
+          if (!explicitSignOutRef.current) {
+            const restored = await tryOfflineRestore(true);
+            if (restored) {
+              setSession(null);
+              setLoading(false);
+              return;
+            }
+          }
+          setSession(null);
+          setUser(null);
+          setIsOfflineSession(false);
           setProfile(null);
           setRoles([]);
+          setLoading(false);
+          return;
         }
+        setSession(session);
+        setUser(session.user);
+        setIsOfflineSession(false);
+        setTimeout(async () => {
+          const p = await fetchProfile(session.user.id);
+          const r = await fetchRoles(session.user.id);
+          await cacheSession(session.user.id, session.user.email || '', p, r);
+        }, 0);
         setLoading(false);
       }
     );
+
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
@@ -202,7 +221,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    explicitSignOutRef.current = true;
     try { await supabase.auth.signOut(); } catch {}
+
     await clearOfflineSession();
     await clearOfflineCredentials();
     // NOTE: PIN is intentionally NOT cleared on signOut so the user can
