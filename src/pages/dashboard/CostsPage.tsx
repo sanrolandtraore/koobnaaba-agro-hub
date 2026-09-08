@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Trash2, DollarSign, WifiOff } from "lucide-react";
-import MarketplacePricePicker from "@/components/MarketplacePricePicker";
+
 
 const categories = [
   { value: "intrant", label: "Intrant" },
@@ -93,7 +93,7 @@ const CostsPage = () => {
               </div>
               <div className="space-y-2"><Label>Description *</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required placeholder="Engrais NPK" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Montant (FCFA) *</Label><MarketplacePricePicker value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} searchHint={form.description} unit="FCFA" /></div>
+                <div className="space-y-2"><Label>Montant (FCFA) *</Label><Input type="number" step="any" min="0" placeholder="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required /></div>
                 <div className="space-y-2"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required /></div>
               </div>
               <Button type="submit" className="w-full gradient-primary text-primary-foreground">Enregistrer</Button>
