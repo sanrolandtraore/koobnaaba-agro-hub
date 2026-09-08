@@ -221,7 +221,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    explicitSignOutRef.current = true;
     try { await supabase.auth.signOut(); } catch {}
+
     await clearOfflineSession();
     await clearOfflineCredentials();
     // NOTE: PIN is intentionally NOT cleared on signOut so the user can
