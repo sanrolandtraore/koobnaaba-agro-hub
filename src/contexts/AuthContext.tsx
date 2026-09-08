@@ -35,6 +35,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [isOfflineSession, setIsOfflineSession] = useState(false);
+  // Vrai uniquement quand l'utilisateur clique lui-même sur « Se déconnecter »
+  const explicitSignOutRef = useRef(false);
+
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
