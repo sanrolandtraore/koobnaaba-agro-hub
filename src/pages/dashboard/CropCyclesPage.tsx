@@ -37,13 +37,7 @@ const CropCyclesPage = () => {
   const emptyForm = { parcel_id: "", crop_reference_id: "", season: "", start_date: "", end_date: "", status: "planning", expected_yield_kg: "", price_per_kg: "" };
   const [form, setForm] = useState(emptyForm);
 
-  // Suggestion de rendement basée sur la référence, mais l'utilisateur saisit ses vraies valeurs
-  const selectedParcel = parcels.find((p: any) => p.id === form.parcel_id);
-  const selectedCrop = crops.find((c: any) => c.id === form.crop_reference_id);
-  const suggestedYield = selectedParcel && selectedCrop?.avg_yield_per_ha
-    ? Math.round((selectedParcel.area_ha || 0) * selectedCrop.avg_yield_per_ha)
-    : null;
-  const suggestedPrice = selectedCrop?.avg_price_per_kg || null;
+  // Aucune suggestion : l'utilisateur saisit lui-même ses vraies valeurs
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
