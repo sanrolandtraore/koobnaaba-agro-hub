@@ -129,7 +129,7 @@ const CropPlanningPage = () => {
         name,
         totalQty: Math.round(qtyPerHa * area * 100) / 100,
         unit: v.unit || "kg",
-        unitPrice: v.unit_price || 0,
+        unitPrice: 0,
       };
     });
   }, [crop, area]);
@@ -140,7 +140,7 @@ const CropPlanningPage = () => {
       name: p.name,
       totalDays: Math.round(p.days_per_ha * area * 10) / 10,
       workers: 1,
-      dailyRate: labourData.daily_rate,
+      dailyRate: 0,
     }));
   }, [crop, area]);
 
