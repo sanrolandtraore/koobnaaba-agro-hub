@@ -45,9 +45,9 @@ const CropCyclesPage = () => {
     if (!form.season) { toast.error("Veuillez sélectionner une saison"); return; }
     if (!form.start_date) { toast.error("La date de début est requise"); return; }
 
-    // Priorité aux vraies valeurs saisies par l'utilisateur ; sinon suggestion de référence
-    const yieldKg = form.expected_yield_kg ? parseFloat(form.expected_yield_kg) : suggestedYield;
-    const priceKg = form.price_per_kg ? parseFloat(form.price_per_kg) : suggestedPrice;
+    // Uniquement les valeurs saisies par l'utilisateur
+    const yieldKg = form.expected_yield_kg ? parseFloat(form.expected_yield_kg) : null;
+    const priceKg = form.price_per_kg ? parseFloat(form.price_per_kg) : null;
     const expected_yield_kg = yieldKg && yieldKg > 0 ? yieldKg : null;
     const expected_revenue = expected_yield_kg && priceKg ? Math.round(expected_yield_kg * priceKg) : null;
 
@@ -140,12 +140,12 @@ const CropCyclesPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Rendement attendu (kg)</Label>
-                  <Input type="number" step="any" min="0" value={form.expected_yield_kg} onChange={(e) => setForm({ ...form, expected_yield_kg: e.target.value })} placeholder={suggestedYield ? `Suggéré : ${suggestedYield.toLocaleString("fr-FR")}` : "Ex: 1500"} />
+                  <Input type="number" step="any" min="0" value={form.expected_yield_kg} onChange={(e) => setForm({ ...form, expected_yield_kg: e.target.value })} placeholder="0" />
                   <p className="text-xs text-muted-foreground">Votre estimation réelle</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Prix de vente (FCFA/kg)</Label>
-                  <Input type="number" step="any" min="0" value={form.price_per_kg} onChange={(e) => setForm({ ...form, price_per_kg: e.target.value })} placeholder={suggestedPrice ? `Suggéré : ${suggestedPrice.toLocaleString("fr-FR")}` : "Ex: 250"} />
+                  <Input type="number" step="any" min="0" value={form.price_per_kg} onChange={(e) => setForm({ ...form, price_per_kg: e.target.value })} placeholder="0" />
                   <p className="text-xs text-muted-foreground">Le vrai prix du marché</p>
                 </div>
               </div>
@@ -156,21 +156,6 @@ const CropCyclesPage = () => {
                   <SelectContent>{statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              {form.parcel_id && form.crop_reference_id && (() => {
-                const p = parcels.find((x: any) => x.id === form.parcel_id) as any;
-                const c = crops.find((x: any) => x.id === form.crop_reference_id) as any;
-                if (!p || !c) return null;
-                const yld = (p.area_ha || 0) * (c.avg_yield_per_ha || 0);
-                const rev = yld * (c.avg_price_per_kg || 0);
-                return (
-                  <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 space-y-1 text-sm">
-                    <p className="font-medium text-primary">Estimations automatiques</p>
-                    <p>Rendement attendu : <strong>{fmt(yld)} kg</strong></p>
-                    {rev > 0 && <p>Revenu estimé : <strong>{fmt(rev)} FCFA</strong></p>}
-                    {c.plants_per_ha && <p>Plants : <strong>{fmt(c.plants_per_ha * (p.area_ha || 0))}</strong></p>}
-                  </div>
-                );
-              })()}
               <Button type="submit" className="w-full gradient-primary text-primary-foreground">Créer le cycle</Button>
             </form>
           </DialogContent>
