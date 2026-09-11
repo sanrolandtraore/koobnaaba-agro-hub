@@ -183,8 +183,34 @@ const Auth = () => {
       return;
     }
 
-    if (!resetPhone.trim() || !resetName.trim()) {
-      toast.error("Veuillez remplir tous les champs");
+    if (!resetPhone.trim()) {
+      toast.error("Veuillez saisir votre numéro de téléphone");
+      return;
+    }
+
+    // Step 1: request an SMS verification code
+    if (!codeSent) {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("reset-password", {
+          body: { step: "request", identifier: cleanPhone(resetPhone), role: selectedRole },
+        });
+        if (error) toast.error("Erreur de connexion au serveur");
+        else if (data?.error) toast.error(data.error);
+        else {
+          toast.success(data?.message || "Code envoyé par SMS.");
+          setCodeSent(true);
+        }
+      } catch {
+        toast.error("Erreur de connexion au serveur");
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: verify the code and set the new password
+    if (!/^\d{6}$/.test(resetCode.trim())) {
+      toast.error("Saisissez le code à 6 chiffres reçu par SMS");
       return;
     }
     if (newPassword.length < 8) {
@@ -200,9 +226,10 @@ const Auth = () => {
     try {
       const { data, error } = await supabase.functions.invoke("reset-password", {
         body: {
+          step: "verify",
           identifier: cleanPhone(resetPhone),
+          code: resetCode.trim(),
           new_password: newPassword,
-          full_name: resetName.trim(),
           role: selectedRole,
         },
       });
@@ -212,7 +239,8 @@ const Auth = () => {
         toast.success("Mot de passe réinitialisé ! Connectez-vous.");
         setMode("login");
         setResetPhone("");
-        setResetName("");
+        setResetCode("");
+        setCodeSent(false);
         setNewPassword("");
         setConfirmPassword("");
       }
@@ -221,6 +249,7 @@ const Auth = () => {
     }
     setLoading(false);
   };
+
 
   const MethodToggle = () => (
     <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted/50 border border-border">
