@@ -59,7 +59,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [resetPhone, setResetPhone] = useState("");
   const [resetEmail, setResetEmail] = useState("");
-  const [resetName, setResetName] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+
   const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
   const [loading, setLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
