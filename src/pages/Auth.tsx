@@ -59,7 +59,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [resetPhone, setResetPhone] = useState("");
   const [resetEmail, setResetEmail] = useState("");
-  const [resetName, setResetName] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+
   const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
   const [loading, setLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -183,8 +185,34 @@ const Auth = () => {
       return;
     }
 
-    if (!resetPhone.trim() || !resetName.trim()) {
-      toast.error("Veuillez remplir tous les champs");
+    if (!resetPhone.trim()) {
+      toast.error("Veuillez saisir votre numéro de téléphone");
+      return;
+    }
+
+    // Step 1: request an SMS verification code
+    if (!codeSent) {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("reset-password", {
+          body: { step: "request", identifier: cleanPhone(resetPhone), role: selectedRole },
+        });
+        if (error) toast.error("Erreur de connexion au serveur");
+        else if (data?.error) toast.error(data.error);
+        else {
+          toast.success(data?.message || "Code envoyé par SMS.");
+          setCodeSent(true);
+        }
+      } catch {
+        toast.error("Erreur de connexion au serveur");
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: verify the code and set the new password
+    if (!/^\d{6}$/.test(resetCode.trim())) {
+      toast.error("Saisissez le code à 6 chiffres reçu par SMS");
       return;
     }
     if (newPassword.length < 8) {
@@ -200,9 +228,10 @@ const Auth = () => {
     try {
       const { data, error } = await supabase.functions.invoke("reset-password", {
         body: {
+          step: "verify",
           identifier: cleanPhone(resetPhone),
+          code: resetCode.trim(),
           new_password: newPassword,
-          full_name: resetName.trim(),
           role: selectedRole,
         },
       });
@@ -212,7 +241,8 @@ const Auth = () => {
         toast.success("Mot de passe réinitialisé ! Connectez-vous.");
         setMode("login");
         setResetPhone("");
-        setResetName("");
+        setResetCode("");
+        setCodeSent(false);
         setNewPassword("");
         setConfirmPassword("");
       }
@@ -221,6 +251,7 @@ const Auth = () => {
     }
     setLoading(false);
   };
+
 
   const MethodToggle = () => (
     <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted/50 border border-border">
@@ -295,25 +326,30 @@ const Auth = () => {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="resetPhone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
-                    <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required />
+                    <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required disabled={codeSent} />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="resetName" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet (vérification)</Label>
-                    <Input id="resetName" value={resetName} onChange={e => setResetName(e.target.value)} placeholder="Ouédraogo Abdoulaye" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
-                    <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
-                    <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-                  </div>
+                  {codeSent && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="resetCode" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Code reçu par SMS</Label>
+                        <Input id="resetCode" inputMode="numeric" maxLength={6} value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, ""))} placeholder="123456" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
+                        <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
+                        <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
               <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
-                {loading ? "Chargement..." : idMethod === "email" ? "Envoyer le lien" : "Réinitialiser le mot de passe"}
+                {loading ? "Chargement..." : idMethod === "email" ? "Envoyer le lien" : codeSent ? "Réinitialiser le mot de passe" : "Recevoir un code par SMS"}
               </Button>
+
               <button type="button" onClick={() => setMode("login")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto">
                 <ArrowLeft className="h-3 w-3" /> Retour à la connexion
               </button>
