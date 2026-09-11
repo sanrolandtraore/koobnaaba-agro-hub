@@ -295,25 +295,30 @@ const Auth = () => {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="resetPhone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
-                    <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required />
+                    <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required disabled={codeSent} />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="resetName" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet (vérification)</Label>
-                    <Input id="resetName" value={resetName} onChange={e => setResetName(e.target.value)} placeholder="Ouédraogo Abdoulaye" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
-                    <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
-                    <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-                  </div>
+                  {codeSent && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="resetCode" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Code reçu par SMS</Label>
+                        <Input id="resetCode" inputMode="numeric" maxLength={6} value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, ""))} placeholder="123456" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
+                        <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
+                        <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
               <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
-                {loading ? "Chargement..." : idMethod === "email" ? "Envoyer le lien" : "Réinitialiser le mot de passe"}
+                {loading ? "Chargement..." : idMethod === "email" ? "Envoyer le lien" : codeSent ? "Réinitialiser le mot de passe" : "Recevoir un code par SMS"}
               </Button>
+
               <button type="button" onClick={() => setMode("login")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto">
                 <ArrowLeft className="h-3 w-3" /> Retour à la connexion
               </button>
