@@ -1660,6 +1660,63 @@ export type Database = {
           },
         ]
       }
+      marketplace_offers: {
+        Row: {
+          category: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          location_name: string | null
+          owner_id: string
+          partner_name: string
+          price_indication: string | null
+          title: string
+          unit: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          category?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location_name?: string | null
+          owner_id: string
+          partner_name: string
+          price_indication?: string | null
+          title: string
+          unit?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          category?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location_name?: string | null
+          owner_id?: string
+          partner_name?: string
+          price_indication?: string | null
+          title?: string
+          unit?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       marketplace_orders: {
         Row: {
           amount: number
@@ -1766,6 +1823,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      mission_interventions: {
+        Row: {
+          actions_done: string | null
+          cost: number | null
+          created_at: string
+          duration_hours: number | null
+          id: string
+          intervention_date: string
+          intervention_type: string
+          latitude: number | null
+          longitude: number | null
+          mission_id: string
+          observations: string | null
+          photo_urls: string[]
+          products_used: string | null
+          provider_id: string
+          recommendations: string | null
+        }
+        Insert: {
+          actions_done?: string | null
+          cost?: number | null
+          created_at?: string
+          duration_hours?: number | null
+          id?: string
+          intervention_date?: string
+          intervention_type?: string
+          latitude?: number | null
+          longitude?: number | null
+          mission_id: string
+          observations?: string | null
+          photo_urls?: string[]
+          products_used?: string | null
+          provider_id: string
+          recommendations?: string | null
+        }
+        Update: {
+          actions_done?: string | null
+          cost?: number | null
+          created_at?: string
+          duration_hours?: number | null
+          id?: string
+          intervention_date?: string
+          intervention_type?: string
+          latitude?: number | null
+          longitude?: number | null
+          mission_id?: string
+          observations?: string | null
+          photo_urls?: string[]
+          products_used?: string | null
+          provider_id?: string
+          recommendations?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_interventions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "provider_missions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parcels: {
         Row: {
@@ -2035,6 +2154,124 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      provider_missions: {
+        Row: {
+          client_id: string | null
+          client_name: string
+          completed_date: string | null
+          created_at: string
+          description: string | null
+          domain: string
+          id: string
+          location_name: string | null
+          paid: boolean
+          price: number | null
+          provider_id: string
+          scheduled_date: string
+          service_type: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          client_name: string
+          completed_date?: string | null
+          created_at?: string
+          description?: string | null
+          domain?: string
+          id?: string
+          location_name?: string | null
+          paid?: boolean
+          price?: number | null
+          provider_id: string
+          scheduled_date?: string
+          service_type?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          client_name?: string
+          completed_date?: string | null
+          created_at?: string
+          description?: string | null
+          domain?: string
+          id?: string
+          location_name?: string | null
+          paid?: boolean
+          price?: number | null
+          provider_id?: string
+          scheduled_date?: string
+          service_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_missions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "expert_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_requests: {
+        Row: {
+          contact_phone: string | null
+          created_at: string
+          id: string
+          message: string | null
+          needed_by: string | null
+          offer_id: string
+          owner_id: string
+          quantity: string | null
+          requester_id: string
+          response: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          needed_by?: string | null
+          offer_id: string
+          owner_id: string
+          quantity?: string | null
+          requester_id: string
+          response?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          needed_by?: string | null
+          offer_id?: string
+          owner_id?: string
+          quantity?: string | null
+          requester_id?: string
+          response?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_offers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scouting_sessions: {
         Row: {

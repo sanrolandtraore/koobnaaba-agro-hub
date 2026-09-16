@@ -8,6 +8,13 @@
       "when": 1789170230241,
       "tag": "0000_secure_reviews_prices_reset_otp",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789558313201,
+      "tag": "0001_provider_workspace_and_marketplace",
+      "breakpoints": true
     }
   ]
 }
