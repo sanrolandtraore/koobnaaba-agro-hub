@@ -1,73 +1,210 @@
-# Welcome to your Lovable project
+# Koobnaaba: Farm Forward
 
-## Project info
+Construire une plateforme SaaS de gestion agricole full-stack prête pour utilisation et destinée au marché africain (burkinabè), nommée 'Koobnaaba''.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+‎• La plateforme doit être :
 
-## How can I edit this code?
+‎• 100% fonctionnelle
 
-There are several ways of editing your application.
+‎• Sans données mockées
 
-**Use Lovable**
+‎• Full-stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+‎• Production-ready
 
-Changes made via Lovable will be committed automatically to this repo.
+‎• Architecture scalable
 
-**Use your preferred IDE**
+‎• Code propre, modulaire, maintenable.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+‎
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+‎EXIGENCES GÉNÉRALES NON NÉGOCIABLES
 
-Follow these steps:
+‎Chaque bouton doit :
+
+‎• Déclencher une action réelle
+
+‎• Appeler un endpoint backend réel
+
+‎• Modifier la base PostgreSQL
+
+‎• Rafraîchir l’UI dynamiquement
+
+‎• Gérer erreurs serveur
+
+‎• Gérer erreurs validation
+
+‎• Respecter les rôles utilisateurs
+
+‎• Aucun mock.
+
+‎• Aucun fake endpoint.
+
+‎• Authentification sécurisée JWT.
+
+‎• RBAC strict.
+
+‎• Journalisation (audit log).
+
+‎• Code structuré par domaine (DDD-lite).
+
+‎• Docker ready.
+
+‎• Documentation API auto-générée (Swagger).
+
+‎
+
+‎STACK TECH OBLIGATOIRE
+
+‎• Frontend :
+
+‎Flutter (Android-first)
+
+‎State management propre (Riverpod ou Bloc)
+
+‎etc.... .
+
+‎• Backend :
+
+‎Node.js avec NestJS
+
+‎Architecture modulaire
+
+‎REST API
+
+‎Validation DTO stricte
+
+‎etc... .
+
+‎• Database :
+
+‎PostgreSQL
+
+‎PostGIS (géolocalisation)
+
+‎Infrastructure :
+
+‎Docker
+
+‎CI/CD ready
+
+‎etc... .
+
+‎
+
+‎6 MODULES À DÉVELOPPER
+
+‎MODULE 1(Offline first) — Gestion Exploitation Agricole 
+
+‎Entités
+
+‎• User
+
+‎• Farm
+
+‎• Parcel (geom polygon PostGIS)
+
+‎• CropCycle
+
+‎• ActivityLog
+
+‎• CostEntry
+
+‎• InvestmentPlan
+
+‎• InputRequirement
+
+‎• CropReference
+
+‎• ClimateZone
+
+‎• Implémente moteur de calcul :
+
+‎• Calcul du nombre de plants fruitier (Densité)
+
+‎• Quantité intrants
+
+‎• Projection rendement
+
+‎• Projection revenu
+
+‎• ROI dynamique
+
+‎Tous les calculs doivent être exécutés côté backend et stockés.
+
+‎Règles métier
+
+‎• Estimation rendement = surface × moyenne culture × coefficient climat
+
+‎• Coût total = somme CostEntry
+
+‎• Historique saisonnier consultable
+
+‎• GPS doit enregistrer géométrie réelle
+
+‎
+
+‎MODULE 2 (Offline first) — GESTION D’ÉLEVAGE (Livestock Management)
+
+‎
+
+‎Objectif :
+
+‎Offrir un module complet de suivi des élevages (bovins, caprins, ovins, volailles, porcs, poissons etc.) avec les mêmes exigences production-ready que le reste de Koobnaab.
+
+‎
+
+‎MODULE 3— Location d’Actifs Agricoles
+
+‎Inspiré de WeFarmUp mais adapté localement.
+
+‎Entités
+
+‎• Equipment
+
+‎• EquipmentAvailability
+
+‎• Booking
+
+‎• Payment
+
+‎• SecurityDeposit
+
+‎• Rating
+
+‎• Règles
+
+‎• Vérification disponibilité avant confirmation
+
+‎• Paiement Mobile Money simulé via
+
+‎• provider configurable
+
+‎• Dépôt bloqué jusqu’à validation fin location
+
+‎• Système de litige
+
+‎• Notation après transaction.
+
+This project was built with [Lovable](https://lovable.dev).
+
+**Live app**: https://koobnaaba-agro-hub.lovable.app
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/d819dab9-20db-4173-8f2b-9172f2b1de89).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
