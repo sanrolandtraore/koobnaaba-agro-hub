@@ -31,6 +31,33 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Recover from stale PWA/service-worker caches after deployments.
+      window.addEventListener('error', function (event) {
+        console.error('KoobNaaba runtime error:', event.error || event.message);
+      });
+      window.addEventListener('unhandledrejection', function (event) {
+        console.error('KoobNaaba unhandled rejection:', event.reason);
+      });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', async function () {
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(function (registration) {
+              return registration.unregister();
+            }));
+            if (window.caches) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map(function (key) {
+                return caches.delete(key);
+              }));
+            }
+          } catch (error) {
+            console.warn('KoobNaaba cache recovery skipped:', error);
+          }
+        });
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
