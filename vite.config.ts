@@ -20,24 +20,57 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-icon-512.png", "pwa-icon-192.png"],
       workbox: {
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,json}"],
         navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            // Supabase REST endpoints: cache for offline reads with quick fallback
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: "supabase-api",
-              expiration: { maxEntries: 50, maxAgeSeconds: 300 },
+              cacheName: "supabase-rest-cache",
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
           {
-            urlPattern: /^https:\/\/.*tile\.openstreetmap\.org\/.*/i,
+            // Supabase Storage (e.g. crop diagnoses photos, field photos)
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "supabase-storage-cache",
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // OpenStreetMap, CartoDB and ArcGIS Satellite Tiles for offline field geocoding & mapping
+            urlPattern: /^https:\/\/(?:[a-c]\.tile\.openstreetmap\.org|[a-d]\.basemaps\.cartocdn\.com|server\.arcgisonline\.com)\/.*/i,
             handler: "CacheFirst",
             options: {
-              cacheName: "map-tiles",
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheName: "map-tiles-cache",
+              expiration: { maxEntries: 2000, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Google Fonts & Static CDNs
+            urlPattern: /^https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "static-cdn-cache",
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
         ],

@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
   MapPin, Wheat, Activity, DollarSign, WifiOff, ArrowUpRight,
-  Sprout, CalendarDays, Package, TrendingUp, TrendingDown, Calculator, Microscope,
+  Sprout, CalendarDays, Package, TrendingUp, TrendingDown, Calculator, Microscope, Tractor, Sparkles,
 } from "lucide-react";
 
 const DashboardHome = () => {
@@ -177,6 +177,40 @@ const DashboardHome = () => {
             <span className="text-[11px] md:text-xs font-medium leading-tight">{a.label}</span>
           </Link>
         ))}
+      </section>
+
+      {/* KoobNaaba Mécanisation & Matériel Hub Spotlight */}
+      <section>
+        <Link
+          to="/dashboard/equipment"
+          className="group block p-4 sm:p-5 rounded-2xl border border-emerald-800/30 bg-gradient-to-r from-emerald-950 via-teal-900 to-amber-950 text-white shadow-md hover:shadow-xl transition-all relative overflow-hidden"
+        >
+          <div className="absolute -right-4 -bottom-6 text-7xl opacity-15 select-none pointer-events-none group-hover:scale-110 transition-transform">
+            🚜
+          </div>
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-amber-400 text-amber-950 hover:bg-amber-400 font-bold text-[10px] uppercase tracking-wider">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  KoobNaaba Mécanisation
+                </Badge>
+                <span className="text-xs text-emerald-200 font-semibold">Mécanisation à la Demande</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-amber-200 transition-colors">
+                Besoin d'un tracteur, drone de pulvérisation ou moissonneuse ?
+              </h3>
+              <p className="text-xs text-emerald-100/80 max-w-xl">
+                Simulez votre devis en 1 clic, réservez avec acompte Mobile Money en séquestre et bénéficiez de l'accompagnement d'un agent de terrain certifié.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-semibold text-amber-300 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                Accéder au Hub Matériel <ArrowUpRight className="h-4 w-4" />
+              </span>
+            </div>
+          </div>
+        </Link>
       </section>
 
       {/* Bento grid */}

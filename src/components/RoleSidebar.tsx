@@ -4,7 +4,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import {
   GraduationCap, Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
-  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings,
+  Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Tractor,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
 } from "lucide-react";
@@ -25,7 +25,7 @@ export const agriculteurNav: NavItem[] = [
   { to: "/dashboard/harvests", labelKey: "nav.harvests", icon: Package },
   { to: "/dashboard/calendar", labelKey: "nav.calendar", icon: CalendarDays },
   { to: "/dashboard/workers", labelKey: "nav.workers", icon: Users },
-  { to: "/dashboard/equipment", labelKey: "nav.equipment", icon: Wrench },
+  { to: "/dashboard/equipment", labelKey: "nav.equipment", icon: Tractor },
   { to: "/dashboard/costs", labelKey: "nav.costs", icon: DollarSign },
   { to: "/dashboard/investment", labelKey: "nav.investment", icon: Calculator },
   // Outils agronomiques (ex-module Expert agronome)
@@ -71,10 +71,18 @@ export const formationNav: NavItem[] = [
 
 export const partenaireNav: NavItem[] = [
   { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard/partenaire-abonnement", labelKey: "nav.providerSubscription", icon: Sparkles },
+  { to: "/dashboard/expert-diagnosis", labelKey: "nav.aiDiagnosis", icon: Microscope },
+  { to: "/dashboard/expert-prescriptions", labelKey: "nav.prescriptions", icon: FileText },
+  { to: "/dashboard/scouting", labelKey: "nav.scouting", icon: Eye },
+  { to: "/dashboard/equipment", labelKey: "nav.equipmentFleet", icon: Tractor },
+  { to: "/dashboard/partenaire-mes-offres", labelKey: "nav.myOffers", icon: Store },
+  { to: "/dashboard/expert-calculator", labelKey: "nav.calculator", icon: Calculator },
+  { to: "/dashboard/expert-cartography", labelKey: "nav.gpsMapping", icon: MapPin },
+  { to: "/dashboard/crop-library", labelKey: "nav.technicalSheets", icon: BookOpen },
+  { to: "/dashboard/expert-clients", labelKey: "nav.myClients", icon: Users },
   { to: "/dashboard/partenaire-fournisseurs", labelKey: "nav.suppliers", icon: Package },
-  { to: "/dashboard/partenaire-assurance", labelKey: "nav.insurance", icon: Award },
-  { to: "/dashboard/partenaire-programmes", labelKey: "nav.programs", icon: FolderOpen },
-  { to: "/dashboard/partenaire-banques", labelKey: "nav.banking", icon: Wallet },
+  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake },
   { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
 ];
 

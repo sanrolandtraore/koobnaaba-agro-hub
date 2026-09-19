@@ -57,7 +57,7 @@
     "harvests": "Harvests & Lots",
     "calendar": "Calendar",
     "workers": "Workforce",
-    "equipment": "Equipment",
+    "equipment": "Mechanization & Machinery",
     "costs": "Costs",
     "investment": "Investment",
     "analytics": "Analytics",
@@ -87,6 +87,9 @@
     "scouting": "Field scouting",
     "gpsMapping": "GPS mapping",
     "statistics": "Statistics",
-    "education": "Courses"
+    "education": "Courses",
+    "providerSubscription": "Company Subscription",
+    "myOffers": "My Offers & Sales",
+    "equipmentFleet": "Machinery & Rental"
   }
 }

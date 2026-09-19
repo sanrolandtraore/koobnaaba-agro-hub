@@ -3,8 +3,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, Search, Loader2 } from "lucide-react";
+import { BookOpen, Search, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { WEST_AFRICA_12_CROPS, CropTechnicalSheetData } from "@/lib/cropLibraryData";
 
 interface Sheet {
   id: string;
@@ -22,10 +23,11 @@ interface Sheet {
   recommended_varieties: string[];
   yield_potential_t_ha: number | null;
   notes: string | null;
+  iconEmoji?: string;
 }
 
 export default function CropLibraryPage() {
-  const [sheets, setSheets] = useState<Sheet[]>([]);
+  const [sheets, setSheets] = useState<Sheet[]>(WEST_AFRICA_12_CROPS);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [zone, setZone] = useState<string>("all");
@@ -33,22 +35,34 @@ export default function CropLibraryPage() {
 
   useEffect(() => {
     supabase.from("crop_technical_sheets").select("*").order("name_fr").then(({ data }) => {
-      setSheets((data ?? []) as Sheet[]);
+      if (data && data.length > 0) {
+        setSheets(data as Sheet[]);
+      } else {
+        setSheets(WEST_AFRICA_12_CROPS);
+      }
+      setLoading(false);
+    }).catch(() => {
+      setSheets(WEST_AFRICA_12_CROPS);
       setLoading(false);
     });
   }, []);
 
   const filtered = sheets.filter(s => {
     const okSearch = !search || s.name_fr.toLowerCase().includes(search.toLowerCase()) || s.crop_key.includes(search.toLowerCase());
-    const okZone = zone === "all" || s.climate_zones.some(z => z.includes(zone));
+    const okZone = zone === "all" || s.climate_zones.some(z => z.toLowerCase().includes(zone.toLowerCase()));
     return okSearch && okZone;
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><BookOpen className="h-6 w-6 text-primary" />Fiches techniques</h1>
-        <p className="text-sm text-muted-foreground">{sheets.length} cultures référencées.</p>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <BookOpen className="h-6 w-6 text-primary" />
+          Fiches techniques (12 cultures ouest-africaines)
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {sheets.length} cultures de référence ouest-africaines documentées avec paramètres NPK, eau ETc, variétés et ravageurs.
+        </p>
       </div>
 
       <div className="flex gap-2">

@@ -10,6 +10,9 @@ export interface PendingDiagnosis {
   imageBase64?: string;
   mimeType?: string;
   imagePreview?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  parcelName?: string;
   createdAt: string;
 }
 
@@ -46,6 +49,9 @@ export interface LocalDiagnosis {
   treatment_bio: string | null;
   treatment_chemical: string | null;
   ai_response: any;
+  latitude?: number | null;
+  longitude?: number | null;
+  parcel_name?: string | null;
   created_at: string;
   synced?: boolean;
 }

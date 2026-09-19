@@ -29,7 +29,7 @@ export default function RevenuePage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user]);
+  useEffect(() => { load();   }, [user]);
 
   const billable = useMemo(() => missions.filter((m) => m.status === "terminee" && m.price), [missions]);
   const total = billable.reduce((s, m) => s + Number(m.price), 0);

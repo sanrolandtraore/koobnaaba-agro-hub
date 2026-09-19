@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { OFFER_CATEGORIES } from "./PartnerMarketplacePage";
+import { OFFER_CATEGORIES } from "./partnerCategories";
 
 interface Offer {
   id: string; partner_name: string; category: string; title: string; description: string | null;
@@ -44,7 +44,7 @@ export default function MyOffersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user]);
+  useEffect(() => { load();   }, [user]);
 
   const set = (k: keyof typeof empty, v: string) => setForm((f) => ({ ...f, [k]: v }));
 

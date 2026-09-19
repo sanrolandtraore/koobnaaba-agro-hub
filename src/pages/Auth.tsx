@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { hasOfflineCredentials } from "@/lib/offlineAuth";
 import { hasPin } from "@/lib/pinAuth";
 import logo from "@/assets/logo.png";
+import BackendStatusButton from "@/components/BackendStatusButton";
 
 const ROLES = [
   { value: "agriculteur", label: "Expert Agronome", icon: Wheat, desc: "Cultures, parcelles & conseil agronomique" },
@@ -290,7 +291,10 @@ const Auth = () => {
   return (
     <div className="flex min-h-screen items-center justify-center gradient-hero p-4">
       <Card className="w-full max-w-lg border-border/50 shadow-warm animate-fade-in">
-        <CardHeader className="text-center space-y-3">
+        <div className="flex justify-end pt-3 pr-4">
+          <BackendStatusButton />
+        </div>
+        <CardHeader className="text-center space-y-3 pt-0">
           <img src={logo} alt="KoobNaaba" className="mx-auto h-16 w-auto" />
           <CardTitle className="text-2xl font-heading">
             {mode === "forgot" ? "Réinitialiser le " : mode === "login" ? "Bienvenue sur " : "Rejoignez "}

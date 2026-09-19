@@ -62,7 +62,7 @@ export default function MissionsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user]);
+  useEffect(() => { load();   }, [user]);
 
   const services = domain === "elevage" ? SERVICES_ELEV : SERVICES_AGRI;
 

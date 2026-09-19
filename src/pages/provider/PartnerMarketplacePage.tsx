@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Store, Search, Phone, Mail, Globe, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { OFFER_CATEGORIES } from "./partnerCategories";
 
 interface Offer {
   id: string; owner_id: string; partner_name: string; category: string; title: string;
@@ -18,16 +19,6 @@ interface Offer {
   location_name: string | null; contact_phone: string | null; contact_email: string | null;
   website: string | null; image_url: string | null;
 }
-
-export const OFFER_CATEGORIES = [
-  { value: "intrants", label: "Intrants agricoles" },
-  { value: "materiel", label: "Matériel & équipement" },
-  { value: "veterinaire", label: "Produits vétérinaires" },
-  { value: "semences", label: "Semences" },
-  { value: "financement", label: "Financement & assurance" },
-  { value: "service", label: "Service" },
-  { value: "autre", label: "Autre" },
-];
 
 const catLabel = (v: string) => OFFER_CATEGORIES.find((c) => c.value === v)?.label ?? v;
 

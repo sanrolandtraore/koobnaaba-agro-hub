@@ -15,10 +15,19 @@ import {
   Plus, Microscope, Bug, Droplets, Tractor, Fish, Egg,
   ClipboardList, MapPin, GraduationCap, Trash2, Clock, CheckCircle, XCircle, Loader2,
   Wheat, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby, Waves, Mountain, Sun, Home,
-  FileSearch, FileText, Award, Warehouse, Factory, ShoppingBag, QrCode, Users, Salad,
+  FileSearch, FileText, Award, Warehouse, Factory, ShoppingBag, QrCode, Users, Salad, Sparkles, Eye, Calculator,
 } from "lucide-react";
 
 const SERVICE_CATEGORIES = [
+  {
+    category: "✨ Aide à la décision & Diagnostic IA",
+    services: [
+      { value: "diagnostic_ia", label: "Diagnostic IA (Maladie & Ravageur)", icon: Microscope, desc: "Photo de feuille ou tige analysée par vision IA avec détection de carences et recommandations." },
+      { value: "ordonnance_agronomique", label: "Ordonnance phytosanitaire signée", icon: FileText, desc: "Prescription agronomique officielle au format PDF délivrée par un conseiller certifié." },
+      { value: "scouting_geolocalise", label: "Scouting terrain géolocalisé", icon: Eye, desc: "Audit et relevé d'observations terrain avec coordonnées GPS, intensité d'attaque et rapport." },
+      { value: "calcul_agronomique", label: "Calculatrice & Plan de doses", icon: Calculator, desc: "Calcul de densité de semis, fractionnement NPK et besoins en eau ETc selon la parcelle." },
+    ],
+  },
   {
     category: "🌱 Productions végétales",
     services: [
@@ -190,8 +199,8 @@ const ServicesPage = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Services Techniques</h1>
-          <p className="text-muted-foreground mt-1">Demandez l'accompagnement de nos Experts Agronomes</p>
+          <h1 className="text-2xl font-heading font-bold">Plateforme Services & Aide à la Décision</h1>
+          <p className="text-muted-foreground mt-1">« La technologie au service de l'agriculture africaine » — Diagnostic IA, ordonnances et accompagnement agronomique</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>

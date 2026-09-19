@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import PinSetup from "./pages/PinSetup";
@@ -62,6 +63,8 @@ const AssurancePage = lazy(() => import("./pages/dashboard/partenaire/AssuranceP
 const ProgrammesPage = lazy(() => import("./pages/dashboard/partenaire/ProgrammesPage"));
 const ServicesBancairesPage = lazy(() => import("./pages/dashboard/partenaire/ServicesBancairesPage"));
 const PartnersDirectoryPage = lazy(() => import("./pages/dashboard/PartnersDirectoryPage"));
+const ProviderSubscriptionPage = lazy(() => import("./pages/dashboard/partenaire/ProviderSubscriptionPage"));
+const MyOffersPage = lazy(() => import("./pages/provider/MyOffersPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -87,7 +90,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <OfflineIndicator />
-        <BrowserRouter>
+        <ErrorBoundary>
+          <BrowserRouter>
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -136,6 +140,8 @@ const App = () => (
                 <Route path="crop-library" element={<Suspense fallback={<PageLoader />}><CropLibraryPage /></Suspense>} />
                 <Route path="expert-clients" element={<Suspense fallback={<PageLoader />}><ExpertClientsPage /></Suspense>} />
                 <Route path="expert-analytics" element={<Suspense fallback={<PageLoader />}><ExpertAnalyticsPage /></Suspense>} />
+                <Route path="partenaire-abonnement" element={<Suspense fallback={<PageLoader />}><ProviderSubscriptionPage /></Suspense>} />
+                <Route path="partenaire-mes-offres" element={<Suspense fallback={<PageLoader />}><MyOffersPage /></Suspense>} />
                 <Route path="partenaire-fournisseurs" element={<Suspense fallback={<PageLoader />}><FournisseursPage /></Suspense>} />
                 <Route path="partenaire-assurance" element={<Suspense fallback={<PageLoader />}><AssurancePage /></Suspense>} />
                 <Route path="partenaire-programmes" element={<Suspense fallback={<PageLoader />}><ProgrammesPage /></Suspense>} />
@@ -146,6 +152,7 @@ const App = () => (
             </Routes>
           </AuthProvider>
         </BrowserRouter>
+      </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>

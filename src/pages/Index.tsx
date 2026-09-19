@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Wheat, BarChart3, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Wheat, BarChart3, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight, Microscope, FileText, Calculator, Eye, Sparkles, Tractor, ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import logo from "@/assets/logo.png";
 import galleryFarmField from "@/assets/gallery/farm-field.jpg";
@@ -96,27 +96,29 @@ const Index = () => {
       </div>
 
       {/* Hero */}
-      <section className="gradient-hero min-h-[80vh] flex items-center relative overflow-hidden">
+      <section className="gradient-hero min-h-[85vh] flex items-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 right-20 w-72 h-72 rounded-full bg-secondary blur-3xl" />
           <div className="absolute bottom-20 left-20 w-96 h-96 rounded-full bg-primary blur-3xl" />
         </div>
         <div className="container max-w-5xl mx-auto px-4 py-20 relative z-10">
           <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
-            <img src={logo} alt="KoobNaaba" className="h-20 w-auto" />
+            <img src={logo} alt="KoobNaaba" className="h-24 w-auto drop-shadow-md" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-primary-foreground uppercase tracking-wider backdrop-blur-sm">
+              ✨ AgriTech Aide à la Décision & Services Intégrés
+            </div>
             <h1 className="text-4xl md:text-6xl font-heading font-bold text-primary-foreground leading-tight">
-              La gestion agricole,{" "}
-              <span className="text-gradient-warm">enfin facile.</span>
+              « La technologie au service de <span className="text-gradient-warm">l'agriculture africaine.</span> »
             </h1>
-            <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl">
-              La plateforme de gestion agricole intelligente conçue pour les agriculteurs africains. 
-              Gérez vos exploitations, suivez vos cultures et optimisez vos rendements.
+            <p className="text-lg md:text-xl text-primary-foreground/90 max-w-3xl leading-relaxed">
+              Le partenaire technique de référence des producteurs, maraîchers, éleveurs et coopératives au Burkina Faso. 
+              Diagnostic IA des maladies, ordonnances agronomiques certifiées, calculatrice agro, scouting géolocalisé et accès direct aux intrants et matériels.
             </p>
-            <div className="flex gap-4 flex-wrap justify-center">
+            <div className="flex gap-4 flex-wrap justify-center pt-2">
               <Button size="lg" onClick={() => navigate("/auth")} className="gradient-warm text-accent-foreground font-semibold px-8 shadow-warm hover:opacity-90 transition-opacity">
-                Commencer <ArrowRight className="ml-2 h-5 w-5" />
+                Accéder aux services <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="border-black bg-black text-white hover:bg-black/90 hover:text-white">
+              <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="border-black bg-black text-white hover:bg-black/90 hover:text-white font-medium">
                 Se connecter
               </Button>
             </div>
@@ -191,23 +193,53 @@ const Index = () => {
       {/* Features */}
       <section className="py-20 bg-background">
         <div className="container max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-heading font-bold text-center mb-12">
-            Tout pour gérer votre <span className="text-gradient-warm">exploitation</span>
-          </h2>
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-2">
+            <h2 className="text-3xl font-heading font-bold">
+              Plateforme AgriTech & <span className="text-gradient-warm">Aide à la Décision</span>
+            </h2>
+            <p className="text-muted-foreground text-sm md:text-base">
+              Tous les outils d'aide à la décision et de productivité agronomique réunis pour producteurs, conseillers techniques et coopératives.
+            </p>
+          </div>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { icon: MapPin, title: "Exploitations & Parcelles", desc: "Enregistrez vos fermes, délimitez vos parcelles et suivez chaque mètre carré de votre exploitation." },
-              { icon: Wheat, title: "Cycles culturaux", desc: "Planifiez vos saisons, estimez vos rendements et suivez vos cultures du semis à la récolte." },
-              { icon: BarChart3, title: "Suivi financier", desc: "Contrôlez vos coûts, estimez vos revenus et calculez votre ROI par cycle cultural." },
+              { icon: Microscope, title: "Diagnostic IA Végétal", desc: "Prenez une photo de feuille ou tige : l'intelligence artificielle identifie instantanément ravageurs, maladies et carences minérales." },
+              { icon: FileText, title: "Ordonnances Certifiées", desc: "Génération automatique d'ordonnances phytosanitaires au format PDF signées avec posologie exacte et délais avant récolte." },
+              { icon: Calculator, title: "Calculatrice Agro & Doses", desc: "Calculez précisément les densités de semis, fractionnements NPK, besoins en eau ETc et projections de rendement." },
+              { icon: Eye, title: "Scouting Terrain Géolocalisé", desc: "Relevés d'observations sur le terrain avec capture GPS, photos datées et génération de rapports de patrouille." },
+              { icon: MapPin, title: "Cartographie & Parcelles", desc: "Délimitez vos parcelles par GPS, calculez les surfaces réelles et pilotez les cycles culturaux saison par saison." },
+              { icon: Tractor, title: "Mécanisation & Intrants", desc: "Accédez en direct aux prestataires agricoles vérifiés : labour tracteur, drones de pulvérisation, semences et fertilisants." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-warm transition-all duration-300 hover:-translate-y-1">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-4">
                   <Icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-lg font-heading font-semibold mb-2">{title}</h3>
-                <p className="text-sm text-muted-foreground">{desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Provider Subscription Highlight */}
+          <div className="mt-12 bg-gradient-to-r from-primary/15 via-primary/5 to-muted/40 border border-primary/20 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+            <div className="space-y-2 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+                <Sparkles className="h-3.5 w-3.5" /> Entreprises & Prestataires
+              </div>
+              <h3 className="text-2xl font-heading font-bold text-foreground">
+                Vous êtes prestataire de services, vendeur d'intrants ou loueur de matériel ?
+              </h3>
+              <p className="text-muted-foreground text-sm max-w-2xl leading-relaxed">
+                Abonnez votre entreprise pour équiper vos équipes avec les outils professionnels KoobNaaba : Diagnostic IA, Ordonnances signées, Scouting terrain, gestion de flotte de location et vitrine marketplace.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              onClick={() => navigate("/auth")}
+              className="gradient-primary text-primary-foreground font-semibold px-6 shadow-warm shrink-0 hover:opacity-95"
+            >
+              Découvrir les formules pro <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </section>

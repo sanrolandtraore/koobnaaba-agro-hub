@@ -16,8 +16,22 @@ import "leaflet/dist/leaflet.css";
 import {
   MapPin, Trash2, Navigation, RotateCcw, Save,
   Bug, Droplets, Leaf, AlertTriangle, Camera, StickyNote, Layers,
-  Ruler, Target, Image as ImageIcon, X,
+  Ruler, Target, Image as ImageIcon, X, Download, HardDriveDownload,
+  Wifi, WifiOff, CheckCircle2, Loader2, Sparkles,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  computeTilesForBBox,
+  downloadMapTiles,
+  getBBoxFromCoordinates,
+  getCachedTileCount,
+  type TileDownloadProgress,
+  DEFAULT_OFFLINE_ZOOMS,
+} from "@/lib/mapTileDownloader";
+import {
+  cacheData,
+  getCachedData,
+} from "@/lib/offlineDb";
 
 // ─── Types ───
 interface Coordinate { lat: number; lng: number; }
@@ -137,19 +151,173 @@ const ExpertCartographyPage = () => {
   const [showParcelDialog, setShowParcelDialog] = useState(false);
   const [parcelForm, setParcelForm] = useState({ name: "", client_name: "", notes: "" });
 
-  // ─── Fetch data ───
+  // ─── Offline Map Caching State ───
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const [downloadScope, setDownloadScope] = useState<"all" | "selected" | "visible">("all");
+  const [downloadTargetParcelId, setDownloadTargetParcelId] = useState<string>("all");
+  const [cachedTileCount, setCachedTileCount] = useState<number>(0);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<TileDownloadProgress | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Connectivity listener
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  // Check cached tiles count on load
+  const refreshCachedCount = useCallback(async () => {
+    const count = await getCachedTileCount();
+    setCachedTileCount(count);
+  }, []);
+
+  useEffect(() => {
+    refreshCachedCount();
+  }, [refreshCachedCount]);
+
+  // ─── Fetch data (with IndexedDB fallback for parcels and observations) ───
   const fetchData = useCallback(async () => {
     if (!user) return;
-    const [obsRes, parcelRes] = await Promise.all([
-      supabase.from("field_observations").select("*").order("created_at", { ascending: false }),
-      supabase.from("expert_parcels").select("*").order("created_at", { ascending: false }),
-    ]);
-    if (obsRes.data) setObservations(obsRes.data as FieldObservation[]);
-    if (parcelRes.data) setParcels(parcelRes.data as ExpertParcel[]);
+    const cacheKey = `user-${user.id}`;
+
+    if (navigator.onLine) {
+      try {
+        const [obsRes, parcelRes] = await Promise.all([
+          supabase.from("field_observations").select("*").order("created_at", { ascending: false }),
+          supabase.from("expert_parcels").select("*").order("created_at", { ascending: false }),
+        ]);
+        if (obsRes.data) {
+          setObservations(obsRes.data as FieldObservation[]);
+          await cacheData("field_observations", cacheKey, obsRes.data);
+        }
+        if (parcelRes.data) {
+          setParcels(parcelRes.data as ExpertParcel[]);
+          await cacheData("expert_parcels", cacheKey, parcelRes.data);
+        }
+      } catch (err) {
+        console.warn("Erreur réseau cartographie, repli sur le cache local:", err);
+        const [cachedObs, cachedParcels] = await Promise.all([
+          getCachedData("field_observations", cacheKey),
+          getCachedData("expert_parcels", cacheKey),
+        ]);
+        if (cachedObs) setObservations(cachedObs as FieldObservation[]);
+        if (cachedParcels) setParcels(cachedParcels as ExpertParcel[]);
+      }
+    } else {
+      const [cachedObs, cachedParcels] = await Promise.all([
+        getCachedData("field_observations", cacheKey),
+        getCachedData("expert_parcels", cacheKey),
+      ]);
+      if (cachedObs) setObservations(cachedObs as FieldObservation[]);
+      if (cachedParcels) setParcels(cachedParcels as ExpertParcel[]);
+    }
     setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ─── Trigger Tile Pre-caching for Parcels ───
+  const startTileDownload = async () => {
+    if (!navigator.onLine) {
+      toast.error("Une connexion internet active est requise pour pré-télécharger les fonds de carte.");
+      return;
+    }
+
+    // Determine coordinates to cover
+    let coordsToCover: Coordinate[] = [];
+
+    if (downloadScope === "visible" && mapInstance.current) {
+      const bounds = mapInstance.current.getBounds();
+      coordsToCover = [
+        { lat: bounds.getSouth(), lng: bounds.getWest() },
+        { lat: bounds.getNorth(), lng: bounds.getEast() },
+      ];
+    } else if (downloadScope === "selected" || (downloadTargetParcelId && downloadTargetParcelId !== "all")) {
+      const targetId = downloadTargetParcelId !== "all" ? downloadTargetParcelId : selectedParcel;
+      const target = parcels.find(p => p.id === targetId);
+      if (target?.geometry?.coordinates?.[0]) {
+        coordsToCover = target.geometry.coordinates[0].map((c: number[]) => ({ lat: c[1], lng: c[0] }));
+      } else if (target?.center_lat && target?.center_lng) {
+        coordsToCover = [{ lat: Number(target.center_lat), lng: Number(target.center_lng) }];
+      }
+    } else {
+      // "all" assigned parcels
+      parcels.forEach(p => {
+        if (p.geometry?.coordinates?.[0]) {
+          p.geometry.coordinates[0].forEach((c: number[]) => {
+            coordsToCover.push({ lat: c[1], lng: c[0] });
+          });
+        } else if (p.center_lat && p.center_lng) {
+          coordsToCover.push({ lat: Number(p.center_lat), lng: Number(p.center_lng) });
+        }
+      });
+      // also include observations
+      observations.forEach(obs => {
+        coordsToCover.push({ lat: Number(obs.latitude), lng: Number(obs.longitude) });
+      });
+    }
+
+    if (coordsToCover.length === 0) {
+      if (polygonPoints.length > 0) {
+        coordsToCover = polygonPoints;
+      } else if (mapInstance.current) {
+        const center = mapInstance.current.getCenter();
+        coordsToCover = [{ lat: center.lat, lng: center.lng }];
+      }
+    }
+
+    const bbox = getBBoxFromCoordinates(coordsToCover, 0.008); // ~800m de marge
+    // Calculate tile URLs
+    const urls = computeTilesForBBox(bbox, DEFAULT_OFFLINE_ZOOMS);
+
+    if (urls.length === 0) {
+      toast.info("Aucune tuile nécessaire pour cette sélection.");
+      return;
+    }
+
+    setDownloading(true);
+    abortControllerRef.current = new AbortController();
+
+    try {
+      toast.loading(`Téléchargement de ${urls.length} tuiles en cours...`, { id: "tile-download" });
+      const result = await downloadMapTiles(
+        urls,
+        (progress) => setDownloadProgress(progress),
+        abortControllerRef.current.signal
+      );
+
+      toast.success(
+        `Zone cartographique téléchargée ! ${result.completed} tuiles stockées pour consultation hors-ligne.`,
+        { id: "tile-download" }
+      );
+      await refreshCachedCount();
+    } catch (err: any) {
+      if (err.name === "AbortError" || err.message === "Download aborted") {
+        toast.info("Téléchargement de la carte interrompu.", { id: "tile-download" });
+      } else {
+        toast.error("Erreur lors de la mise en cache de la carte: " + (err.message || "Erreur réseau"), {
+          id: "tile-download",
+        });
+      }
+    } finally {
+      setDownloading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const cancelTileDownload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  };
 
   // ─── Initialize Map ───
   useEffect(() => {
@@ -404,45 +572,72 @@ const ExpertCartographyPage = () => {
       {/* ─── Toolbar ─── */}
       <Card className="shadow-sm">
         <CardContent className="pt-4 pb-3">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={drawingMode === "polygon" ? "default" : "outline"}
-              onClick={() => { setDrawingMode(drawingMode === "polygon" ? "none" : "polygon"); setPolygonPoints([]); }}
-            >
-              <Layers className="h-4 w-4 mr-1" /> Mesurer un champ (4 coins)
-            </Button>
-            <Button
-              size="sm"
-              variant={drawingMode === "marker" ? "default" : "outline"}
-              onClick={() => setDrawingMode(drawingMode === "marker" ? "none" : "marker")}
-            >
-              <Target className="h-4 w-4 mr-1" /> Placer observation
-            </Button>
-            <div className="border-l border-border mx-1" />
-            {drawingMode === "polygon" && (
-              <Button size="sm" onClick={captureGPSPoint} disabled={polygonPoints.length >= MAX_POINTS}>
-                <Navigation className="h-4 w-4 mr-1" />
-                {polygonPoints.length >= MAX_POINTS ? "4 coins enregistrés" : `Je suis au ${CORNER_LABELS[polygonPoints.length]}`}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              <Button
+                size="sm"
+                variant={drawingMode === "polygon" ? "default" : "outline"}
+                onClick={() => { setDrawingMode(drawingMode === "polygon" ? "none" : "polygon"); setPolygonPoints([]); }}
+              >
+                <Layers className="h-4 w-4 mr-1" /> Mesurer un champ (4 coins)
               </Button>
-            )}
-            {drawingMode === "marker" && (
-              <Button size="sm" variant="outline" onClick={captureGPSPoint}>
-                <Navigation className="h-4 w-4 mr-1" /> Ma position
+              <Button
+                size="sm"
+                variant={drawingMode === "marker" ? "default" : "outline"}
+                onClick={() => setDrawingMode(drawingMode === "marker" ? "none" : "marker")}
+              >
+                <Target className="h-4 w-4 mr-1" /> Placer observation
               </Button>
-            )}
-            {polygonPoints.length > 0 && (
-              <>
-                <Button size="sm" variant="ghost" onClick={() => setPolygonPoints([])}>
-                  <RotateCcw className="h-4 w-4 mr-1" /> Effacer
+              <div className="border-l border-border mx-1 h-6" />
+              {drawingMode === "polygon" && (
+                <Button size="sm" onClick={captureGPSPoint} disabled={polygonPoints.length >= MAX_POINTS}>
+                  <Navigation className="h-4 w-4 mr-1" />
+                  {polygonPoints.length >= MAX_POINTS ? "4 coins enregistrés" : `Je suis au ${CORNER_LABELS[polygonPoints.length]}`}
                 </Button>
-                {polygonPoints.length >= 3 && (
-                  <Button size="sm" variant="secondary" onClick={() => setShowParcelDialog(true)}>
-                    <Save className="h-4 w-4 mr-1" /> Enregistrer ({areaHa} ha)
+              )}
+              {drawingMode === "marker" && (
+                <Button size="sm" variant="outline" onClick={captureGPSPoint}>
+                  <Navigation className="h-4 w-4 mr-1" /> Ma position
+                </Button>
+              )}
+              {polygonPoints.length > 0 && (
+                <>
+                  <Button size="sm" variant="ghost" onClick={() => setPolygonPoints([])}>
+                    <RotateCcw className="h-4 w-4 mr-1" /> Effacer
                   </Button>
-                )}
-              </>
-            )}
+                  {polygonPoints.length >= 3 && (
+                    <Button size="sm" variant="secondary" onClick={() => setShowParcelDialog(true)}>
+                      <Save className="h-4 w-4 mr-1" /> Enregistrer ({areaHa} ha)
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Offline Caching Actions */}
+            <div className="flex items-center gap-2">
+              {!isOnline && (
+                <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
+                  <WifiOff className="h-3 w-3" /> Hors-ligne
+                </Badge>
+              )}
+              {cachedTileCount > 0 && (
+                <Badge variant="secondary" className="text-xs gap-1 hidden sm:inline-flex">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600" /> {cachedTileCount} tuiles en cache
+                </Badge>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => setShowDownloadDialog(true)}
+                data-testid="download-map-area-btn"
+                title="Download Map Area for offline use"
+              >
+                <HardDriveDownload className="h-4 w-4" />
+                <span>Download Map Area</span>
+              </Button>
+            </div>
           </div>
           {drawingMode === "polygon" && (
             <div className="mt-2 space-y-2">
@@ -497,9 +692,26 @@ const ExpertCartographyPage = () => {
                           {p.client_name && ` · ${p.client_name}`}
                         </p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); deleteParcel(p.id); }}>
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-primary hover:text-primary hover:bg-primary/10"
+                          title="Télécharger cette parcelle hors-ligne"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedParcel(p.id);
+                            setDownloadScope("selected");
+                            setDownloadTargetParcelId(p.id);
+                            setShowDownloadDialog(true);
+                          }}
+                        >
+                          <HardDriveDownload className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); deleteParcel(p.id); }}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -652,6 +864,123 @@ const ExpertCartographyPage = () => {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      {/* ─── Download Map Area Dialog ─── */}
+      <Dialog open={showDownloadDialog} onOpenChange={setShowDownloadDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading flex items-center gap-2">
+              <HardDriveDownload className="h-5 w-5 text-primary" /> Télécharger la zone cartographique
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Pré-mettez en cache les tuiles satellite haute résolution et le réseau routier pour permettre aux éclaireurs de terrain d'inspecter et de positionner les points GPS même en zone blanche sans connexion internet.
+            </p>
+
+            <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between font-medium">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> État du cache local
+                </span>
+                <span className="font-mono text-primary font-semibold">{cachedTileCount} tuiles</span>
+              </div>
+              <p className="text-muted-foreground">
+                Les fonds de carte sont conservés dans le stockage local de l'appareil et réutilisés instantanément lors des interventions terrain.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Périmètre à télécharger</Label>
+              <Select
+                value={downloadTargetParcelId}
+                onValueChange={(val) => {
+                  setDownloadTargetParcelId(val);
+                  setDownloadScope(val === "all" ? "all" : val === "visible" ? "visible" : "selected");
+                }}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder="Sélectionner le périmètre" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    Toutes les parcelles assignées ({parcels.length} parcelles)
+                  </SelectItem>
+                  {mapInstance.current && (
+                    <SelectItem value="visible">
+                      Zone actuellement visible à l'écran
+                    </SelectItem>
+                  )}
+                  {parcels.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} {p.area_ha ? `(${p.area_ha} ha)` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Download Progress */}
+            {downloading && downloadProgress && (
+              <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
+                <div className="flex items-center justify-between text-xs font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                    Téléchargement des tuiles...
+                  </span>
+                  <span className="font-mono">{downloadProgress.percent}%</span>
+                </div>
+                <Progress value={downloadProgress.percent} className="h-2" />
+                <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <span>{downloadProgress.completed} / {downloadProgress.total} tuiles</span>
+                  {downloadProgress.failed > 0 && (
+                    <span className="text-amber-600">{downloadProgress.failed} ignorées</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 pt-2">
+              {downloading ? (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="w-full"
+                  onClick={cancelTileDownload}
+                >
+                  Annuler le téléchargement
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setShowDownloadDialog(false)}
+                  >
+                    Fermer
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 gap-2"
+                    onClick={startTileDownload}
+                    disabled={!isOnline}
+                    data-testid="confirm-download-map-area"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Map Area
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {!isOnline && (
+              <p className="text-[11px] text-destructive text-center">
+                Connexion hors-ligne : reconnectez-vous au réseau pour télécharger de nouveaux fonds de carte.
+              </p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

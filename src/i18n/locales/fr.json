@@ -57,7 +57,7 @@
     "harvests": "Récoltes & Lots",
     "calendar": "Calendrier",
     "workers": "Main d'œuvre",
-    "equipment": "Équipements",
+    "equipment": "Mécanisation & Matériel",
     "costs": "Coûts",
     "investment": "Investissement",
     "analytics": "Analyse",
@@ -87,6 +87,9 @@
     "scouting": "Scouting terrain",
     "gpsMapping": "Cartographie GPS",
     "statistics": "Statistiques",
-    "education": "Formations"
+    "education": "Formations",
+    "providerSubscription": "Abonnement Entreprise",
+    "myOffers": "Mes offres & Ventes",
+    "equipmentFleet": "Parc matériel & Location"
   }
 }

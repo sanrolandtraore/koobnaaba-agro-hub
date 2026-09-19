@@ -53,7 +53,7 @@ export default function InterventionsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user]);
+  useEffect(() => { load();   }, [user]);
 
   const reset = () => {
     setMissionId(missions[0]?.id ?? ""); setDate(new Date().toISOString().slice(0, 10));

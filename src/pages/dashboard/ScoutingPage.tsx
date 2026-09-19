@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,11 +14,19 @@ import { toast } from "sonner";
 import {
   Plus, MapPin, Camera, FileText, Eye, Trash2, Loader2, Leaf,
   AlertTriangle, Bug, Droplets, Sun, ThermometerSun, Search, Send,
-  Download, ChevronDown, ChevronUp, Clock, CheckCircle2,
+  Download, ChevronDown, ChevronUp, Clock, CheckCircle2, Wifi, WifiOff, CloudOff,
+  Navigation,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import AgronomicPlansGenerator from "@/components/AgronomicPlansGenerator";
+import {
+  cacheData,
+  getCachedData,
+  addToSyncQueue,
+  applyOptimisticInsert,
+  applyOptimisticDelete,
+} from "@/lib/offlineDb";
 
 type ScoutingSession = {
   id: string;
@@ -39,6 +47,7 @@ type ScoutingSession = {
   report_shared_to: string[] | null;
   created_at: string;
   updated_at: string;
+  _offline?: boolean;
 };
 
 const GROWTH_STAGES = ["Germination", "Levée", "Tallage", "Montaison", "Floraison", "Fructification", "Maturation", "Récolte"];
@@ -85,28 +94,82 @@ export default function ScoutingPage() {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Monitor connectivity
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   const fetchSessions = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("scouting_sessions")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("visit_date", { ascending: false });
-    if (error) toast.error("Erreur chargement sessions");
-    else setSessions((data as ScoutingSession[]) || []);
+
+    const cacheKey = `user-${user.id}`;
+    if (navigator.onLine) {
+      try {
+        const { data, error } = await supabase
+          .from("scouting_sessions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("visit_date", { ascending: false });
+
+        if (error) throw error;
+        const list = (data as ScoutingSession[]) || [];
+        setSessions(list);
+        await cacheData("scouting_sessions", cacheKey, list);
+      } catch (err: any) {
+        console.warn("Erreur réseau scouting, repli sur le cache local:", err);
+        const cached = await getCachedData("scouting_sessions", cacheKey);
+        if (cached) {
+          setSessions(cached as ScoutingSession[]);
+          toast.info("Rapports chargés depuis la mémoire locale (hors-ligne).");
+        } else {
+          toast.error("Impossible de charger les sessions.");
+        }
+      }
+    } else {
+      const cached = await getCachedData("scouting_sessions", cacheKey);
+      if (cached) {
+        setSessions(cached as ScoutingSession[]);
+      } else {
+        toast.info("Mode hors-ligne : Aucun rapport en cache local.");
+      }
+    }
     setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchSessions(); }, [fetchSessions]);
 
+  // Refetch when background sync completes
+  useEffect(() => {
+    const onSynced = () => { fetchSessions(); };
+    window.addEventListener("koobnaaba:sync-completed", onSynced);
+    return () => window.removeEventListener("koobnaaba:sync-completed", onSynced);
+  }, [fetchSessions]);
+
   const captureGPS = () => {
-    if (!navigator.geolocation) { toast.error("GPS non disponible"); return; }
+    if (!navigator.geolocation) { toast.error("GPS non disponible sur cet appareil"); return; }
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGpsLoading(false); toast.success("Position GPS capturée"); },
-      () => { setGpsLoading(false); toast.error("Impossible d'obtenir la position"); },
-      { enableHighAccuracy: true, timeout: 15000 }
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsLoading(false);
+        toast.success(`Position GPS acquise : ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`);
+      },
+      (err) => {
+        setGpsLoading(false);
+        // Even without satellite lock, give fallback tip
+        toast.error(`Erreur GPS (${err.message}). Vérifiez l'activation de la localisation.`);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
   };
 
@@ -129,6 +192,8 @@ export default function ScoutingPage() {
     if (!user) return;
     if (!form.client_name || !form.parcel_name) { toast.error("Nom du client et parcelle requis"); return; }
     setSaving(true);
+    const cacheKey = `user-${user.id}`;
+
     const payload = {
       user_id: user.id,
       client_name: form.client_name,
@@ -144,14 +209,70 @@ export default function ScoutingPage() {
       latitude: coords?.lat ?? null,
       longitude: coords?.lng ?? null,
     };
-    const { error } = await supabase.from("scouting_sessions").insert(payload as any);
-    if (error) toast.error("Erreur sauvegarde");
-    else { toast.success("Session enregistrée"); setShowForm(false); resetForm(); fetchSessions(); }
+
+    if (navigator.onLine) {
+      try {
+        const { data, error } = await supabase.from("scouting_sessions").insert(payload as any).select();
+        if (error) throw error;
+        toast.success("Rapport de scouting enregistré et synchronisé !");
+        setShowForm(false);
+        resetForm();
+        fetchSessions();
+      } catch (err: any) {
+        console.warn("Échec de synchronisation en ligne, mise en file d'attente hors-ligne:", err);
+        // Fallback to offline insert
+        const tempId = `offline-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const offlineRow: ScoutingSession = {
+          ...payload,
+          id: tempId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          report_shared_to: null,
+          photo_urls: null,
+          _offline: true,
+        };
+        await addToSyncQueue({ table: "scouting_sessions", operation: "insert", data: offlineRow });
+        await applyOptimisticInsert("scouting_sessions", cacheKey, offlineRow);
+        setSessions(prev => [offlineRow, ...prev]);
+        toast.info("Réseau instable : Rapport sauvegardé localement, synchronisation en attente.");
+        setShowForm(false);
+        resetForm();
+      }
+    } else {
+      // Offline mode
+      const tempId = `offline-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const offlineRow: ScoutingSession = {
+        ...payload,
+        id: tempId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        report_shared_to: null,
+        photo_urls: null,
+        _offline: true,
+      };
+      await addToSyncQueue({ table: "scouting_sessions", operation: "insert", data: offlineRow });
+      await applyOptimisticInsert("scouting_sessions", cacheKey, offlineRow);
+      setSessions(prev => [offlineRow, ...prev]);
+      toast.success("Mode hors-ligne : Rapport & géolocalisation enregistrés avec succès dans la base locale !");
+      setShowForm(false);
+      resetForm();
+    }
+
     setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette session ?")) return;
+    const cacheKey = user ? `user-${user.id}` : "";
+
+    if (id.startsWith("offline-") || !navigator.onLine) {
+      await addToSyncQueue({ table: "scouting_sessions", operation: "delete", data: { id } });
+      await applyOptimisticDelete("scouting_sessions", cacheKey, id);
+      setSessions(prev => prev.filter(s => s.id !== id));
+      toast.success("Session supprimée du cache local.");
+      return;
+    }
+
     const { error } = await supabase.from("scouting_sessions").delete().eq("id", id);
     if (error) toast.error("Erreur suppression");
     else { toast.success("Session supprimée"); fetchSessions(); }
@@ -254,13 +375,27 @@ export default function ScoutingPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Eye className="h-6 w-6 text-primary" /> Scouting Agricole
+            {!isOnline && (
+              <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1 ml-2">
+                <WifiOff className="h-3 w-3" /> Hors-ligne
+              </Badge>
+            )}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">Inspections terrain et suivi des fermes clientes</p>
+          <p className="text-muted-foreground text-sm mt-1">Inspections terrain et suivi des parcelles géolocalisées</p>
         </div>
         <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2">
           <Plus className="h-4 w-4" /> Nouvelle inspection
         </Button>
       </div>
+
+      {!isOnline && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-300">
+          <WifiOff className="h-4 w-4 shrink-0" />
+          <div className="flex-1">
+            <strong>Mode terrain autonome activé :</strong> Vous pouvez créer des fiches de scouting avec relevé GPS hors-ligne. Vos données sont conservées localement dans IndexedDB et seront synchronisées dès que la connexion sera rétablie.
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative max-w-md">
@@ -308,11 +443,20 @@ export default function ScoutingPage() {
                       <span className="font-semibold truncate">{s.client_name || "Client"}</span>
                       <Badge variant="outline" className="text-xs">{s.parcel_name || "Parcelle"}</Badge>
                       {s.general_condition && <Badge variant={conditionColor(s.general_condition)} className="text-xs">{s.general_condition}</Badge>}
+                      {(s._offline || s.id.startsWith("offline-")) && (
+                        <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
+                          <CloudOff className="h-3 w-3" /> En attente de synchronisation
+                        </Badge>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(s.visit_date).toLocaleDateString("fr-FR")}</span>
                       {s.crop_type && <span className="flex items-center gap-1"><Leaf className="h-3 w-3" />{s.crop_type}</span>}
-                      {s.latitude && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />GPS</span>}
+                      {s.latitude && s.longitude ? (
+                        <span className="flex items-center gap-1 text-primary font-mono text-[11px]">
+                          <MapPin className="h-3 w-3" />{s.latitude.toFixed(4)}, {s.longitude.toFixed(4)}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -374,13 +518,62 @@ export default function ScoutingPage() {
               </div>
             </div>
 
-            {/* GPS */}
-            <div className="flex items-center gap-3">
-              <Button type="button" variant="outline" onClick={captureGPS} disabled={gpsLoading} className="gap-2">
-                {gpsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-                Capturer position GPS
-              </Button>
-              {coords && <span className="text-xs text-muted-foreground">{coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}</span>}
+            {/* GPS & Géolocalisation terrain */}
+            <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-primary" /> Géolocalisation de la parcelle
+                </Label>
+                {coords && (
+                  <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                    Fix GPS actif
+                  </Badge>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="button" variant="outline" onClick={captureGPS} disabled={gpsLoading} className="gap-2">
+                  {gpsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4 text-primary" />}
+                  {coords ? "Recalibrer position GPS" : "Capturer coordonnées GPS (Hors-ligne)"}
+                </Button>
+                {coords && (
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setCoords(null)} className="text-xs text-muted-foreground">
+                    Réinitialiser
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Latitude</Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    placeholder="ex: 12.3714"
+                    value={coords?.lat ?? ""}
+                    onChange={e => {
+                      const val = parseFloat(e.target.value);
+                      setCoords(c => ({ lat: isNaN(val) ? 0 : val, lng: c?.lng ?? 0 }));
+                    }}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Longitude</Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    placeholder="ex: -1.5197"
+                    value={coords?.lng ?? ""}
+                    onChange={e => {
+                      const val = parseFloat(e.target.value);
+                      setCoords(c => ({ lat: c?.lat ?? 0, lng: isNaN(val) ? 0 : val }));
+                    }}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Fonctionne via le capteur GPS du smartphone/tablette sans connexion data internet.
+              </p>
             </div>
 
             {/* Problems */}

@@ -54,7 +54,7 @@ export default function PartnerEntriesPage({ category, title, subtitle, icon }: 
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, category]);
+  useEffect(() => { load();   }, [user, category]);
 
   const startCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
   const startEdit = (e: Entry) => {

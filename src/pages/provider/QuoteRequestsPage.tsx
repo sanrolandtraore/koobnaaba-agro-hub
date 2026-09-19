@@ -40,7 +40,7 @@ export default function QuoteRequestsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user]);
+  useEffect(() => { load();   }, [user]);
 
   const respond = async (q: Quote, status: string) => {
     const { error } = await supabase.from("quote_requests")

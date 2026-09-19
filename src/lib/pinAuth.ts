@@ -93,7 +93,9 @@ export async function verifyPin(pin: string): Promise<{ ok: boolean; record?: Pi
   try {
     const db = await getDb();
     await db.put('cachedData', { key: PIN_KEY, table: '_pin', data: [{ ...rec, lastUsedAt: Date.now() }], cachedAt: Date.now() });
-  } catch {}
+  } catch {
+    // Ignore cache update failure
+  }
   return { ok: true, record: rec };
 }
 
@@ -101,5 +103,7 @@ export async function clearPin(): Promise<void> {
   try {
     const db = await getDb();
     await db.delete('cachedData', PIN_KEY);
-  } catch {}
+  } catch {
+    // Ignore cache deletion failure
+  }
 }

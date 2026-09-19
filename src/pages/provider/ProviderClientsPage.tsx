@@ -47,7 +47,7 @@ export default function ProviderClientsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user]);
+  useEffect(() => { load();   }, [user]);
 
   const save = async () => {
     if (!user || !name.trim()) return;

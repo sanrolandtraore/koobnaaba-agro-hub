@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Koobnaaba</string>
+    <string name="app_subtitle">Gestion Agricole &amp; Élevage Intelligente</string>
+    <string name="nav_dashboard">Accueil</string>
+    <string name="nav_farms">Exploitations</string>
+    <string name="nav_parcels">Parcelles</string>
+    <string name="nav_crops">Cultures</string>
+    <string name="nav_activities">Activités</string>
+    <string name="nav_finances">Finances</string>
+    <string name="nav_livestock">Élevage</string>
+    <string name="nav_calculator">Calculateur</string>
+</resources>
