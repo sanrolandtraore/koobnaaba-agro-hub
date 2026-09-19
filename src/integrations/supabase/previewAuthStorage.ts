@@ -4,6 +4,7 @@
 // postMessage so the project's preview surfaces share one login; else localStorage.
 export function brokeredPreviewStorage() {
   if (typeof window === 'undefined') return undefined;
+  // Production deployments must never depend on Lovable's preview broker.\n  // Use native localStorage on Vercel/custom domains for reliable startup.
   const host = location.hostname;
   const PREVIEW_ZONES = ['lovableproject.com', 'lovableproject-dev.com', 'lovable.app', 'gpt-eng.com', 'gptengineer.run'];
   const onPreviewZone = PREVIEW_ZONES.some((z) => host === z || host.endsWith('.' + z));
