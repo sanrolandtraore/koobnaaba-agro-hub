@@ -7,7 +7,6 @@
     <meta name="description" content="Plateforme de gestion agricole pour l&#39;Afrique. Gérez vos exploitations, élevage,cultures et finances.">
     <meta name="author" content="Koobnaaba" />
 
-    <!-- PWA -->
     <meta name="theme-color" content="#2d6a4f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -15,49 +14,50 @@
     <link rel="apple-touch-icon" href="/pwa-icon-192.png" />
     <link rel="icon" type="image/png" href="/pwa-icon-192.png">
 
-    <!-- OG -->
-    
-    
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5cb8d9a7-37ec-4aeb-8cf0-c3dfe3d8a9a3?Expires=1773002118&amp;GoogleAccessId=go-api-on-aws%40gpt-engineer-390607.iam.gserviceaccount.com&amp;Signature=UV9lOHL2%2FS8qYuzuxKz9DQ%2BIeEnRnGKikl6v737NUABvPGtfGzE0mCg6UsRQQbOg2T3wx52ng%2FrNZ8OYSNMevQQl0QxvyZsxhbEzOHJ%2FkvvYc3hMdAwwCK%2BaxVkqGkCkF71MSJ8JVBcQyKXNerhygffbdSY1z5cPJxxhSLmEXJg6iLyzhB4oqHT2z0beNxFGPfdGl%2Ff9ZYvFcBMU2IAiFl1ZvKsDgwYDGS0nbL2g8pZsn1%2Fb%2FdW5ogzBZMG428kv0Td%2BsOmcJ3RuWURfXHCAPrEfDEteRWJsktl9ixT8XP664e0H6hvPaA82s%2F1qUAeokHCz%2B7nlc%2F5GYNjc5lac7A%3D%3D">
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5cb8d9a7-37ec-4aeb-8cf0-c3dfe3d8a9a3?Expires=1773002118&amp;GoogleAccessId=go-api-on-aws%40gpt-engineer-390607.iam.gserviceaccount.com&amp;Signature=UV9lOHL2%2FS8qYuzuxKz9DQ%2BIeEnRnGKikl6v737NUABvPGtfGzE0mCg6UsRQQbOg2T3wx52ng%2FrNZ8OYSNMevQQl0QxvyZsxhbEzOHJ%2FkvvYc3hMdAwwCK%2BaxVkqGkCkF71MSJ8JVBcQyKXNerhygffbdSY1z5cPJxxhSLmEXJg6iLyzhB4oqHT2z0beNxFGPfdGl%2Ff9ZYvFcBMU2IAiFl1ZvKsDgwYDGS0nbL2g8pZsn1%2Fb%2FdW5ogzBZMG428kv0Td%2BsOmcJ3RuWURfXHCAPrEfDEteRWJsktl9ixT8XP664e0H6hvPaA82s%2F1qUAeokHCz%2B7nlc%2F5GYNjc5lac7A%3D%3D">
     <meta property="og:title" content="Koobnaaba - Gestion Agricole Intelligente">
-  <meta name="twitter:title" content="Koobnaaba - Gestion Agricole Intelligente">
-  <meta property="og:description" content="Plateforme de gestion agricole pour l&#39;Afrique. Gérez vos exploitations, élevage,cultures et finances.">
-  <meta name="twitter:description" content="Plateforme de gestion agricole pour l&#39;Afrique. Gérez vos exploitations, élevage,cultures et finances.">
-</head>
+    <meta property="og:description" content="Plateforme de gestion agricole pour l&#39;Afrique. Gérez vos exploitations, élevage,cultures et finances.">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Koobnaaba - Gestion Agricole Intelligente">
+    <meta name="twitter:description" content="Plateforme de gestion agricole pour l&#39;Afrique. Gérez vos exploitations, élevage,cultures et finances.">
+  </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#faf8f5;font-family:system-ui,sans-serif;color:#1f2937">
+        <div style="text-align:center;padding:24px">
+          <div style="font-size:22px;font-weight:700">KoobNaaba</div>
+          <div style="margin-top:8px;color:#6b7280">Chargement de la plateforme…</div>
+        </div>
+      </div>
+    </div>
+
     <script>
-      // Recover from stale PWA/service-worker caches after deployments.
       window.addEventListener('error', function (event) {
         console.error('KoobNaaba runtime error:', event.error || event.message);
       });
       window.addEventListener('unhandledrejection', function (event) {
         console.error('KoobNaaba unhandled rejection:', event.reason);
       });
+
+      // Immediately retire any legacy PWA service worker before the next
+      // navigation. This prevents stale HTML/JS from masking deployments.
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', async function () {
-          try {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map(function (registration) {
-              return registration.unregister();
-            }));
-            if (window.caches) {
-              const keys = await caches.keys();
-              await Promise.all(keys.map(function (key) {
-                return caches.delete(key);
-              }));
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          if (!registrations.length) return;
+          return Promise.all(registrations.map(function (registration) {
+            return registration.unregister();
+          })).then(function () {
+            if (navigator.serviceWorker.controller) {
+              window.location.reload();
             }
-          } catch (error) {
-            console.warn('KoobNaaba cache recovery skipped:', error);
-          }
+          });
+        }).catch(function (error) {
+          console.warn('KoobNaaba service-worker cleanup skipped:', error);
         });
       }
     </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
