@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import ProviderMap from "@/components/marketplace/ProviderMap";
 import {
   Search, X, MapPin, Phone, Plus, ShoppingBag, Lock, Unlock, CheckCircle,
   Clock, Loader2, XCircle, Eye, FileImage, Trash2, Package, Send, Shield,
@@ -106,6 +107,8 @@ const ServiceMarketplacePage = () => {
   const [catFilter, setCatFilter] = useState("all");
   const [searchEquip, setSearchEquip] = useState("");
   const [searchSupplier, setSearchSupplier] = useState("");
+  const [selectedMapService, setSelectedMapService] = useState<MarketService | null>(null);
+  const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
 
   const [showCreateService, setShowCreateService] = useState(false);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
@@ -138,6 +141,15 @@ const ServiceMarketplacePage = () => {
 
   useEffect(() => { if (user) fetchData(); }, [user]);
 
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setUserPosition([coords.latitude, coords.longitude]),
+      () => undefined,
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 120000 },
+    );
+  }, []);
+
   // ─── Service CRUD ───
   const handleCreateService = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,6 +158,7 @@ const ServiceMarketplacePage = () => {
       provider_id: user!.id, title: serviceForm.title, description: serviceForm.description || null,
       category: serviceForm.category, price: parseFloat(serviceForm.price), price_unit: serviceForm.price_unit,
       location_name: serviceForm.location_name || null, phone: serviceForm.phone || null,
+      latitude: userPosition?.[0] ?? null, longitude: userPosition?.[1] ?? null,
     });
     if (error) toast.error(error.message);
     else { toast.success("Service publié !"); setShowCreateService(false); setServiceForm({ title: "", description: "", category: "autre", price: "", price_unit: "forfait", location_name: "", phone: "" }); fetchData(); }
@@ -244,6 +257,9 @@ const ServiceMarketplacePage = () => {
           <TabsTrigger value="services" className="flex items-center gap-1.5">
             <ShoppingBag className="h-4 w-4" /> Services
           </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-1.5">
+            <MapPin className="h-4 w-4" /> Carte
+          </TabsTrigger>
           <TabsTrigger value="equipment" className="flex items-center gap-1.5">
             <Tractor className="h-4 w-4" /> Matériels ({equipment.length})
           </TabsTrigger>
@@ -317,6 +333,33 @@ const ServiceMarketplacePage = () => {
                 </Card>
               ))}
             </div>
+          )}
+        </TabsContent>
+
+        {/* ═══ MAP TAB ═══ */}
+        <TabsContent value="map" className="space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h2 className="text-lg font-semibold">Prestataires autour de vous</h2>
+              <p className="text-xs text-muted-foreground">La carte affiche les services dont la position GPS a été enregistrée.</p>
+            </div>
+            <Badge variant="outline" className="gap-1.5"><MapPin className="h-3.5 w-3.5" /> GPS {userPosition ? "actif" : "non disponible"}</Badge>
+          </div>
+          <ProviderMap
+            services={filteredServices.filter((s) => s.is_active && s.provider_id !== user?.id)}
+            selectedId={selectedMapService?.id}
+            onSelect={(service) => setSelectedMapService(services.find((s) => s.id === service.id) ?? null)}
+          />
+          {selectedMapService && (
+            <Card className="border-primary/20 shadow-sm">
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-semibold truncate">{selectedMapService.title}</p>
+                  <p className="text-xs text-muted-foreground">{selectedMapService.location_name ?? "Localisation GPS"} · {Number(selectedMapService.price).toLocaleString("fr-FR")} FCFA</p>
+                </div>
+                {isClient && <Button size="sm" onClick={() => { setSelectedService(selectedMapService); setShowOrderDialog(true); }}>Commander</Button>}
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
