@@ -1785,6 +1785,8 @@ export type Database = {
           images: string[] | null
           is_active: boolean
           location_name: string | null
+          latitude: number | null
+          longitude: number | null
           phone: string | null
           price: number
           price_unit: string
@@ -1800,6 +1802,8 @@ export type Database = {
           images?: string[] | null
           is_active?: boolean
           location_name?: string | null
+          latitude?: number | null
+          longitude?: number | null
           phone?: string | null
           price?: number
           price_unit?: string
