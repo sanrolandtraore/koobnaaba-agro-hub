@@ -27,24 +27,18 @@ const ALLOWED_ROLES = [...ROLES.map(r => r.value), "agent_technique"] as string[
 // Build a role-scoped internal identifier so each module can have its own account
 // even when sharing the same phone number or email inbox.
 const cleanPhone = (phone: string) => phone.replace(/[^0-9+]/g, "");
+const normalizePhone = (phone: string) => {
+  const cleaned = cleanPhone(phone);
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("00")) return "+" + cleaned.slice(2);
+  if (cleaned.length === 8) return "+226" + cleaned;
+  return cleaned;
+};
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
-const phoneToInternalId = (phone: string, role: string) => {
-  const cleaned = cleanPhone(phone);
-  const safeRole = ALLOWED_ROLES.includes(role) ? role : "agriculteur";
-  return `${safeRole}.${cleaned}@koobnaaba.local`;
-};
-
-// Namespace real emails using plus-addressing so the same inbox can register
-// several module-scoped accounts (delivery still lands in the base inbox).
-const emailToInternalId = (email: string, role: string) => {
-  const raw = email.trim().toLowerCase();
-  const safeRole = ALLOWED_ROLES.includes(role) ? role : "agriculteur";
-  const [local, domain] = raw.split("@");
-  if (!local || !domain) return raw;
-  const base = local.split("+")[0];
-  return `${base}+koobnaaba_${safeRole}@${domain}`;
-};
+// Supabase native authentication: keep phone and email identifiers intact.
+const normalizeIdentifier = (method: IdMethod, value: string) =>
+  method === "phone" ? normalizePhone(value) : value.trim().toLowerCase();
 
 type AuthMode = "login" | "register" | "forgot";
 type IdMethod = "phone" | "email";
@@ -88,13 +82,13 @@ const Auth = () => {
         toast.error("Le numéro de téléphone est requis");
         return null;
       }
-      return phoneToInternalId(phone, selectedRole);
+      return normalizePhone(phone);
     }
     if (!isValidEmail(email)) {
       toast.error("Adresse email invalide");
       return null;
     }
-    return emailToInternalId(email, selectedRole);
+    return email.trim().toLowerCase();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,7 +130,7 @@ const Auth = () => {
       let phoneForProfile = "";
       let emailForProfile = "";
       if (idMethod === "phone") {
-        phoneForProfile = cleanPhone(phone);
+        phoneForProfile = normalizePhone(phone);
         if (phoneForProfile.length < 8) {
           toast.error("Numéro de téléphone invalide");
           setLoading(false);
@@ -173,7 +167,7 @@ const Auth = () => {
       }
       setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(
-        emailToInternalId(resetEmail, selectedRole),
+        resetEmail.trim().toLowerCase(),
         { redirectTo: `${window.location.origin}/auth` }
       );
       if (error) toast.error(error.message);
@@ -196,7 +190,7 @@ const Auth = () => {
       setLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke("reset-password", {
-          body: { step: "request", identifier: cleanPhone(resetPhone), role: selectedRole },
+          body: { step: "request", identifier: normalizePhone(resetPhone), role: selectedRole },
         });
         if (error) toast.error("Erreur de connexion au serveur");
         else if (data?.error) toast.error(data.error);
@@ -272,7 +266,7 @@ const Auth = () => {
   const RolePicker = ({ compact = false }: { compact?: boolean }) => (
     <div className="space-y-2">
       <Label className="text-sm font-semibold">
-        {mode === "login" ? "Choisissez le module à ouvrir" : "Votre profil"}
+        {mode === "login" ? "Choisissez votre profil" : "Votre profil"}
       </Label>
       <div className={cn("grid gap-2", compact ? "grid-cols-3 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-3")}>
         {ROLES.map(({ value, label, icon: Icon, desc }) => (
@@ -307,7 +301,7 @@ const Auth = () => {
                 {hasCachedCreds ? "Mode hors-ligne — connectez-vous avec vos identifiants enregistrés" : "Pas de connexion internet"}
               </span>
             ) : mode === "login"
-              ? "Chaque module a son propre compte. Sélectionnez-le puis connectez-vous."
+              ? "Connectez-vous avec votre email ou votre numéro de téléphone."
               : mode === "register"
               ? "Créez un compte dédié à votre module."
               : "Sélectionnez le module concerné pour réinitialiser son mot de passe"}
