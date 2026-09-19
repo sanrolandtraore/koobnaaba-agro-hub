@@ -1,6 +1,4 @@
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import "./i18n";
 
 const root = document.getElementById("root");
 
@@ -19,12 +17,18 @@ function showFatalError(error: unknown) {
   console.error("KoobNaaba bootstrap error:", error);
 }
 
-if (!root) {
-  console.error("KoobNaaba: #root introuvable");
-} else {
-  import("./App")
-    .then(({ default: App }) => {
-      createRoot(root).render(<App />);
-    })
-    .catch(showFatalError);
+async function bootstrap() {
+  if (!root) {
+    throw new Error("KoobNaaba: #root introuvable");
+  }
+
+  // Keep every application import behind the fatal-error guard. A broken CSS,
+  // i18n, or App module must never result in an unexplained white screen.
+  await import("./index.css");
+  await import("./i18n");
+
+  const { default: App } = await import("./App");
+  createRoot(root).render(<App />);
 }
+
+bootstrap().catch(showFatalError);
