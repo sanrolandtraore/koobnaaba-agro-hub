@@ -181,29 +181,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
+  const signUp = async (identifier: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
     const safeRole = role && ['agriculteur', 'eleveur', 'formation', 'partenaire', 'agent_technique'].includes(role) ? role : 'agriculteur';
-    const { error } = await supabase.auth.signUp({
-      email,
+    const normalizedPhone = phone?.trim() || (identifier.trim().startsWith("+") || /^\d{8,15}$/.test(identifier.trim()) ? identifier.trim() : "");
+    const normalizedEmail = realEmail?.trim().toLowerCase() || (identifier.includes("@") ? identifier.trim().toLowerCase() : "");
+
+    const payload = {
       password,
       options: {
         data: {
           full_name: fullName,
           role: safeRole,
-          phone: phone || "",
-          real_email: realEmail || "",
+          phone: normalizedPhone,
+          real_email: normalizedEmail,
         },
         emailRedirectTo: window.location.origin,
       },
-    });
-    return { error };
+    };
+
+    const result = normalizedPhone
+      ? await supabase.auth.signUp({ phone: normalizedPhone, ...payload })
+      : await supabase.auth.signUp({ email: normalizedEmail, ...payload });
+
+    return { error: result.error };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (identifier: string, password: string) => {
+    const value = identifier.trim();
+    const isPhone = value.startsWith("+") || /^\d{8,15}$/.test(value);
+    const normalizedPhone = isPhone && !value.startsWith("+") && value.length === 8 ? "+226" + value : value;
+
+    const { error } = isPhone
+      ? await supabase.auth.signInWithPassword({ phone: normalizedPhone, password })
+      : await supabase.auth.signInWithPassword({ email: value.toLowerCase(), password });
+
     if (!error) {
-      // Cache credentials for offline login
-      await saveOfflineCredentials(email, password);
+      await saveOfflineCredentials(isPhone ? normalizedPhone : value.toLowerCase(), password);
     }
     return { error };
   };
