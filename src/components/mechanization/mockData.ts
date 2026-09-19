@@ -99,6 +99,9 @@ export const MECH_MACHINES: MechanizationMachine[] = [
     rating: 4.9,
     completedJobs: 84,
     fuelType: "diesel",
+    transmission: "Boîte mécanique 8x2 synchronisée",
+    engineHours: 1240,
+    imageUrl: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80",
     implementsIncluded: ["Charrue 3 disques", "Herse rotative 24 disques", "Semoir 4 rangs"],
   },
   {
@@ -119,6 +122,9 @@ export const MECH_MACHINES: MechanizationMachine[] = [
     rating: 4.95,
     completedJobs: 112,
     fuelType: "diesel",
+    transmission: "PowrReverser 12x12 hydraulique",
+    engineHours: 850,
+    imageUrl: "https://images.unsplash.com/photo-1594771804886-a933bb2d609b?auto=format&fit=crop&w=800&q=80",
     implementsIncluded: ["Charrue à disques renforcée", "Sous-soleuse 2 dents", "Remorque 6T"],
   },
   {
@@ -138,6 +144,9 @@ export const MECH_MACHINES: MechanizationMachine[] = [
     rating: 5.0,
     completedJobs: 67,
     fuelType: "electrique_batterie",
+    transmission: "Propulsion coaxiale octocoptère",
+    engineHours: 320,
+    imageUrl: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?auto=format&fit=crop&w=800&q=80",
     implementsIncluded: ["Générateur rapide essence", "Batteries intelligentes x4", "Centrale RTK centimétrique"],
   },
   {
@@ -157,6 +166,9 @@ export const MECH_MACHINES: MechanizationMachine[] = [
     rating: 4.85,
     completedJobs: 92,
     fuelType: "diesel",
+    transmission: "Hydrostatique continue 3 gammes",
+    engineHours: 1950,
+    imageUrl: "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80",
     implementsIncluded: ["Table de coupe riz 3.6m", "Cueilleur maïs 4 rangs", "Broyeur de paille"],
   },
   {
@@ -177,6 +189,9 @@ export const MECH_MACHINES: MechanizationMachine[] = [
     rating: 4.9,
     completedJobs: 73,
     fuelType: "diesel",
+    transmission: "Synchro Shuttle 15x15",
+    engineHours: 640,
+    imageUrl: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80",
     implementsIncluded: ["Charrue 4 disques", "Semoir pneumatique", "Gyrobroyeur"],
   },
   {
@@ -197,6 +212,9 @@ export const MECH_MACHINES: MechanizationMachine[] = [
     rating: 4.75,
     completedJobs: 45,
     fuelType: "diesel",
+    transmission: "Mécanique 6 avant / 2 arrière",
+    engineHours: 410,
+    imageUrl: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80",
     implementsIncluded: ["Fraise rotative arrière", "Charrue brabant", "Petite remorque 1T"],
   },
 ];

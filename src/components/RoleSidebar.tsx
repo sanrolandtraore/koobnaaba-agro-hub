@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/logo.png";
@@ -6,11 +7,13 @@ import {
   GraduationCap, Sprout, LayoutDashboard, MapPin, Wheat, Activity, DollarSign, LogOut, User, Calculator,
   Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Tractor,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
-  FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
+  FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles, Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
+import { getSupabaseConfig } from "@/integrations/supabase/client";
+import { BackendConnectionModal } from "@/components/BackendConnectionModal";
 
 export type NavItem = { to: string; labelKey: string; icon: React.ElementType };
 

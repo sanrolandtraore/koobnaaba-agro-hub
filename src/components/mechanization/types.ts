@@ -29,6 +29,9 @@ export interface MechanizationMachine {
   completedJobs: number;
   fuelType: "diesel" | "electrique_batterie";
   implementsIncluded: string[];
+  imageUrl?: string;
+  engineHours?: number;
+  transmission?: string;
 }
 
 export interface MechanizationJob {

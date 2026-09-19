@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +54,7 @@ export const MechBookingModal = ({
   onJobCreated,
   userParcels = [],
 }: MechBookingModalProps) => {
+  const { user } = useAuth();
   const [parcelName, setParcelName] = useState(
     userParcels.length > 0 ? userParcels[0].name : "Parcelle Principale"
   );
@@ -76,40 +79,56 @@ export const MechBookingModal = ({
     initialData?.service?.name ||
     (initialData?.machine ? `Prestation ${initialData.machine.title}` : "Labour standard & Hersage");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const selectedAgent = FIELD_AGENTS.find((a) => a.id === selectedAgentId) || FIELD_AGENTS[0];
-      const matchedMachine = MECH_MACHINES.find((m) => m.id === operatorPreference);
+    const selectedAgent = FIELD_AGENTS.find((a) => a.id === selectedAgentId) || FIELD_AGENTS[0];
+    const matchedMachine = MECH_MACHINES.find((m) => m.id === operatorPreference);
 
-      const newJob: MechanizationJob = {
-        id: `JOB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-        serviceType: serviceTitle,
-        parcelName: `${parcelName} (${areaHa} ha)`,
-        areaHa,
-        totalCost: computedTotalCost,
-        depositAmount: computedDeposit,
-        paymentMethod,
-        escrowStatus: "acompte_bloque",
-        jobStatus: "demande_recue",
-        operatorName: matchedMachine
-          ? `${matchedMachine.verifiedPartner} (${matchedMachine.title})`
-          : "Opérateur Certifié KoobNaaba le plus proche",
-        operatorPhone: "+226 70 88 99 00",
-        fieldAgentName: `${selectedAgent.name} (Agent Relais)`,
-        fieldAgentPhone: selectedAgent.phone,
-        scheduledDate: `Prévu pour le ${new Date(scheduledDate).toLocaleDateString("fr-FR")}`,
-        machineName: matchedMachine ? matchedMachine.brandModel : "Tracteur 75CV / Matériel homologué",
-        notes: notes || "Accès parcelle libre, point d'eau à proximité.",
-      };
+    const newJob: MechanizationJob = {
+      id: `JOB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      serviceType: serviceTitle,
+      parcelName: `${parcelName} (${areaHa} ha)`,
+      areaHa,
+      totalCost: computedTotalCost,
+      depositAmount: computedDeposit,
+      paymentMethod,
+      escrowStatus: "acompte_bloque",
+      jobStatus: "demande_recue",
+      operatorName: matchedMachine
+        ? `${matchedMachine.verifiedPartner} (${matchedMachine.title})`
+        : "Opérateur Certifié KoobNaaba le plus proche",
+      operatorPhone: "+226 70 88 99 00",
+      fieldAgentName: `${selectedAgent.name} (Agent Relais)`,
+      fieldAgentPhone: selectedAgent.phone,
+      scheduledDate: `Prévu pour le ${new Date(scheduledDate).toLocaleDateString("fr-FR")}`,
+      machineName: matchedMachine ? matchedMachine.brandModel : "Tracteur 75CV / Matériel homologué",
+      notes: notes || "Accès parcelle libre, point d'eau à proximité.",
+    };
 
-      onJobCreated(newJob);
-      setIsSubmitting(false);
-      toast.success("Demande de mécanisation validée avec succès !");
-      onOpenChange(false);
-    }, 600);
+    // If user is connected to Supabase, push the booking directly into service_requests table as well
+    if (user?.id) {
+      try {
+        await supabase.from("service_requests").insert({
+          user_id: user.id,
+          service_type: "mecanisation",
+          description: `${serviceTitle} sur ${parcelName} (${areaHa} ha). Acompte séquestre: ${computedDeposit} FCFA. Paiement: ${paymentMethod}. Consignes: ${notes || "R.A.S."}`,
+          phone: farmerPhone,
+          preferred_date: scheduledDate,
+          location: parcelName,
+          estimated_cost: computedTotalCost,
+          status: "en_attente",
+        });
+      } catch (err) {
+        console.warn("Could not insert service_request in Supabase:", err);
+      }
+    }
+
+    onJobCreated(newJob);
+    setIsSubmitting(false);
+    toast.success("Demande de mécanisation enregistrée avec succès !");
+    onOpenChange(false);
   };
 
   return (

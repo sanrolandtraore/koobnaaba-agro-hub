@@ -569,89 +569,125 @@ const ExpertCartographyPage = () => {
         </p>
       </div>
 
-      {/* ─── Toolbar ─── */}
-      <Card className="shadow-sm">
-        <CardContent className="pt-4 pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-2 items-center">
+      {/* ─── Field-Ready Cartography Toolbar (MechAfrica Standard) ─── */}
+      <Card className="shadow-md border-stone-200 dark:border-stone-800 bg-card overflow-hidden">
+        <div className="bg-gradient-to-r from-stone-900 to-stone-950 px-4 py-2.5 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge className="bg-amber-400 text-stone-950 font-black text-[10px] tracking-wider uppercase px-2 py-0.5 rounded">
+              GPS TERRAIN
+            </Badge>
+            <span className="text-xs font-semibold text-stone-300">Arpentage haute précision & Cartographie hors-ligne</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {!isOnline ? (
+              <Badge variant="outline" className="text-xs bg-amber-500/20 text-amber-300 border-amber-400/50 gap-1 font-bold">
+                <WifiOff className="h-3.5 w-3.5" /> Hors-ligne
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs bg-emerald-500/20 text-emerald-300 border-emerald-400/50 gap-1 font-semibold">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                GPS / Réseau Actif
+              </Badge>
+            )}
+            {cachedTileCount > 0 && (
+              <Badge variant="secondary" className="text-xs gap-1 hidden sm:inline-flex bg-stone-800 text-stone-200 border border-stone-700">
+                <CheckCircle2 className="h-3 w-3 text-emerald-400" /> {cachedTileCount} tuiles stockées
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <CardContent className="pt-4 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2.5 items-center">
               <Button
                 size="sm"
                 variant={drawingMode === "polygon" ? "default" : "outline"}
                 onClick={() => { setDrawingMode(drawingMode === "polygon" ? "none" : "polygon"); setPolygonPoints([]); }}
+                className={`h-10 px-4 rounded-xl text-xs font-bold gap-2 ${
+                  drawingMode === "polygon" ? "bg-amber-500 hover:bg-amber-600 text-stone-950 shadow-md" : "border-stone-300 dark:border-stone-700"
+                }`}
               >
-                <Layers className="h-4 w-4 mr-1" /> Mesurer un champ (4 coins)
+                <Layers className="h-4 w-4" /> Arpenter un champ (4 coins GPS)
               </Button>
               <Button
                 size="sm"
                 variant={drawingMode === "marker" ? "default" : "outline"}
                 onClick={() => setDrawingMode(drawingMode === "marker" ? "none" : "marker")}
+                className="h-10 px-4 rounded-xl text-xs font-semibold gap-2 border-stone-300 dark:border-stone-700"
               >
-                <Target className="h-4 w-4 mr-1" /> Placer observation
+                <Target className="h-4 w-4" /> Poser observation
               </Button>
-              <div className="border-l border-border mx-1 h-6" />
+
+              <div className="hidden sm:block border-l border-border mx-1 h-7" />
+
               {drawingMode === "polygon" && (
-                <Button size="sm" onClick={captureGPSPoint} disabled={polygonPoints.length >= MAX_POINTS}>
-                  <Navigation className="h-4 w-4 mr-1" />
-                  {polygonPoints.length >= MAX_POINTS ? "4 coins enregistrés" : `Je suis au ${CORNER_LABELS[polygonPoints.length]}`}
+                <Button
+                  size="sm"
+                  onClick={captureGPSPoint}
+                  disabled={polygonPoints.length >= MAX_POINTS}
+                  className="h-10 px-4 rounded-xl text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md gap-2"
+                >
+                  <Navigation className="h-4 w-4" />
+                  {polygonPoints.length >= MAX_POINTS ? "4 coins validés" : `Enregistrer le ${CORNER_LABELS[polygonPoints.length]}`}
                 </Button>
               )}
               {drawingMode === "marker" && (
-                <Button size="sm" variant="outline" onClick={captureGPSPoint}>
-                  <Navigation className="h-4 w-4 mr-1" /> Ma position
+                <Button size="sm" variant="outline" onClick={captureGPSPoint} className="h-10 px-4 rounded-xl text-xs font-semibold gap-2">
+                  <Navigation className="h-4 w-4" /> Ma position actuelle
                 </Button>
               )}
               {polygonPoints.length > 0 && (
                 <>
-                  <Button size="sm" variant="ghost" onClick={() => setPolygonPoints([])}>
-                    <RotateCcw className="h-4 w-4 mr-1" /> Effacer
+                  <Button size="sm" variant="ghost" onClick={() => setPolygonPoints([])} className="h-10 px-3 rounded-xl text-xs text-muted-foreground hover:text-foreground">
+                    <RotateCcw className="h-4 w-4 mr-1" /> Recommencer
                   </Button>
                   {polygonPoints.length >= 3 && (
-                    <Button size="sm" variant="secondary" onClick={() => setShowParcelDialog(true)}>
-                      <Save className="h-4 w-4 mr-1" /> Enregistrer ({areaHa} ha)
+                    <Button size="sm" onClick={() => setShowParcelDialog(true)} className="h-10 px-4 rounded-xl text-xs font-black bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 gap-2 shadow-md">
+                      <Save className="h-4 w-4" /> Enregistrer la parcelle ({areaHa} ha)
                     </Button>
                   )}
                 </>
               )}
             </div>
 
-            {/* Offline Caching Actions */}
+            {/* Offline Caching Action Button */}
             <div className="flex items-center gap-2">
-              {!isOnline && (
-                <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
-                  <WifiOff className="h-3 w-3" /> Hors-ligne
-                </Badge>
-              )}
-              {cachedTileCount > 0 && (
-                <Badge variant="secondary" className="text-xs gap-1 hidden sm:inline-flex">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600" /> {cachedTileCount} tuiles en cache
-                </Badge>
-              )}
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                className="h-10 px-4 rounded-xl gap-2 font-bold text-xs border-amber-500/40 hover:bg-amber-500/10 text-stone-800 dark:text-amber-300 shadow-sm"
                 onClick={() => setShowDownloadDialog(true)}
                 data-testid="download-map-area-btn"
                 title="Download Map Area for offline use"
               >
-                <HardDriveDownload className="h-4 w-4" />
+                <HardDriveDownload className="h-4 w-4 text-amber-500" />
                 <span>Download Map Area</span>
               </Button>
             </div>
           </div>
           {drawingMode === "polygon" && (
-            <div className="mt-2 space-y-2">
+            <div className="mt-3 space-y-2">
               <p className="text-xs text-muted-foreground">
-                Placez-vous à chaque coin du champ et appuyez sur le bouton (ou touchez le coin sur la carte). 4 coins suffisent.
+                Déplacez-vous sur la bordure du champ et validez chaque coin. Cibles tactiles optimisées pour usage extérieur en plein soleil.
               </p>
-              <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 text-sm">
-                <strong>{polygonPoints.length}/{MAX_POINTS}</strong> coins · Superficie : <strong>{areaHa} ha</strong> · {perimeterM.toLocaleString("fr-FR")} m de tour
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3.5 text-sm flex items-center justify-between">
+                <div>
+                  <span className="font-extrabold text-stone-900 dark:text-stone-100">{polygonPoints.length} sur {MAX_POINTS}</span> coins enregistrés
+                  <span className="mx-2">•</span>
+                  Périmètre estimé : <strong className="font-mono">{perimeterM.toLocaleString("fr-FR")} m</strong>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-stone-500 uppercase font-bold tracking-wider">Superficie : </span>
+                  <span className="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">{areaHa} ha</span>
+                </div>
               </div>
             </div>
           )}
           {drawingMode === "marker" && (
             <p className="text-xs text-muted-foreground mt-2">
-              Cliquez sur la carte pour placer une observation géolocalisée
+              Cliquez ou touchez un point sur la carte pour signaler un foyer d'adventices, une panne ou un stress hydrique.
             </p>
           )}
 

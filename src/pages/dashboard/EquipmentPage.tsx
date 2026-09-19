@@ -195,64 +195,86 @@ export const EquipmentPage = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* KoobNaaba Mechanization Hero Header */}
-      <section className="rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden bg-gradient-to-br from-emerald-950 via-teal-900 to-amber-950 shadow-xl border border-emerald-800/40">
-        <div className="absolute -right-8 -bottom-10 opacity-10 select-none text-[12rem] pointer-events-none">
+      {/* MechAfrica-Inspired Field Mechanization Hero Header */}
+      <section className="rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden bg-gradient-to-br from-stone-950 via-emerald-950 to-amber-950 shadow-2xl border border-emerald-500/20">
+        <div className="absolute -right-6 -bottom-8 opacity-10 select-none text-[13rem] pointer-events-none font-mono">
           🚜
         </div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-4">
+        <div className="relative z-10 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Badge className="bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30 text-xs font-semibold px-3 py-1 uppercase tracking-wider backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-300" />
-                Hub Mécanisation
+              <Badge className="bg-amber-400 text-stone-950 font-black tracking-wider text-[11px] px-3 py-1 uppercase rounded-md shadow-sm">
+                <Sparkles className="h-3.5 w-3.5 mr-1.5 text-stone-950" />
+                MÉCANISATION AFRIQUE
               </Badge>
-              <Badge variant="outline" className="text-white/80 border-white/20 text-xs hidden sm:inline-flex">
-                Plateforme Propriétaire KoobNaaba
+              <Badge variant="outline" className="text-emerald-300 border-emerald-500/30 bg-emerald-950/40 text-[11px] font-medium backdrop-blur">
+                <ShieldCheck className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                Opérateurs Certifiés & Séquestre Mobile Money
               </Badge>
             </div>
 
-            {isOffline && (
-              <Badge variant="outline" className="bg-background/20 border-white/30 text-white text-xs">
-                <WifiOff className="h-3 w-3 mr-1" /> Mode Hors-ligne Actif
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {isOffline ? (
+                <Badge variant="outline" className="bg-amber-500/20 border-amber-400/40 text-amber-300 text-xs gap-1.5">
+                  <WifiOff className="h-3 w-3" /> Mode Hors-ligne / USSD Prêt
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-emerald-500/20 border-emerald-400/30 text-emerald-300 text-xs gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                  Réseau Prestataires Actif
+                </Badge>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-              Mécanisation Agricole & Gestion de Flotte
+          <div className="space-y-2 max-w-3xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white font-heading">
+              Louez ou Déployez du Matériel Agricole de Précision
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl leading-relaxed">
-              Infrastructure intégrée <strong>KoobNaaba</strong> : Réservez des tracteurs, pulvérisateurs drones et moissonneuses avec conducteurs certifiés, paiement Mobile Money en séquestre et agents de terrain.
+            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-normal">
+              Plateforme inspirée des standards <strong>MechAfrica / MechLink</strong> : réservation sans friction de tracteurs 4WD, pulvérisateurs drones RTK et moissonneuses. Réservation en ligne ou par <strong>code USSD *384*226#</strong>, chauffeurs formés et paiement sécurisé libéré uniquement à la validation des travaux.
             </p>
           </div>
 
-          {/* Real-time KPI Stats Ribbon */}
+          {/* High-Contrast Quick Metrics Banner */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
-              <p className="text-[10px] sm:text-xs text-white/70 uppercase tracking-wider font-semibold">Tracteurs & Drones</p>
-              <p className="text-xl sm:text-2xl font-black font-mono text-amber-300 mt-0.5">48 Actifs</p>
-              <p className="text-[10px] text-white/70">Disponibles dans votre rayon</p>
+            <div className="bg-stone-900/80 backdrop-blur-md rounded-2xl p-3.5 border border-stone-800/80 shadow-sm hover:border-amber-500/40 transition-colors">
+              <div className="flex items-center justify-between text-stone-400 text-[11px] font-semibold uppercase tracking-wider">
+                <span>Flotte Active</span>
+                <Tractor className="h-3.5 w-3.5 text-amber-400" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-400 mt-1">48 Engins</p>
+              <p className="text-[11px] text-stone-400 mt-0.5">Tracteurs, drones & moissonneuses</p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
-              <p className="text-[10px] sm:text-xs text-white/70 uppercase tracking-wider font-semibold">Délai d'intervention</p>
-              <p className="text-xl sm:text-2xl font-black font-mono text-emerald-300 mt-0.5">24h - 48h</p>
-              <p className="text-[10px] text-white/70">Sur votre parcelle déclarée</p>
+            <div className="bg-stone-900/80 backdrop-blur-md rounded-2xl p-3.5 border border-stone-800/80 shadow-sm hover:border-emerald-500/40 transition-colors">
+              <div className="flex items-center justify-between text-stone-400 text-[11px] font-semibold uppercase tracking-wider">
+                <span>Délai Terrain</span>
+                <Clock className="h-3.5 w-3.5 text-emerald-400" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-400 mt-1">24h - 48h</p>
+              <p className="text-[11px] text-stone-400 mt-0.5">Intervention bord-champ garantie</p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
-              <p className="text-[10px] sm:text-xs text-white/70 uppercase tracking-wider font-semibold">Économie Main d'œuvre</p>
-              <p className="text-xl sm:text-2xl font-black font-mono text-white mt-0.5">-35%</p>
-              <p className="text-[10px] text-white/70">Vs corvées manuelles</p>
+            <div className="bg-stone-900/80 backdrop-blur-md rounded-2xl p-3.5 border border-stone-800/80 shadow-sm hover:border-amber-500/40 transition-colors">
+              <div className="flex items-center justify-between text-stone-400 text-[11px] font-semibold uppercase tracking-wider">
+                <span>Inclusion USSD</span>
+                <Smartphone className="h-3.5 w-3.5 text-amber-400" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold font-mono text-white mt-1">*384*226#</p>
+              <p className="text-[11px] text-stone-400 mt-0.5">Accessible sans connexion internet</p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
-              <p className="text-[10px] sm:text-xs text-white/70 uppercase tracking-wider font-semibold">Garantie Séquestre</p>
-              <p className="text-xl sm:text-2xl font-black font-mono text-amber-300 mt-0.5">100%</p>
-              <p className="text-[10px] text-white/70">Paiement après validation</p>
+            <div className="bg-stone-900/80 backdrop-blur-md rounded-2xl p-3.5 border border-stone-800/80 shadow-sm hover:border-emerald-500/40 transition-colors">
+              <div className="flex items-center justify-between text-stone-400 text-[11px] font-semibold uppercase tracking-wider">
+                <span>Séquestre Garanti</span>
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-400 mt-1">100%</p>
+              <p className="text-[11px] text-stone-400 mt-0.5">Paiement libéré après votre audit</p>
             </div>
           </div>
         </div>
@@ -364,78 +386,99 @@ export const EquipmentPage = () => {
               ))}
             </div>
 
-            {/* Machines Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Machines Grid - MechAfrica Equipment Catalog Style */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredMachines.map((machine) => (
                 <Card
                   key={machine.id}
-                  className="rounded-2xl border-border/60 hover:shadow-warm transition-all flex flex-col justify-between overflow-hidden bg-card group"
+                  className="rounded-2xl border-stone-200 dark:border-stone-800 hover:border-amber-500/50 dark:hover:border-amber-500/50 hover:shadow-xl transition-all flex flex-col justify-between overflow-hidden bg-card group"
                 >
-                  <CardHeader className="p-4 pb-2 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
+                  {/* Equipment Photography Banner */}
+                  <div className="relative h-44 w-full bg-stone-900 overflow-hidden">
+                    <img
+                      src={machine.imageUrl || "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80"}
+                      alt={machine.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
+
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
                       <Badge
-                        variant="outline"
-                        className={`text-[10px] font-semibold uppercase ${
+                        className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border shadow-md ${
                           machine.status === "disponible"
-                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                            ? "bg-emerald-500 text-stone-950 border-emerald-400 font-bold"
+                            : "bg-amber-500 text-stone-950 border-amber-400 font-bold"
                         }`}
                       >
-                        {machine.status === "disponible" ? "● Disponible immédiatement" : "○ En mission (retour sous 48h)"}
+                        {machine.status === "disponible" ? "● DISPONIBLE" : "○ EN MISSION"}
                       </Badge>
-                      <div className="flex items-center text-[11px] text-amber-500 font-bold">
-                        <Star className="h-3 w-3 fill-amber-400 text-amber-400 mr-0.5" />
-                        {machine.rating} ({machine.completedJobs})
+                      <div className="flex items-center text-xs text-amber-300 font-bold bg-stone-900/80 backdrop-blur px-2.5 py-1 rounded-md border border-stone-700/60">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 mr-1" />
+                        {machine.rating} <span className="text-stone-400 text-[10px] ml-1">({machine.completedJobs} chantiers)</span>
                       </div>
                     </div>
 
-                    <div>
-                      <CardTitle className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                        {machine.title}
-                      </CardTitle>
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
-                        <MapPin className="h-3 w-3 text-primary shrink-0" />
-                        {machine.location} ({machine.region})
+                    <div className="absolute bottom-3 left-3 right-3 text-white">
+                      <p className="text-[11px] text-amber-400 font-mono font-bold tracking-wider uppercase">
+                        {machine.brandModel} {machine.powerHp ? `• ${machine.powerHp} CV` : ""}
                       </p>
+                      <h3 className="text-base font-black truncate drop-shadow-sm text-white">
+                        {machine.title}
+                      </h3>
                     </div>
-                  </CardHeader>
+                  </div>
 
-                  <CardContent className="p-4 pt-1 space-y-3">
-                    <div className="p-2.5 rounded-xl bg-muted/40 border border-border/40 text-xs space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Prestataire certifié :</span>
-                        <span className="font-semibold text-foreground truncate max-w-[170px]">
-                          {machine.verifiedPartner}
+                  <CardContent className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1 font-medium text-foreground">
+                          <MapPin className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                          {machine.location}
+                        </span>
+                        <span className="font-mono text-[11px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-semibold">
+                          {machine.region}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Débit journalier :</span>
-                        <span className="font-mono font-semibold text-foreground">~{machine.dailyCapacityHa} ha / jour</span>
+
+                      {/* Technical Specs Strip */}
+                      <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-stone-100 dark:bg-stone-900/70 border border-stone-200/80 dark:border-stone-800 text-xs">
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground">Rendement estimé</p>
+                          <p className="font-mono font-bold text-foreground mt-0.5">~{machine.dailyCapacityHa} ha / jour</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground">Compteur Horamètre</p>
+                          <p className="font-mono font-bold text-foreground mt-0.5">{machine.engineHours || 800} heures</p>
+                        </div>
+                        <div className="col-span-2 pt-1 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between text-[11px]">
+                          <span className="text-muted-foreground">Coopérative :</span>
+                          <span className="font-semibold text-foreground truncate max-w-[190px]">{machine.verifiedPartner}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Opérateur & Carburant :</span>
-                        <span className="font-semibold text-emerald-600">Inclus avec le matériel</span>
+
+                      {/* Implements tag list */}
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">Équipements & Outils inclus</p>
+                        <div className="flex flex-wrap gap-1">
+                          {machine.implementsIncluded.map((imp) => (
+                            <span
+                              key={imp}
+                              className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-900 dark:text-amber-200 font-medium border border-amber-500/20"
+                            >
+                              {imp}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Implements tag list */}
-                    <div className="flex flex-wrap gap-1">
-                      {machine.implementsIncluded.map((imp) => (
-                        <span
-                          key={imp}
-                          className="text-[10px] px-2 py-0.5 rounded-md bg-secondary/40 text-secondary-foreground font-medium"
-                        >
-                          {imp}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="pt-2 border-t flex items-center justify-between">
+                    <div className="pt-3 border-t flex items-center justify-between gap-2 mt-2">
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">Tarif forfaitaire</p>
-                        <p className="text-base font-black font-mono text-emerald-600">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Tarif Clé en Main</p>
+                        <p className="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
                           {machine.pricePerHa.toLocaleString()}{" "}
-                          <span className="text-[10px] font-medium text-foreground">FCFA / ha</span>
+                          <span className="text-xs font-semibold text-muted-foreground">F/ha</span>
                         </p>
                       </div>
 
@@ -450,10 +493,11 @@ export const EquipmentPage = () => {
                           });
                           setBookingModalOpen(true);
                         }}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl h-8 gap-1 shadow-sm"
+                        className="bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-xs rounded-xl h-9 px-4 gap-1.5 shadow-md hover:shadow-lg transition-all"
                       >
+                        <Zap className="h-3.5 w-3.5 fill-stone-950" />
                         Réserver
-                        <ChevronRight className="h-3.5 w-3.5" />
+                        <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
                       </Button>
                     </div>
                   </CardContent>
@@ -626,15 +670,15 @@ export const EquipmentPage = () => {
                         <Button
                           size="sm"
                           onClick={() => handleValidateJob(job.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl h-8 gap-1.5"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-10 px-4 gap-2 shadow-md hover:shadow-lg transition-all"
                         >
                           <CheckCircle2 className="h-4 w-4" />
-                          Confirmer la fin du chantier & Débloquer les fonds
+                          Valider la fin des travaux & Débloquer le paiement
                         </Button>
                       ) : (
-                        <div className="flex items-center gap-1 text-xs text-emerald-600 font-semibold">
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/30">
                           <CheckCircle2 className="h-4 w-4" />
-                          Chantier clôturé avec succès
+                          Chantier clôturé & Fonds transférés au prestataire
                         </div>
                       )}
                     </div>

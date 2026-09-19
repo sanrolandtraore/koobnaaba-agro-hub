@@ -70,28 +70,28 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
   const quickAreaButtons = [1, 2.5, 5, 10, 20];
 
   return (
-    <Card className="border-border/60 shadow-warm overflow-hidden rounded-2xl bg-card">
-      <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-amber-950 p-4 sm:p-5 text-white">
+    <Card className="border-stone-200 dark:border-stone-800 shadow-xl overflow-hidden rounded-2xl bg-card">
+      <div className="bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950 p-4 sm:p-5 text-white border-b border-stone-800">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-white/15 backdrop-blur">
-              <Calculator className="h-5 w-5 text-amber-300" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-400 text-stone-950 shadow-md">
+              <Calculator className="h-5 w-5 font-black" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base sm:text-lg">Simulateur de Devis & Calculateur Mécanisé</h3>
-                <Badge className="bg-amber-400 text-amber-950 hover:bg-amber-400 font-semibold text-[10px] uppercase tracking-wider">
-                  Temps Réel
+                <h3 className="font-extrabold text-base sm:text-lg tracking-tight">Simulateur & Calculateur de Travaux Agricoles</h3>
+                <Badge className="bg-amber-400 text-stone-950 hover:bg-amber-400 font-black text-[10px] uppercase tracking-wider px-2 py-0.5 rounded">
+                  MECH-CALC
                 </Badge>
               </div>
-              <p className="text-xs text-white/80">
-                Estimez le coût, le carburant et la durée de vos travaux de mécanisation
+              <p className="text-xs text-stone-300">
+                Tarifs transparents plafonnés : carburant, débit de chantier et séquestre garantis
               </p>
             </div>
           </div>
           <div className="text-right hidden sm:block">
-            <span className="text-[11px] text-emerald-200 uppercase tracking-wider font-semibold">Taux Référence</span>
-            <p className="text-xs font-medium text-white/90">Paiement échelonné via Mobile Money</p>
+            <span className="text-[11px] text-amber-400 uppercase tracking-wider font-bold">Standard MechAfrica</span>
+            <p className="text-xs font-medium text-stone-300">Paiement Mobile Money échelonné (30% / 70%)</p>
           </div>
         </div>
       </div>
@@ -298,10 +298,10 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-stone-800 dark:text-stone-200 flex items-start gap-2.5">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                   <span>
-                    <strong>Garantie Séquestre KoobNaaba :</strong> Votre acompte est sécurisé. L'opérateur n'est payé qu'après validation du labour/récolte par vous-même ou un agent de terrain.
+                    <strong>Protocole Séquestre MechAfrica :</strong> L'acompte de 30% reste bloqué sur le compte séquestre. Le prestataire n'est crédité qu'après vérification de conformité par le producteur ou l'agent terrain.
                   </span>
                 </div>
               </div>
@@ -321,10 +321,10 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
                   durationHours,
                 })
               }
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md gap-2 rounded-xl h-11"
+              className="w-full bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-sm shadow-lg gap-2 rounded-xl h-12"
             >
-              <Sparkles className="h-4 w-4 text-amber-300" />
-              Réserver ce chantier maintenant
+              <Zap className="h-4 w-4 fill-stone-950" />
+              Réserver cette opération maintenant
               <ArrowRight className="h-4 w-4 ml-auto" />
             </Button>
           </div>
