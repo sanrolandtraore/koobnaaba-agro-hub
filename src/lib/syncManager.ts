@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { getSyncQueue, removeSyncQueueItem, updateSyncQueueItem, getSyncQueueCount } from './offlineDb';
+import { getSyncQueue, removeSyncQueueItem, updateSyncQueueItem, getSyncQueueCount, replaceOfflineId } from './offlineDb';
 import { toast } from 'sonner';
 
 const MAX_RETRIES = 5;
@@ -22,7 +22,8 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
   let synced = 0;
   let failed = 0;
 
-  for (const item of queue) {
+  for (let index = 0; index < queue.length; index++) {
+    const item = queue[index];
     if (item.retries >= MAX_RETRIES) {
       failed++;
       continue;
@@ -33,9 +34,20 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
 
       switch (item.operation) {
         case 'insert': {
-          const { id: _tempId, _offline, ...insertData } = item.data;
-          const res = await (supabase.from(item.table as any) as any).insert(insertData);
+          const { id: tempId, _offline, ...insertData } = item.data;
+          const res = await (supabase.from(item.table as any) as any).insert(insertData).select().single();
           error = res.error;
+          if (!error && typeof tempId === 'string' && tempId.startsWith('offline-') && res.data?.id) {
+            await replaceOfflineId(tempId, res.data.id);
+            // The queue snapshot is already in memory; update following items
+            // so dependent inserts/updates use the freshly assigned server id.
+            for (let pendingIndex = index + 1; pendingIndex < queue.length; pendingIndex++) {
+              queue[pendingIndex] = {
+                ...queue[pendingIndex],
+                data: replaceReferences(queue[pendingIndex].data, tempId, res.data.id),
+              };
+            }
+          }
           break;
         }
         case 'update': {
@@ -70,6 +82,15 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
   return { synced, failed };
 }
 
+function replaceReferences(value: any, fromId: string, toId: string): any {
+  if (value === fromId) return toId;
+  if (Array.isArray(value)) return value.map((item) => replaceReferences(item, fromId, toId));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceReferences(item, fromId, toId)]));
+  }
+  return value;
+}
+
 export async function syncOnReconnect(): Promise<void> {
   const count = await getSyncQueueCount();
   if (count === 0) {
@@ -101,3 +122,4 @@ if (typeof window !== 'undefined') {
     }, 1500);
   });
 }
+
