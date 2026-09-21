@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -31,7 +31,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { MechanizationJob, MechanizationMachine, MechanizationService } from "./types";
-import { MECH_MACHINES, FIELD_AGENTS } from "./mockData";
+import { listFieldAgents, listMechanizationMachines } from "./repository";
 
 interface MechBookingModalProps {
   open: boolean;
@@ -66,10 +66,13 @@ export const MechBookingModal = ({
     initialData?.machine?.id || "auto_fastest"
   );
   const [paymentMethod, setPaymentMethod] = useState<"orange_money" | "moov_money" | "wave" | "cash_agent">("orange_money");
-  const [farmerPhone, setFarmerPhone] = useState<string>("+226 70 00 00 00");
+  const [farmerPhone, setFarmerPhone] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(FIELD_AGENTS[0].id);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [machines, setMachines] = useState<MechanizationMachine[]>([]);
+  const [fieldAgents, setFieldAgents] = useState<any[]>([]);
+  useEffect(() => { if (!open) return; Promise.all([listMechanizationMachines(), listFieldAgents()]).then(([m,a]) => { setMachines(m); setFieldAgents(a); if (a[0]) setSelectedAgentId(a[0].id); if (initialData?.machine?.id) setOperatorPreference(initialData.machine.id); else if (m[0]) setOperatorPreference(m[0].id); }).catch((error) => console.warn("Réseau mécanisation:", error)); }, [open, initialData?.machine?.id]);
 
   const baseRate = initialData?.service?.baseRatePerHa || initialData?.machine?.pricePerHa || 25000;
   const computedTotalCost = initialData?.totalCost || Math.round(baseRate * areaHa);
@@ -83,47 +86,25 @@ export const MechBookingModal = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const selectedAgent = FIELD_AGENTS.find((a) => a.id === selectedAgentId) || FIELD_AGENTS[0];
-    const matchedMachine = MECH_MACHINES.find((m) => m.id === operatorPreference);
+    const selectedAgent = fieldAgents.find((a) => a.id === selectedAgentId);
+    const matchedMachine = machines.find((m) => m.id === operatorPreference);
 
+    if (!user?.id) { toast.error("Connectez-vous pour commander une prestation."); setIsSubmitting(false); return; }
+    const { data: row, error } = await supabase.from("mechanization_jobs").insert({
+      requester_id:user.id, service_id:initialData?.service?.id ?? null, machine_id:matchedMachine?.id ?? null, field_agent_id:selectedAgent?.id ?? null,
+      service_type:serviceTitle, parcel_name:parcelName, area_ha:areaHa, total_cost:computedTotalCost, deposit_amount:computedDeposit,
+      payment_method:paymentMethod, escrow_status:"en_attente", job_status:"demande_recue", operator_name:matchedMachine?.title ?? null,
+      field_agent_name:selectedAgent?.name ?? null, field_agent_phone:selectedAgent?.phone ?? null, scheduled_date:scheduledDate,
+      machine_name:matchedMachine?.brandModel ?? null, notes:notes || null, farmer_phone:farmerPhone
+    }).select("*").single();
+    if (error || !row) { console.error("Création chantier:", error); toast.error("Impossible d'enregistrer la demande."); setIsSubmitting(false); return; }
     const newJob: MechanizationJob = {
-      id: `JOB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-      serviceType: serviceTitle,
-      parcelName: `${parcelName} (${areaHa} ha)`,
-      areaHa,
-      totalCost: computedTotalCost,
-      depositAmount: computedDeposit,
-      paymentMethod,
-      escrowStatus: "acompte_bloque",
-      jobStatus: "demande_recue",
-      operatorName: matchedMachine
-        ? `${matchedMachine.verifiedPartner} (${matchedMachine.title})`
-        : "Opérateur Certifié KoobNaaba le plus proche",
-      operatorPhone: "+226 70 88 99 00",
-      fieldAgentName: `${selectedAgent.name} (Agent Relais)`,
-      fieldAgentPhone: selectedAgent.phone,
-      scheduledDate: `Prévu pour le ${new Date(scheduledDate).toLocaleDateString("fr-FR")}`,
-      machineName: matchedMachine ? matchedMachine.brandModel : "Tracteur 75CV / Matériel homologué",
-      notes: notes || "Accès parcelle libre, point d'eau à proximité.",
+      id:row.id, serviceType:row.service_type, parcelName:row.parcel_name, areaHa:Number(row.area_ha), totalCost:Number(row.total_cost),
+      depositAmount:Number(row.deposit_amount), paymentMethod:row.payment_method, escrowStatus:row.escrow_status, jobStatus:row.job_status,
+      operatorName:row.operator_name ?? "En attente d'affectation", operatorPhone:row.operator_phone ?? "",
+      fieldAgentName:row.field_agent_name ?? "Non affecté", fieldAgentPhone:row.field_agent_phone ?? "",
+      scheduledDate:row.scheduled_date, machineName:row.machine_name ?? "À affecter", notes:row.notes ?? ""
     };
-
-    // If user is connected to Supabase, push the booking directly into service_requests table as well
-    if (user?.id) {
-      try {
-        await supabase.from("service_requests").insert({
-          user_id: user.id,
-          service_type: "mecanisation",
-          description: `${serviceTitle} sur ${parcelName} (${areaHa} ha). Acompte séquestre: ${computedDeposit} FCFA. Paiement: ${paymentMethod}. Consignes: ${notes || "R.A.S."}`,
-          phone: farmerPhone,
-          preferred_date: scheduledDate,
-          location: parcelName,
-          estimated_cost: computedTotalCost,
-          status: "en_attente",
-        });
-      } catch (err) {
-        console.warn("Could not insert service_request in Supabase:", err);
-      }
-    }
 
     onJobCreated(newJob);
     setIsSubmitting(false);
@@ -262,7 +243,7 @@ export const MechBookingModal = ({
                 <SelectItem value="auto_fastest" className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
                   ⚡ Attribution automatique (Opérateur le plus proche disponible)
                 </SelectItem>
-                {MECH_MACHINES.map((m) => (
+                {machines.map((m) => (
                   <SelectItem key={m.id} value={m.id} className="text-xs">
                     {m.title} · {m.location} ({m.pricePerHa.toLocaleString()} F/ha)
                   </SelectItem>
@@ -282,7 +263,7 @@ export const MechBookingModal = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {FIELD_AGENTS.map((fa) => (
+                {fieldAgents.map((fa) => (
                   <SelectItem key={fa.id} value={fa.id} className="text-xs">
                     {fa.name} — {fa.zone} ({fa.languages.join(", ")})
                   </SelectItem>
