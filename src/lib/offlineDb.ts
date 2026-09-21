@@ -9,6 +9,15 @@ interface SyncQueueItem {
   retries: number;
 }
 
+function replaceValue(value: unknown, fromId: string, toId: string): unknown {
+  if (value === fromId) return toId;
+  if (Array.isArray(value)) return value.map((item) => replaceValue(item, fromId, toId));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceValue(item, fromId, toId)]));
+  }
+  return value;
+}
+
 interface OfflineDBSchema extends DBSchema {
   cachedData: {
     key: string; // "table:queryKey"
@@ -111,6 +120,27 @@ export async function getSyncQueueCount(): Promise<number> {
   return db.count('syncQueue');
 }
 
+// When an offline insert receives its server id, rewrite references in both the
+// pending queue and local cache before the next dependent operation is sent.
+export async function replaceOfflineId(fromId: string, toId: string): Promise<void> {
+  const db = await getDb();
+  const tx = db.transaction(['syncQueue', 'cachedData'], 'readwrite');
+  const queueStore = tx.objectStore('syncQueue');
+  let queueCursor = await queueStore.openCursor();
+  while (queueCursor) {
+    await queueCursor.update({ ...queueCursor.value, data: replaceValue(queueCursor.value.data, fromId, toId) as any });
+    queueCursor = await queueCursor.continue();
+  }
+
+  const cacheStore = tx.objectStore('cachedData');
+  let cacheCursor = await cacheStore.openCursor();
+  while (cacheCursor) {
+    await cacheCursor.update({ ...cacheCursor.value, data: replaceValue(cacheCursor.value.data, fromId, toId) as any });
+    cacheCursor = await cacheCursor.continue();
+  }
+  await tx.done;
+}
+
 // ── Offline session ──
 
 const SESSION_KEY = 'offline-session';
@@ -134,8 +164,9 @@ export async function getOfflineSession(): Promise<OfflineSession | null> {
   const entry = await db.get('cachedData', SESSION_KEY);
   if (!entry?.data?.[0]) return null;
   const session = entry.data[0] as OfflineSession;
-  // La session locale n'expire pas : l'utilisateur reste connecté
-  // jusqu'à ce qu'il se déconnecte lui-même.
+  // The local cache is read-only and short lived. It is not a replacement for
+  // a Supabase session and must not keep access alive indefinitely on a lost device.
+  if (Date.now() - session.savedAt > 7 * 24 * 60 * 60 * 1000) return null;
   return session;
 
 }
@@ -168,3 +199,4 @@ export async function applyOptimisticDelete(table: string, queryKey: string, id:
     await cacheData(table, queryKey, cached.filter((row: any) => row.id !== id));
   }
 }
+
