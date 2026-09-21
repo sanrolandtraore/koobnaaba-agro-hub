@@ -9,5 +9,9 @@ verify_jwt = true
 [functions.delete-account]
 verify_jwt = true
 
+[functions.diagnose-crop]
+verify_jwt = true
+
 [functions.reset-password]
 verify_jwt = false
+
