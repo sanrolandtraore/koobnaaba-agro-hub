@@ -1,9 +1,9 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Wheat, BarChart3, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight, Microscope, FileText, Calculator, Eye, Sparkles, Tractor, ShieldCheck } from "lucide-react";
+import { MapPin, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight, Microscope, FileText, Calculator, Eye, Sparkles, Tractor } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import galleryFarmField from "@/assets/gallery/farm-field.jpg";
 import galleryLivestock from "@/assets/gallery/livestock.jpg";
@@ -15,19 +15,7 @@ import videoHarvest from "@/assets/gallery/harvest-video.mp4";
 import videoLivestock from "@/assets/gallery/livestock-video.mp4";
 import videoIrrigation from "@/assets/gallery/irrigation-video.mp4";
 
-// ── Partner data ──
-const partners = [
-  { name: "Ministère de l'Agriculture", category: "Institution" },
-  { name: "Banque Agricole du Faso", category: "Finance" },
-  { name: "SOFITEX", category: "Filière coton" },
-  { name: "INERA", category: "Recherche" },
-  { name: "FAO Burkina", category: "Organisation" },
-  { name: "Coris Bank", category: "Finance" },
-  { name: "AGRODIA", category: "Distribution" },
-  { name: "SN-SOSUCO", category: "Agro-industrie" },
-];
-
-// ── Gallery data ──
+// Partner data is loaded from the real public service catalog. No fictional partner list is shipped in the frontend.\n// ── Gallery data ──
 const galleryItems: { src: string; title: string; desc: string; type: "image" | "video" }[] = [
   { src: galleryFarmField, title: "Champs de mil au coucher du soleil", desc: "Récolte traditionnelle dans la savane", type: "image" },
   { src: videoHarvest, title: "Récolte en action", desc: "Scènes de récolte sous le soleil doré", type: "video" },
@@ -54,47 +42,32 @@ function useCarousel(length: number, interval = 4000) {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [lang, setLang] = useState<'fr' | 'en'>('fr');
-  const [langOpen, setLangOpen] = useState(false);
-  const partnerCarousel = useCarousel(partners.length, 3000);
+  const [partners, setPartners] = useState<{ name: string; category: string }[]>([]);
+  const partnerCarousel = useCarousel(Math.max(partners.length, 1), 3000);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadPartners = async () => {
+      const { data, error } = await supabase
+        .from("service_offers")
+        .select("id,title,category,service_area")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (!cancelled && !error) {
+        setPartners((data ?? []).map((offer) => ({
+          name: offer.title,
+          category: offer.category || offer.service_area || "Service agricole",
+        })));
+      }
+    };
+    void loadPartners();
+    return () => { cancelled = true; };
+  }, []);
   const galleryCarousel = useCarousel(galleryItems.length, 5000);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top bar */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        {/* Language Selector */}
-        <div className="relative">
-          <button
-            onClick={() => setLangOpen(o => !o)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-background/20 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground hover:bg-background/30 transition-colors text-sm font-medium"
-          >
-            <span className="text-base leading-none">{lang === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
-            <span className="hidden sm:inline">{lang === 'fr' ? 'FR' : 'EN'}</span>
-            <Globe className="h-3.5 w-3.5 opacity-70" />
-          </button>
-          {langOpen && (
-            <div className="absolute right-0 top-full mt-1.5 bg-card border border-border rounded-lg shadow-lg overflow-hidden min-w-[140px] animate-fade-in">
-              <button
-                onClick={() => { setLang('fr'); setLangOpen(false); }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-accent transition-colors ${lang === 'fr' ? 'bg-accent font-semibold' : ''}`}
-              >
-                <span className="text-base">🇫🇷</span>
-                <span className="text-foreground">Français</span>
-              </button>
-              <button
-                onClick={() => { setLang('en'); setLangOpen(false); }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-accent transition-colors ${lang === 'en' ? 'bg-accent font-semibold' : ''}`}
-              >
-                <span className="text-base">🇬🇧</span>
-                <span className="text-foreground">English</span>
-              </button>
-            </div>
-          )}
-        </div>
-        <ThemeToggle />
-      </div>
-
       {/* Hero */}
       <section className="gradient-hero min-h-[85vh] flex items-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -126,67 +99,46 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Partner Banner Carousel */}
+      {/* Live provider catalog — only real active offers from Supabase */}
       <section className="py-10 bg-muted/30 border-y border-border overflow-hidden">
         <div className="container max-w-5xl mx-auto px-4">
           <h3 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-6">
-            Nos partenaires de confiance
+            Prestataires et services présents sur KoobNaaba
           </h3>
-          <div className="relative">
-            <button
-              onClick={partnerCarousel.prev}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors"
-              aria-label="Précédent"
-            >
-              <ChevronLeft className="h-4 w-4 text-foreground" />
-            </button>
-            <button
-              onClick={partnerCarousel.next}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors"
-              aria-label="Suivant"
-            >
-              <ChevronRight className="h-4 w-4 text-foreground" />
-            </button>
-
-            <div className="overflow-hidden mx-10">
-              <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${partnerCarousel.index * (100 / 4)}%)` }}
-              >
-                {[...partners, ...partners].map((p, i) => (
-                  <div
-                    key={`${p.name}-${i}`}
-                    className="flex-shrink-0 w-1/2 md:w-1/4 px-3"
-                  >
-                    <div
-                      className="bg-card border border-border rounded-xl p-5 text-center hover:shadow-warm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full flex flex-col items-center justify-center gap-2"
-                      onClick={() => {}}
-                    >
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
-                        {p.name.charAt(0)}
+          {partners.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Les prestataires actifs apparaîtront ici dès leur publication sur KoobNaaba.
+            </p>
+          ) : (
+            <div className="relative">
+              <button onClick={partnerCarousel.prev} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors" aria-label="Précédent">
+                <ChevronLeft className="h-4 w-4 text-foreground" />
+              </button>
+              <button onClick={partnerCarousel.next} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors" aria-label="Suivant">
+                <ChevronRight className="h-4 w-4 text-foreground" />
+              </button>
+              <div className="overflow-hidden mx-10">
+                <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${partnerCarousel.index * (100 / 4)}%)` }}>
+                  {[...partners, ...partners].map((p, i) => (
+                    <div key={`${p.name}-${i}`} className="flex-shrink-0 w-1/2 md:w-1/4 px-3">
+                      <div className="bg-card border border-border rounded-xl p-5 text-center h-full flex flex-col items-center justify-center gap-2">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
+                          {p.name.charAt(0)}
+                        </div>
+                        <span className="text-sm font-semibold text-foreground leading-tight">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">{p.category}</span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground leading-tight">{p.name}</span>
-                      <span className="text-xs text-muted-foreground">{p.category}</span>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-center gap-1.5 mt-5">
+                {partners.map((_, i) => (
+                  <button key={i} onClick={() => partnerCarousel.setIndex(i)} className={`h-2 rounded-full transition-all duration-300 ${i === partnerCarousel.index ? "w-6 bg-primary" : "w-2 bg-border hover:bg-muted-foreground/40"}`} aria-label={`Prestataire ${i + 1}`} />
                 ))}
               </div>
             </div>
-
-            {/* Dots */}
-            <div className="flex justify-center gap-1.5 mt-5">
-              {partners.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => partnerCarousel.setIndex(i)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    i === partnerCarousel.index ? "w-6 bg-primary" : "w-2 bg-border hover:bg-muted-foreground/40"
-                  }`}
-                  aria-label={`Partenaire ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
