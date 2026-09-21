@@ -22,12 +22,13 @@ function replaceValue(value: unknown, fromId: string, toId: string): unknown {
 
 interface OfflineDBSchema extends DBSchema {
   cachedData: {
-    key: string; // "table:queryKey"
+    key: string; // "userId:table:queryKey" or reserved system key
     value: {
       key: string;
       table: string;
       data: any[];
       cachedAt: number;
+      userId?: string;
     };
   };
   syncQueue: {
@@ -38,7 +39,16 @@ interface OfflineDBSchema extends DBSchema {
 }
 
 const DB_NAME = 'koobnaaba-offline';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
+
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
+function scopedCacheKey(userId: string | null, table: string, queryKey: string): string {
+  return `${userId ?? 'public'}:${table}:${queryKey}`;
+}
 
 let dbInstance: IDBPDatabase<OfflineDBSchema> | null = null;
 
@@ -49,6 +59,8 @@ export async function getDb(): Promise<IDBPDatabase<OfflineDBSchema>> {
     upgrade(db, oldVersion, _newVersion, transaction) {
       if (!db.objectStoreNames.contains('cachedData')) {
         db.createObjectStore('cachedData', { keyPath: 'key' });
+      } else if (oldVersion < 3) {
+        transaction.objectStore('cachedData').clear();
       }
       if (!db.objectStoreNames.contains('syncQueue')) {
         const syncStore = db.createObjectStore('syncQueue', { keyPath: 'id' });
@@ -68,25 +80,28 @@ export async function getDb(): Promise<IDBPDatabase<OfflineDBSchema>> {
 // ── Cache operations ──
 
 export async function cacheData(table: string, queryKey: string, data: any[]): Promise<void> {
+  const userId = await getCurrentUserId();
   const db = await getDb();
-  const key = `${table}:${queryKey}`;
-  await db.put('cachedData', { key, table, data, cachedAt: Date.now() });
+  const key = scopedCacheKey(userId, table, queryKey);
+  await db.put('cachedData', { key, table, userId: userId ?? undefined, data, cachedAt: Date.now() });
 }
 
 export async function getCachedData(table: string, queryKey: string): Promise<any[] | null> {
+  const userId = await getCurrentUserId();
   const db = await getDb();
-  const key = `${table}:${queryKey}`;
+  const key = scopedCacheKey(userId, table, queryKey);
   const entry = await db.get('cachedData', key);
   return entry?.data ?? null;
 }
 
 export async function clearTableCache(table: string): Promise<void> {
+  const userId = await getCurrentUserId();
   const db = await getDb();
   const tx = db.transaction('cachedData', 'readwrite');
   const store = tx.objectStore('cachedData');
   let cursor = await store.openCursor();
   while (cursor) {
-    if (cursor.value.table === table) {
+    if (cursor.value.table === table && (cursor.value.userId ?? null) === userId) {
       await cursor.delete();
     }
     cursor = await cursor.continue();
@@ -131,20 +146,41 @@ export async function getSyncQueueCount(userId?: string): Promise<number> {
 // When an offline insert receives its server id, rewrite references in both the
 // pending queue and local cache before the next dependent operation is sent.
 export async function replaceOfflineId(fromId: string, toId: string): Promise<void> {
+  const userId = await getCurrentUserId();
   const db = await getDb();
   const tx = db.transaction(['syncQueue', 'cachedData'], 'readwrite');
   const queueStore = tx.objectStore('syncQueue');
   let queueCursor = await queueStore.openCursor();
   while (queueCursor) {
-    await queueCursor.update({ ...queueCursor.value, data: replaceValue(queueCursor.value.data, fromId, toId) as any });
+    if (queueCursor.value.userId === userId) await queueCursor.update({ ...queueCursor.value, data: replaceValue(queueCursor.value.data, fromId, toId) as any });
     queueCursor = await queueCursor.continue();
   }
 
   const cacheStore = tx.objectStore('cachedData');
   let cacheCursor = await cacheStore.openCursor();
   while (cacheCursor) {
-    await cacheCursor.update({ ...cacheCursor.value, data: replaceValue(cacheCursor.value.data, fromId, toId) as any });
+    if ((cacheCursor.value.userId ?? null) === userId) await cacheCursor.update({ ...cacheCursor.value, data: replaceValue(cacheCursor.value.data, fromId, toId) as any });
     cacheCursor = await cacheCursor.continue();
+  }
+  await tx.done;
+}
+
+export async function clearUserOfflineData(userId: string): Promise<void> {
+  const db = await getDb();
+  const tx = db.transaction(['cachedData', 'syncQueue'], 'readwrite');
+  const cacheStore = tx.objectStore('cachedData');
+  let cacheCursor = await cacheStore.openCursor();
+  while (cacheCursor) {
+    if (cacheCursor.value.userId === userId || cacheCursor.value.table === '_session' || cacheCursor.value.table === '_credentials' || cacheCursor.value.table === '_pin') {
+      await cacheCursor.delete();
+    }
+    cacheCursor = await cacheCursor.continue();
+  }
+  const queueStore = tx.objectStore('syncQueue');
+  let queueCursor = await queueStore.openCursor();
+  while (queueCursor) {
+    if (queueCursor.value.userId === userId) await queueCursor.delete();
+    queueCursor = await queueCursor.continue();
   }
   await tx.done;
 }
@@ -164,7 +200,7 @@ export interface OfflineSession {
 
 export async function saveOfflineSession(session: OfflineSession): Promise<void> {
   const db = await getDb();
-  await db.put('cachedData', { key: SESSION_KEY, table: '_session', data: [session], cachedAt: Date.now() });
+  await db.put('cachedData', { key: SESSION_KEY, table: '_session', userId: session.userId, data: [session], cachedAt: Date.now() });
 }
 
 export async function getOfflineSession(): Promise<OfflineSession | null> {
