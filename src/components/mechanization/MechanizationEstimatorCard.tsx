@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import {
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
-import { MECH_SERVICES } from "./mockData";
+import { listMechanizationServices } from "./repository";
 import { MechanizationService } from "./types";
 
 interface MechEstimatorCardProps {
@@ -37,12 +37,14 @@ interface MechEstimatorCardProps {
 }
 
 export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimatorCardProps) => {
-  const [selectedServiceId, setSelectedServiceId] = useState<string>("labour_standard");
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [services, setServices] = useState<MechanizationService[]>([]);
+  useEffect(() => { listMechanizationServices().then((data) => { setServices(data); if (data[0]) setSelectedServiceId(data[0].id); }).catch((error) => console.warn("Services mécanisation:", error)); }, []);
   const [areaHa, setAreaHa] = useState<number>(3.5);
   const [soilType, setSoilType] = useState<string>("limoneux");
   const [selectedParcelId, setSelectedParcelId] = useState<string>("");
 
-  const service = MECH_SERVICES.find((s) => s.id === selectedServiceId) || MECH_SERVICES[0];
+  const service = services.find((s) => s.id === selectedServiceId) ?? null;
 
   // Multiplier depending on soil difficulty
   const soilMultipliers: Record<string, { cost: number; fuel: number; time: number; label: string }> = {
@@ -54,10 +56,10 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
 
   const soilFactor = soilMultipliers[soilType] || soilMultipliers.limoneux;
 
-  const totalCost = Math.round(service.baseRatePerHa * areaHa * soilFactor.cost);
+  const totalCost = Math.round((service?.baseRatePerHa ?? 0) * areaHa * soilFactor.cost);
   const depositAmount = Math.round(totalCost * 0.3); // 30% acompte séquestre
-  const fuelLiters = Math.round(service.fuelPerHaLiters * areaHa * soilFactor.fuel);
-  const durationHours = Number((service.hoursPerHa * areaHa * soilFactor.time).toFixed(1));
+  const fuelLiters = Math.round((service?.fuelPerHaLiters ?? 0) * areaHa * soilFactor.fuel);
+  const durationHours = Number(((service?.hoursPerHa ?? 0) * areaHa * soilFactor.time).toFixed(1));
 
   const handleParcelSelect = (parcelId: string) => {
     setSelectedParcelId(parcelId);
@@ -107,7 +109,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
                 <span className="text-[11px] text-muted-foreground">7 services disponibles</span>
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {MECH_SERVICES.map((s) => {
+                {services.map((s) => {
                   const isSelected = s.id === selectedServiceId;
                   return (
                     <button
@@ -244,7 +246,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
               <div className="space-y-3 mt-4">
                 <div className="flex items-baseline justify-between">
                   <span className="text-xs text-muted-foreground">Opération sélectionnée</span>
-                  <span className="text-xs font-medium text-right max-w-[180px] truncate">{service.name}</span>
+                  <span className="text-xs font-medium text-right max-w-[180px] truncate">{service?.name ?? "Aucun service"} </span>
                 </div>
 
                 <div className="flex items-baseline justify-between">
@@ -310,8 +312,8 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
             <Button
               type="button"
               size="lg"
-              onClick={() =>
-                onBookNow({
+              disabled={!service}
+              onClick={() => service && onBookNow({
                   service,
                   areaHa,
                   totalCost,
