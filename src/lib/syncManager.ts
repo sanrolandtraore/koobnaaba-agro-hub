@@ -13,12 +13,18 @@ export function onSyncChange(fn: SyncListener): () => void {
 }
 
 async function notifyListeners() {
-  const count = await getSyncQueueCount();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const count = await getSyncQueueCount(user.id);
   listeners.forEach(fn => fn(count));
 }
 
 export async function processSyncQueue(): Promise<{ synced: number; failed: number }> {
-  const queue = await getSyncQueue();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { synced: 0, failed: 0 };
+
+  const queue = await getSyncQueue(user.id);
   let synced = 0;
   let failed = 0;
 
