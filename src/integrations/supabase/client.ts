@@ -4,12 +4,6 @@ import { brokeredPreviewStorage } from './previewAuthStorage';
 
 export const DEFAULT_SUPABASE_URL = 'https://dtfirensnobimhjqlngl.supabase.co';
 
-// Non-secret placeholder: keeps the public app shell renderable when Vercel
-// variables are temporarily missing. Auth/data calls will fail until the
-// publishable key is configured in the deployment environment.
-export const DUMMY_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZmlyZW5zbm9iaW1oanFsbmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MjAwMDAwMDAwMH0.koobnaaba_placeholder_key_waiting_user_configuration';
-
 export const getSupabaseConfig = () => {
   const envUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : undefined;
   const envKey =
@@ -19,11 +13,11 @@ export const getSupabaseConfig = () => {
 
   const url = (envUrl || DEFAULT_SUPABASE_URL).trim();
   const rawKey = (envKey || '').trim();
-  const isConfigured = rawKey.length > 20 && rawKey !== DUMMY_ANON_KEY;
+  const isConfigured = rawKey.length > 20;
 
   return {
     url,
-    key: isConfigured ? rawKey : DUMMY_ANON_KEY,
+    key: rawKey,
     rawKey,
     isConfigured,
   };
@@ -69,6 +63,10 @@ export const testBackendConnection = async (
 };
 
 const config = getSupabaseConfig();
+
+if (!config.isConfigured) {
+  console.warn('KoobNaaba: clé publique Supabase absente. Configurez VITE_SUPABASE_PUBLISHABLE_KEY (ou VITE_SUPABASE_ANON_KEY) dans Vercel.');
+}
 
 export const supabase = createClient<Database>(config.url, config.key, {
   auth: {
