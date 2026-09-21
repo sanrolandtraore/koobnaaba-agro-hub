@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import OfflineIndicator from "@/components/OfflineIndicator";
@@ -89,19 +89,20 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <OfflineIndicator />
         <ErrorBoundary>
           <BrowserRouter>
-          <AuthProvider>
             <Routes>
+              {/* Public routes intentionally stay outside AuthProvider so the landing page
+                  can render even when Supabase is unavailable or not configured yet. */}
               <Route path="/" element={<Index />} />
               <Route path="/mentions-legales" element={<MentionsLegales />} />
               <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
               <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/auth/pin-setup" element={<PinSetup />} />
-              <Route path="/auth/pin" element={<PinUnlock />} />
-              <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+              <Route element={<AuthProvider><><OfflineIndicator /><Outlet /></></AuthProvider>}>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/pin-setup" element={<PinSetup />} />
+                <Route path="/auth/pin" element={<PinUnlock />} />
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
                 <Route path="farms" element={<Suspense fallback={<PageLoader />}><FarmsPage /></Suspense>} />
                 <Route path="parcels" element={<Suspense fallback={<PageLoader />}><ParcelsPage /></Suspense>} />
@@ -147,11 +148,11 @@ const App = () => (
                 <Route path="partenaire-programmes" element={<Suspense fallback={<PageLoader />}><ProgrammesPage /></Suspense>} />
                 <Route path="partenaire-banques" element={<Suspense fallback={<PageLoader />}><ServicesBancairesPage /></Suspense>} />
                 <Route path="partners-directory" element={<Suspense fallback={<PageLoader />}><PartnersDirectoryPage /></Suspense>} />
+                </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AuthProvider>
-        </BrowserRouter>
+          </BrowserRouter>
       </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
