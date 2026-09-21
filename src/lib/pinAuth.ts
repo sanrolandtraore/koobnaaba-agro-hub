@@ -1,4 +1,4 @@
-import { getDb } from './offlineDb';
+import { getDb, getOfflineSession } from './offlineDb';
 
 // PIN-based quick auth for KoobNaaba
 // - PIN is 4 digits, hashed (SHA-256) with a per-device salt
@@ -26,7 +26,9 @@ function randomHex(bytes: number): string {
 
 async function currentUserId(): Promise<string | null> {
   const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
-  return user?.id ?? null;
+  if (user) return user.id;
+  const offlineSession = await getOfflineSession();
+  return offlineSession?.userId ?? null;
 }
 
 async function sha256(input: string): Promise<string> {
