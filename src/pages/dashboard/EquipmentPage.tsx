@@ -43,7 +43,7 @@ import {
 import MechanizationEstimatorCard from "@/components/mechanization/MechanizationEstimatorCard";
 import MechanizationBookingModal from "@/components/mechanization/MechanizationBookingModal";
 import MechanizationUssdSimulator from "@/components/mechanization/MechanizationUssdSimulator";
-import { MECH_MACHINES, MECH_SERVICES, INITIAL_JOBS } from "@/components/mechanization/mockData";
+import { listMechanizationMachines, listMechanizationServices, listMyMechanizationJobs } from "@/components/mechanization/repository";
 import { MechanizationJob, MechanizationMachine, MechanizationService } from "@/components/mechanization/types";
 
 const statusColors: Record<string, string> = {
@@ -98,17 +98,9 @@ export const EquipmentPage = () => {
   const [activeTab, setActiveTab] = useState<string>("hub");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [jobs, setJobs] = useState<MechanizationJob[]>(() => {
-    const saved = localStorage.getItem("koobnaaba_mechanization_jobs");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return INITIAL_JOBS;
-      }
-    }
-    return INITIAL_JOBS;
-  });
+  const [jobs, setJobs] = useState<MechanizationJob[]>([]);
+  const [machines, setMachines] = useState<MechanizationMachine[]>([]);
+  const [services, setServices] = useState<MechanizationService[]>([]);
 
   // Booking modal trigger state
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -121,8 +113,16 @@ export const EquipmentPage = () => {
   } | null>(null);
 
   useEffect(() => {
-    supabase.from("farms").select("id, name").then(({ data }) => setFarms(data || []));
-    supabase.from("parcels").select("id, name, area_ha").then(({ data }) => setParcels(data || []));
+    Promise.all([
+      supabase.from("farms").select("id,name"),
+      supabase.from("parcels").select("id,name,area_ha"),
+      listMechanizationMachines(),
+      listMechanizationServices(),
+      listMyMechanizationJobs(),
+    ]).then(([farmsResult, parcelsResult, machineData, serviceData, jobData]) => {
+      setFarms(farmsResult.data || []); setParcels(parcelsResult.data || []);
+      setMachines(machineData); setServices(serviceData); setJobs(jobData);
+    }).catch((error) => console.warn("Hub mécanisation:", error));
   }, []);
 
   const resetForm = () => {
@@ -157,9 +157,7 @@ export const EquipmentPage = () => {
   };
 
   const handleCreateJob = (newJob: MechanizationJob) => {
-    const updated = [newJob, ...jobs];
-    setJobs(updated);
-    localStorage.setItem("koobnaaba_mechanization_jobs", JSON.stringify(updated));
+    setJobs((current) => [newJob, ...current]);
     setActiveTab("chantiers");
   };
 
@@ -181,7 +179,7 @@ export const EquipmentPage = () => {
 
   // Filter machines
   const filteredMachines = useMemo(() => {
-    return MECH_MACHINES.filter((m) => {
+    return machines.filter((m) => {
       const matchCat = categoryFilter === "all" || m.category === categoryFilter;
       const matchSearch =
         searchQuery === "" ||
@@ -191,7 +189,7 @@ export const EquipmentPage = () => {
         m.verifiedPartner.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [categoryFilter, searchQuery]);
+  }, [machines, categoryFilter, searchQuery]);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
