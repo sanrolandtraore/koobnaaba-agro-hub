@@ -46,7 +46,7 @@ export async function getDb(): Promise<IDBPDatabase<OfflineDBSchema>> {
   if (dbInstance) return dbInstance;
   
   dbInstance = await openDB<OfflineDBSchema>(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion) {
+    upgrade(db, oldVersion, _newVersion, transaction) {
       if (!db.objectStoreNames.contains('cachedData')) {
         db.createObjectStore('cachedData', { keyPath: 'key' });
       }
@@ -56,7 +56,7 @@ export async function getDb(): Promise<IDBPDatabase<OfflineDBSchema>> {
         syncStore.createIndex('by-timestamp', 'timestamp');
         syncStore.createIndex('by-user', 'userId');
       } else if (oldVersion < 2) {
-        const store = (db as any).transaction.objectStore('syncQueue') as IDBObjectStore;
+        const store = transaction.objectStore('syncQueue') as IDBObjectStore;
         if (!store.indexNames.contains('by-user')) store.createIndex('by-user', 'userId');
       }
     },
