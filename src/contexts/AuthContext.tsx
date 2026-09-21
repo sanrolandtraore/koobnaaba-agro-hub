@@ -13,7 +13,7 @@ interface AuthContextType {
   roles: string[];
   primaryRole: string | null;
   isOfflineSession: boolean;
-  signUp: (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => Promise<{ error: any }>;
+  signUp: (identifier: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string, method?: "email" | "phone") => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInOffline: (identifier: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -181,18 +181,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
+  const signUp = async (
+    identifier: string,
+    password: string,
+    fullName: string,
+    role?: string,
+    phone?: string,
+    realEmail?: string,
+    method: "email" | "phone" = "email",
+  ) => {
     const safeRole = role && ['agriculteur', 'eleveur', 'formation', 'partenaire', 'agent_technique'].includes(role) ? role : 'agriculteur';
+    const metadata = {
+      full_name: fullName,
+      role: safeRole,
+      phone: phone || "",
+      real_email: realEmail || "",
+    };
+
+    if (method === "phone") {
+      const { error } = await supabase.auth.signUp({
+        phone: identifier,
+        password,
+        options: { data: metadata },
+      });
+      return { error };
+    }
+
     const { error } = await supabase.auth.signUp({
-      email,
+      email: identifier,
       password,
       options: {
-        data: {
-          full_name: fullName,
-          role: safeRole,
-          phone: phone || "",
-          real_email: realEmail || "",
-        },
+        data: metadata,
         emailRedirectTo: window.location.origin,
       },
     });
