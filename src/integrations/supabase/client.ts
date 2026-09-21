@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
 
-export const DEFAULT_SUPABASE_URL = 'https://dtfirensnobimhjqlngl.supabase.co';
+export const DEFAULT_SUPABASE_URL = 'https://guuxbuwftarvieliucsv.supabase.co';
 
 export const getSupabaseConfig = () => {
   const envUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : undefined;
@@ -64,11 +64,17 @@ export const testBackendConnection = async (
 
 const config = getSupabaseConfig();
 
+// The public landing page must remain renderable even when deployment
+// environment variables are missing. Never use a real secret or fake data:
+// the placeholder only prevents createClient() from throwing at module load;
+// authenticated Supabase operations still fail until the public key is set.
+const clientKey = config.isConfigured ? config.rawKey : 'koobnaaba-public-key-not-configured';
+
 if (!config.isConfigured) {
   console.warn('KoobNaaba: clé publique Supabase absente. Configurez VITE_SUPABASE_PUBLISHABLE_KEY (ou VITE_SUPABASE_ANON_KEY) dans Vercel.');
 }
 
-export const supabase = createClient<Database>(config.url, config.key, {
+export const supabase = createClient<Database>(config.url, clientKey, {
   auth: {
     storage: brokeredPreviewStorage(),
     persistSession: true,
