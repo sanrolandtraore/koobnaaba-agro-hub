@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { saveOfflineSession, getOfflineSession, clearOfflineSession } from "@/lib/offlineDb";
+import { saveOfflineSession, getOfflineSession, clearOfflineSession, clearUserOfflineData } from "@/lib/offlineDb";
 import { saveOfflineCredentials, verifyOfflineCredentials, clearOfflineCredentials } from "@/lib/offlineAuth";
 import { setupPin as setupPinLib, verifyPin as verifyPinLib, hasPin as hasPinLib, clearPin as clearPinLib, getPinRecord } from "@/lib/pinAuth";
 
@@ -222,8 +222,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     explicitSignOutRef.current = true;
+    const currentUserId = user?.id;
     try { await supabase.auth.signOut(); } catch (error) { console.warn("Supabase sign-out failed:", error); }
 
+    if (currentUserId) await clearUserOfflineData(currentUserId);
     await clearOfflineSession();
     await clearOfflineCredentials();
     // NOTE: PIN is intentionally NOT cleared on signOut so the user can
@@ -253,7 +255,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (navigator.onLine) {
       try {
         const db = await (await import("@/lib/offlineDb")).getDb();
-        const entry = await db.get("cachedData", "offline-credentials");
+        const identifier = result.record.identifier.toLowerCase();
+        const entry = await db.get("cachedData", `credentials:${identifier}`);
         const creds = entry?.data?.[0];
         if (creds?.identifier) {
           // We only have the hash; we cannot replay the password. Fall back to
