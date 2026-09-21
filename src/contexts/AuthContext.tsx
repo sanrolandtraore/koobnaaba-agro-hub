@@ -228,8 +228,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (currentUserId) await clearUserOfflineData(currentUserId);
     await clearOfflineSession();
     await clearOfflineCredentials();
-    // NOTE: PIN is intentionally NOT cleared on signOut so the user can
-    // re-login quickly. Use clearPin() explicitly to remove it.
+    // Explicit sign-out clears the local PIN together with account-local offline data.
+    // This prevents a later device user from unlocking the previous account.
     setUser(null);
     setSession(null);
     setProfile(null);
