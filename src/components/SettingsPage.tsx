@@ -14,14 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Settings, User, Lock, Bell, Palette, Globe, Trash2, Upload, Save, Camera, Eye, EyeOff, Mail, Loader2,
-  Database, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink,
 } from "lucide-react";
-import {
-  getSupabaseConfig,
-  setSupabaseConfig,
-  clearSupabaseConfig,
-  testBackendConnection,
-} from "@/integrations/supabase/client";
 
 const AFRICAN_COUNTRIES = [
   { code: "DZ", name: "Algérie" }, { code: "AO", name: "Angola" }, { code: "BJ", name: "Bénin" },
@@ -70,36 +63,6 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
   });
   const [passwordForm, setPasswordForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [prefs, setPrefs] = useState({ theme: "system", language: "fr", notifications: true });
-
-  const currentBackend = getSupabaseConfig();
-  const [backendUrl, setBackendUrl] = useState(currentBackend.url);
-  const [backendKey, setBackendKey] = useState(currentBackend.rawKey);
-  const [testingBackend, setTestingBackend] = useState(false);
-  const [backendTestResult, setBackendTestResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  const handleTestBackend = async () => {
-    setTestingBackend(true);
-    setBackendTestResult(null);
-    const res = await testBackendConnection(backendUrl, backendKey);
-    setBackendTestResult(res);
-    setTestingBackend(false);
-    if (res.success) toast.success(res.message);
-    else toast.error(res.message);
-  };
-
-  const handleSaveBackend = () => {
-    if (!backendKey.trim()) {
-      toast.error("Veuillez saisir votre clé Anon.");
-      return;
-    }
-    setSupabaseConfig(backendUrl, backendKey);
-    toast.success("Configuration backend enregistrée !");
-  };
-
-  const handleResetBackend = () => {
-    clearSupabaseConfig();
-    toast.info("Configuration réinitialisée au mode local.");
-  };
 
   useEffect(() => {
     if (!user) return;
@@ -223,7 +186,6 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
           <TabsTrigger value="profile" className="flex items-center gap-1"><User className="h-3.5 w-3.5" />Profil</TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-1"><Lock className="h-3.5 w-3.5" />Sécurité</TabsTrigger>
           <TabsTrigger value="preferences" className="flex items-center gap-1"><Palette className="h-3.5 w-3.5" />Préférences</TabsTrigger>
-          <TabsTrigger value="backend" className="flex items-center gap-1"><Database className="h-3.5 w-3.5" />Backend</TabsTrigger>
           {roleSpecificTab && roleSpecificTabLabel && (
             <TabsTrigger value="role-specific" className="flex items-center gap-1">{roleSpecificTabLabel}</TabsTrigger>
           )}
@@ -376,121 +338,19 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* BACKEND TAB */}
+        {/* BACKEND CONFIGURATION */}
         <TabsContent value="backend">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Database className="h-4 w-4 text-primary" />
-                  Connexion au Backend de Données (Supabase)
-                </span>
-                <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                  currentBackend.isConfigured 
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" 
-                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                }`}>
-                  {currentBackend.isConfigured ? "Connecté" : "Mode Local / Hors-ligne"}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Lock className="h-4 w-4 text-primary" />Backend sécurisé</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
               <div className="rounded-xl border p-4 bg-muted/30 space-y-2">
-                <p className="text-sm font-medium">Synchronisation Cloud & Persistance</p>
+                <p className="text-sm font-medium">Configuration gérée par le déploiement</p>
                 <p className="text-xs text-muted-foreground">
-                  Koobnaaba utilise une architecture hors-ligne d'abord (IndexedDB local) qui se synchronise avec la base de données PostgreSQL Supabase lorsqu'une connexion internet et une clé API sont configurées.
+                  La connexion à Supabase est configurée côté déploiement. Aucune clé API ne doit être saisie, affichée ou enregistrée depuis l'interface utilisateur.
                 </p>
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-muted-foreground" /> URL du projet Supabase</Label>
-                  <Input
-                    value={backendUrl}
-                    onChange={(e) => setBackendUrl(e.target.value)}
-                    placeholder="https://votre-projet.supabase.co"
-                    className="font-mono text-xs mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label className="flex items-center gap-1.5">Clé Publique Anon (anon public)</Label>
-                  <Input
-                    type="password"
-                    value={backendKey}
-                    onChange={(e) => setBackendKey(e.target.value)}
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    className="font-mono text-xs mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Retrouvez cette clé dans la console Supabase sous <strong>Project Settings &gt; API</strong>.
-                  </p>
-                </div>
-
-                {backendTestResult && (
-                  <div
-                    className={`p-3 rounded-xl border text-xs flex items-start gap-2 ${
-                      backendTestResult.success
-                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                        : "bg-destructive/10 border-destructive/20 text-destructive"
-                    }`}
-                  >
-                    {backendTestResult.success ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                    ) : (
-                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                    )}
-                    <div>
-                      <p className="font-semibold">
-                        {backendTestResult.success ? "Test réussi" : "Erreur de connexion"}
-                      </p>
-                      <p className="mt-0.5">{backendTestResult.message}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleTestBackend}
-                    disabled={testingBackend}
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${testingBackend ? "animate-spin" : ""}`} />
-                    {testingBackend ? "Test en cours..." : "Tester la connexion"}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    onClick={handleSaveBackend}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    Enregistrer et Appliquer
-                  </Button>
-
-                  {currentBackend.isConfigured && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={handleResetBackend}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      Déconnecter le backend
-                    </Button>
-                  )}
-                </div>
-
-                <div className="pt-2 border-t">
-                  <a
-                    href="https://supabase.com/dashboard/project/dtfirensnobimhjqlngl/settings/api"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
-                  >
-                    Accéder directement à la console Supabase (dtfirensnobimhjqlngl) <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs text-muted-foreground">
+                Seule la clé publique Supabase destinée au navigateur peut être présente dans le bundle. Les clés service-role, secrets, mots de passe et identifiants de fournisseurs restent exclusivement côté serveur.
               </div>
             </CardContent>
           </Card>
