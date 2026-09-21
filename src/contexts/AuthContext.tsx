@@ -222,7 +222,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     explicitSignOutRef.current = true;
-    try { await supabase.auth.signOut(); } catch {}
+    try { await supabase.auth.signOut(); } catch (error) { console.warn("Supabase sign-out failed:", error); }
 
     await clearOfflineSession();
     await clearOfflineCredentials();
