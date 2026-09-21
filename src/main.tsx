@@ -25,7 +25,6 @@ async function bootstrap() {
   // Keep every application import behind the fatal-error guard. A broken CSS,
   // i18n, or App module must never result in an unexplained white screen.
   await import("./index.css");
-  await import("./i18n");
 
   const { default: App } = await import("./App");
   createRoot(root).render(<App />);
