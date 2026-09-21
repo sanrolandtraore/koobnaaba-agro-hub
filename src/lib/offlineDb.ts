@@ -122,7 +122,10 @@ export async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp
 
 export async function getSyncQueue(userId?: string): Promise<SyncQueueItem[]> {
   const db = await getDb();
-  return userId ? db.getAllFromIndex('syncQueue', 'by-user', userId) : db.getAllFromIndex('syncQueue', 'by-timestamp');
+  // Never expose the complete local queue to a caller that omitted an owner.
+  // This prevents cross-account leakage if a future caller forgets to pass userId.
+  if (!userId) return [];
+  return db.getAllFromIndex('syncQueue', 'by-user', userId);
 }
 
 export async function removeSyncQueueItem(id: string): Promise<void> {
@@ -140,7 +143,9 @@ export async function updateSyncQueueItem(id: string, updates: Partial<SyncQueue
 
 export async function getSyncQueueCount(userId?: string): Promise<number> {
   const db = await getDb();
-  return userId ? db.countFromIndex('syncQueue', 'by-user', userId) : db.count('syncQueue');
+  // Never return an aggregate count across users.
+  if (!userId) return 0;
+  return db.countFromIndex('syncQueue', 'by-user', userId);
 }
 
 // When an offline insert receives its server id, rewrite references in both the
