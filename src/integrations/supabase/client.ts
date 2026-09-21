@@ -3,6 +3,8 @@ import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
 
 export const DEFAULT_SUPABASE_URL = 'https://guuxbuwftarvieliucsv.supabase.co';
+// Supabase publishable key: intentionally browser-safe. Never replace this with a service-role/secret key.
+const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_I-PeqouB9o6R4ge4KZfl4w_rkltm1gK';
 
 export const getSupabaseConfig = () => {
   const envUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : undefined;
@@ -12,7 +14,9 @@ export const getSupabaseConfig = () => {
       : undefined;
 
   const url = (envUrl || DEFAULT_SUPABASE_URL).trim();
-  const rawKey = (envKey || '').trim();
+  // The publishable key is safe for browser use. Prefer deployment env when available;
+  // the public fallback prevents authentication from breaking when Vercel env vars are missing.
+  const rawKey = (envKey || DEFAULT_SUPABASE_PUBLISHABLE_KEY).trim();
   const isConfigured = rawKey.length > 20;
 
   return {
@@ -64,17 +68,13 @@ export const testBackendConnection = async (
 
 const config = getSupabaseConfig();
 
-// The public landing page must remain renderable even when deployment
-// environment variables are missing. Never use a real secret or fake data:
-// the placeholder only prevents createClient() from throwing at module load;
-// authenticated Supabase operations still fail until the public key is set.
+// The public landing page and authentication must remain functional when deployment
+// environment variables are missing. The fallback above is a Supabase publishable key,
+// which is explicitly intended for browser clients. Never use service-role or secret keys.
 const clientKey = config.isConfigured ? config.rawKey : 'koobnaaba-public-key-not-configured';
 
 // Only Supabase publishable/anon keys are allowed in this browser bundle.
 // Never add service-role, secret, database, AI-provider, or payment credentials here.
-if (!config.isConfigured) {
-  console.warn('KoobNaaba: clé publique Supabase absente. Configurez VITE_SUPABASE_PUBLISHABLE_KEY (ou VITE_SUPABASE_ANON_KEY) dans Vercel.');
-}
 
 export const supabase = createClient<Database>(config.url, clientKey, {
   auth: {
