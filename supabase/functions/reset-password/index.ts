@@ -81,7 +81,9 @@ serve(async (req) => {
 
     if (action === "request") {
       if (userId) {
-        const otpBytes = new Uint32Array(1);\n        crypto.getRandomValues(otpBytes);\n        const otp = String(100000 + (otpBytes[0] % 900000));
+        const otpBytes = new Uint32Array(1);
+        crypto.getRandomValues(otpBytes);
+        const otp = String(100000 + (otpBytes[0] % 900000));
         const codeHash = await sha256(`${cleaned}:${otp}`);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
