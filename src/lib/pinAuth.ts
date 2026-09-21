@@ -1,9 +1,8 @@
 import { getDb, getOfflineSession } from './offlineDb';
 
-// PIN-based quick auth for KoobNaaba
-// - PIN is 4 digits, hashed (SHA-256) with a per-device salt
-// - Linked to a userId so we can fast-restore the offline session on this device
-// - Device fingerprint = stable random id stored locally (acts as Flutter Secure Storage equivalent)
+// PIN-based quick auth for KoobNaaba.
+// The PIN is never stored in plaintext. This module contains no server secrets.
+// The local record is scoped to the authenticated user and device.
 
 const PIN_KEY = 'pin-auth';
 const DEVICE_KEY = 'device-fingerprint';
@@ -56,7 +55,7 @@ export async function setupPin(userId: string, identifier: string, pin: string):
     const db = await getDb();
     const deviceId = await getDeviceFingerprint();
     const salt = randomHex(8);
-    const pinHash = await sha256(`${pin}|${salt}|${deviceId}|koobnaaba-pin-2026`);
+    const pinHash = await sha256(`${pin}|${salt}|${deviceId}`);
     const record: PinRecord = {
       userId,
       identifier: identifier.toLowerCase(),
