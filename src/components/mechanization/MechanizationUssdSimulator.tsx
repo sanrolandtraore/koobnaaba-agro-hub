@@ -17,7 +17,8 @@ import {
   Radio,
   MapPin,
 } from "lucide-react";
-import { FIELD_AGENTS } from "./mockData";
+import { listFieldAgents, listMechanizationServices } from "./repository";
+import type { FieldAgent, MechanizationService } from "./types";
 
 export const MechUssdSimulator = () => {
   const [ussdStep, setUssdStep] = useState<number>(0);
@@ -27,6 +28,25 @@ export const MechUssdSimulator = () => {
   const [surface, setSurface] = useState<string>("");
   const [commune, setCommune] = useState<string>("");
   const [smsNotification, setSmsNotification] = useState<string | null>(null);
+  const [services, setServices] = useState<MechanizationService[]>([]);
+  const [fieldAgents, setFieldAgents] = useState<FieldAgent[]>([]);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listMechanizationServices(), listFieldAgents()])
+      .then(([liveServices, liveAgents]) => {
+        if (cancelled) return;
+        setServices(liveServices);
+        setFieldAgents(liveAgents);
+        setCatalogError(null);
+      })
+      .catch((error) => {
+        console.error("Chargement USSD:", error);
+        if (!cancelled) setCatalogError("Impossible de charger le catalogue réel.");
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleDial = (code: string = "*384*226#") => {
     setUssdStep(1);
@@ -48,33 +68,30 @@ export const MechUssdSimulator = () => {
       setInputVal("");
     } else if (ussdStep === 2) {
       // Choix du service
-      const servicesMap: Record<string, string> = {
-        "1": "Labour standard (25 000 F/ha)",
-        "2": "Pulvérisation Drone (10 000 F/ha)",
-        "3": "Moissonneuse (45 000 F/ha)",
-        "4": "Semis mécanique (18 000 F/ha)",
-      };
-      setSelectedService(servicesMap[val] || "Labour standard");
+      const service = services[Number(val) - 1];
+      if (!service) { toast.error("Prestation indisponible dans le catalogue."); return; }
+      setSelectedService(service.name);
       setUssdStep(3);
       setInputVal("");
     } else if (ussdStep === 3) {
       // Surface en ha
-      setSurface(val || "2.5");
+      if (!val || Number(val) <= 0) { toast.error("Indiquez une superficie valide."); return; }
+      setSurface(val);
       setUssdStep(4);
       setInputVal("");
     } else if (ussdStep === 4) {
       // Commune
-      setCommune(val || "Koupéla");
+      if (!val) { toast.error("Indiquez votre commune ou village."); return; }
+      setCommune(val);
       setUssdStep(5);
       setInputVal("");
 
-      // Trigger SMS notification
-      setTimeout(() => {
-        setSmsNotification(
-          `[SMS KoobNaaba] Votre demande pour ${selectedService} sur ${val || "votre parcelle"} est confirmée. Agent terrain : Moussa (+226 76 99 88 11). Acompte sécurisé via Orange Money.`
-        );
-        toast.success("Notification SMS envoyée sur votre téléphone 2G !");
-      }, 500);
+      const agent = fieldAgents[0];
+      setSmsNotification(
+        `[Aperçu USSD] Demande ${selectedService} — ${surface} ha — ${val}.` +
+        (agent ? ` Agent disponible : ${agent.name}${agent.phone ? ` (${agent.phone})` : ""}.` : " Aucun agent terrain disponible dans le catalogue.")
+      );
+      toast.success("Demande USSD préparée. Aucune notification SMS réelle n’a été envoyée.");
     }
   };
 
@@ -134,10 +151,7 @@ export const MechUssdSimulator = () => {
               {ussdStep === 2 && (
                 <div className="space-y-1 text-xs">
                   <p className="font-bold text-white mb-1">Choisir prestation :</p>
-                  <p>1. Labour tracteur (25k/ha)</p>
-                  <p>2. Pulvérisation drone (10k/ha)</p>
-                  <p>3. Moissonneuse riz/maïs</p>
-                  <p>4. Semis motorisé</p>
+                  {services.length === 0 ? <p>Aucune prestation disponible.</p> : services.slice(0, 4).map((service, index) => <p key={service.id}>{index + 1}. {service.name}</p>)}
                   <p className="text-[10px] text-emerald-400 mt-1">Saisir option (1-4) :</p>
                 </div>
               )}
@@ -259,7 +273,11 @@ export const MechUssdSimulator = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {FIELD_AGENTS.map((fa) => (
+                {fieldAgents.length === 0 ? (
+                  <div className="col-span-full p-4 rounded-xl border border-dashed text-xs text-muted-foreground">
+                    {catalogError ?? "Aucun agent terrain actif n’est actuellement enregistré."}
+                  </div>
+                ) : fieldAgents.map((fa) => (
                   <div
                     key={fa.id}
                     className="p-3 rounded-xl border bg-card hover:bg-muted/30 transition-colors flex flex-col justify-between space-y-2"
