@@ -70,6 +70,8 @@ const config = getSupabaseConfig();
 // authenticated Supabase operations still fail until the public key is set.
 const clientKey = config.isConfigured ? config.rawKey : 'koobnaaba-public-key-not-configured';
 
+// Only Supabase publishable/anon keys are allowed in this browser bundle.
+// Never add service-role, secret, database, AI-provider, or payment credentials here.
 if (!config.isConfigured) {
   console.warn('KoobNaaba: clé publique Supabase absente. Configurez VITE_SUPABASE_PUBLISHABLE_KEY (ou VITE_SUPABASE_ANON_KEY) dans Vercel.');
 }
