@@ -14,7 +14,7 @@ interface AuthContextType {
   primaryRole: string | null;
   isOfflineSession: boolean;
   signUp: (identifier: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string, method?: "email" | "phone") => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (identifier: string, password: string, method?: "email" | "phone") => Promise<{ error: any }>;
   signInOffline: (identifier: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
@@ -218,11 +218,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (identifier: string, password: string, method: "email" | "phone" = "email") => {
+    const credentials = method === "phone"
+      ? { phone: identifier, password }
+      : { email: identifier, password };
+    const { error } = await supabase.auth.signInWithPassword(credentials);
     if (!error) {
       // Cache credentials for offline login
-      await saveOfflineCredentials(email, password);
+      await saveOfflineCredentials(identifier, password);
     }
     return { error };
   };
