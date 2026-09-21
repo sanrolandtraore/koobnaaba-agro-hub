@@ -1,4 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SyncQueueItem {
   id: string;
@@ -7,6 +8,7 @@ interface SyncQueueItem {
   data: any;
   timestamp: number;
   retries: number;
+  userId: string;
 }
 
 function replaceValue(value: unknown, fromId: string, toId: string): unknown {
@@ -31,12 +33,12 @@ interface OfflineDBSchema extends DBSchema {
   syncQueue: {
     key: string;
     value: SyncQueueItem;
-    indexes: { 'by-table': string; 'by-timestamp': number };
+    indexes: { 'by-table': string; 'by-timestamp': number; 'by-user': string };
   };
 }
 
 const DB_NAME = 'koobnaaba-offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbInstance: IDBPDatabase<OfflineDBSchema> | null = null;
 
@@ -44,7 +46,7 @@ export async function getDb(): Promise<IDBPDatabase<OfflineDBSchema>> {
   if (dbInstance) return dbInstance;
   
   dbInstance = await openDB<OfflineDBSchema>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion) {
       if (!db.objectStoreNames.contains('cachedData')) {
         db.createObjectStore('cachedData', { keyPath: 'key' });
       }
@@ -52,6 +54,10 @@ export async function getDb(): Promise<IDBPDatabase<OfflineDBSchema>> {
         const syncStore = db.createObjectStore('syncQueue', { keyPath: 'id' });
         syncStore.createIndex('by-table', 'table');
         syncStore.createIndex('by-timestamp', 'timestamp');
+        syncStore.createIndex('by-user', 'userId');
+      } else if (oldVersion < 2) {
+        const store = (db as any).transaction.objectStore('syncQueue') as IDBObjectStore;
+        if (!store.indexNames.contains('by-user')) store.createIndex('by-user', 'userId');
       }
     },
   });
@@ -90,16 +96,18 @@ export async function clearTableCache(table: string): Promise<void> {
 
 // ── Sync queue operations ──
 
-export async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retries'>): Promise<string> {
+export async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retries' | 'userId'>): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Une session authentifiée est requise pour mettre une modification hors ligne en file.');
   const db = await getDb();
-  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-  await db.put('syncQueue', { ...item, id, timestamp: Date.now(), retries: 0 });
+  const id = `${Date.now()}-${crypto.randomUUID()}`;
+  await db.put('syncQueue', { ...item, id, userId: user.id, timestamp: Date.now(), retries: 0 });
   return id;
 }
 
-export async function getSyncQueue(): Promise<SyncQueueItem[]> {
+export async function getSyncQueue(userId?: string): Promise<SyncQueueItem[]> {
   const db = await getDb();
-  return db.getAllFromIndex('syncQueue', 'by-timestamp');
+  return userId ? db.getAllFromIndex('syncQueue', 'by-user', userId) : db.getAllFromIndex('syncQueue', 'by-timestamp');
 }
 
 export async function removeSyncQueueItem(id: string): Promise<void> {
@@ -115,9 +123,9 @@ export async function updateSyncQueueItem(id: string, updates: Partial<SyncQueue
   }
 }
 
-export async function getSyncQueueCount(): Promise<number> {
+export async function getSyncQueueCount(userId?: string): Promise<number> {
   const db = await getDb();
-  return db.count('syncQueue');
+  return userId ? db.countFromIndex('syncQueue', 'by-user', userId) : db.count('syncQueue');
 }
 
 // When an offline insert receives its server id, rewrite references in both the
