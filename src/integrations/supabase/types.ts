@@ -14,6 +14,310 @@ export type Database = {
   }
   public: {
     Tables: {
+      field_agents: {
+        Row: {
+          active_villages: number
+          assigned_operators: number
+          created_at: string
+          id: string
+          is_active: boolean
+          languages: string[]
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+          zone: string | null
+        }
+        Insert: {
+          active_villages?: number
+          assigned_operators?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          languages?: string[]
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+          zone?: string | null
+        }
+        Update: {
+          active_villages?: number
+          assigned_operators?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          languages?: string[]
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
+      mechanization_jobs: {
+        Row: {
+          area_ha: number
+          created_at: string
+          deposit_amount: number
+          duration_hours: number | null
+          engine_hours_end: number | null
+          engine_hours_start: number | null
+          escrow_status: string
+          farmer_phone: string | null
+          field_agent_id: string | null
+          field_agent_name: string | null
+          field_agent_phone: string | null
+          fuel_liters: number | null
+          id: string
+          job_status: string
+          machine_id: string | null
+          machine_name: string | null
+          notes: string | null
+          operator_name: string | null
+          operator_phone: string | null
+          parcel_id: string | null
+          parcel_name: string
+          partner_id: string | null
+          payment_method: string
+          requester_id: string
+          scheduled_date: string
+          service_id: string | null
+          service_type: string
+          soil_type: string | null
+          total_cost: number
+          updated_at: string
+        }
+        Insert: {
+          area_ha: number
+          created_at?: string
+          deposit_amount?: number
+          duration_hours?: number | null
+          engine_hours_end?: number | null
+          engine_hours_start?: number | null
+          escrow_status?: string
+          farmer_phone?: string | null
+          field_agent_id?: string | null
+          field_agent_name?: string | null
+          field_agent_phone?: string | null
+          fuel_liters?: number | null
+          id?: string
+          job_status?: string
+          machine_id?: string | null
+          machine_name?: string | null
+          notes?: string | null
+          operator_name?: string | null
+          operator_phone?: string | null
+          parcel_id?: string | null
+          parcel_name: string
+          partner_id?: string | null
+          payment_method: string
+          requester_id: string
+          scheduled_date: string
+          service_id?: string | null
+          service_type: string
+          soil_type?: string | null
+          total_cost: number
+          updated_at?: string
+        }
+        Update: {
+          area_ha?: number
+          created_at?: string
+          deposit_amount?: number
+          duration_hours?: number | null
+          engine_hours_end?: number | null
+          engine_hours_start?: number | null
+          escrow_status?: string
+          farmer_phone?: string | null
+          field_agent_id?: string | null
+          field_agent_name?: string | null
+          field_agent_phone?: string | null
+          fuel_liters?: number | null
+          id?: string
+          job_status?: string
+          machine_id?: string | null
+          machine_name?: string | null
+          notes?: string | null
+          operator_name?: string | null
+          operator_phone?: string | null
+          parcel_id?: string | null
+          parcel_name?: string
+          partner_id?: string | null
+          payment_method?: string
+          requester_id?: string
+          scheduled_date?: string
+          service_id?: string | null
+          service_type?: string
+          soil_type?: string | null
+          total_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mechanization_jobs_field_agent_id_fkey"
+            columns: ["field_agent_id"]
+            isOneToOne: false
+            referencedRelation: "field_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mechanization_jobs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "mechanization_machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mechanization_jobs_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "mechanization_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mechanization_machines: {
+        Row: {
+          brand_model: string
+          category: string
+          completed_jobs: number
+          created_at: string
+          daily_capacity_ha: number | null
+          engine_hours: number | null
+          fuel_type: string
+          hourly_rate: number | null
+          id: string
+          image_url: string | null
+          implements_included: string[]
+          is_active: boolean
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          operator_included: boolean
+          partner_id: string
+          power_hp: number | null
+          price_per_ha: number | null
+          rating: number | null
+          region: string | null
+          status: string
+          title: string
+          transmission: string | null
+          updated_at: string
+          verified: boolean
+          year: number | null
+        }
+        Insert: {
+          brand_model: string
+          category: string
+          completed_jobs?: number
+          created_at?: string
+          daily_capacity_ha?: number | null
+          engine_hours?: number | null
+          fuel_type?: string
+          hourly_rate?: number | null
+          id?: string
+          image_url?: string | null
+          implements_included?: string[]
+          is_active?: boolean
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          operator_included?: boolean
+          partner_id: string
+          power_hp?: number | null
+          price_per_ha?: number | null
+          rating?: number | null
+          region?: string | null
+          status?: string
+          title: string
+          transmission?: string | null
+          updated_at?: string
+          verified?: boolean
+          year?: number | null
+        }
+        Update: {
+          brand_model?: string
+          category?: string
+          completed_jobs?: number
+          created_at?: string
+          daily_capacity_ha?: number | null
+          engine_hours?: number | null
+          fuel_type?: string
+          hourly_rate?: number | null
+          id?: string
+          image_url?: string | null
+          implements_included?: string[]
+          is_active?: boolean
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          operator_included?: boolean
+          partner_id?: string
+          power_hp?: number | null
+          price_per_ha?: number | null
+          rating?: number | null
+          region?: string | null
+          status?: string
+          title?: string
+          transmission?: string | null
+          updated_at?: string
+          verified?: boolean
+          year?: number | null
+        }
+        Relationships: []
+      }
+      mechanization_services: {
+        Row: {
+          base_rate_per_ha: number
+          category: string
+          created_at: string
+          description: string | null
+          fuel_per_ha_liters: number
+          hours_per_ha: number
+          icon_name: string | null
+          id: string
+          is_active: boolean
+          name: string
+          partner_id: string
+          rate_unit: string
+          updated_at: string
+        }
+        Insert: {
+          base_rate_per_ha: number
+          category: string
+          created_at?: string
+          description?: string | null
+          fuel_per_ha_liters?: number
+          hours_per_ha?: number
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          partner_id: string
+          rate_unit: string
+          updated_at?: string
+        }
+        Update: {
+          base_rate_per_ha?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          fuel_per_ha_liters?: number
+          hours_per_ha?: number
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          partner_id?: string
+          rate_unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
