@@ -51,7 +51,22 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    let body: any;
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Méthode non autorisée" }), {
+        status: 405,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json", "Allow": "POST, OPTIONS" },
+      });
+    }
+
+    const contentLength = Number(req.headers.get("content-length") ?? "0");
+    if (Number.isFinite(contentLength) && contentLength > 64 * 1024) {
+      return new Response(JSON.stringify({ error: "Requête trop volumineuse" }), {
+        status: 413,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    let body: unknown;
     try {
       body = await req.json();
     } catch {
@@ -60,7 +75,25 @@ Deno.serve(async (req) => {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
-    const { crop_cycle_id, parcel_id, geometry } = body;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return new Response(JSON.stringify({ error: "Corps de requête invalide" }), {
+        status: 400,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    const { crop_cycle_id, parcel_id, geometry } = body as {
+      crop_cycle_id?: unknown;
+      parcel_id?: unknown;
+      geometry?: unknown;
+    };
+
+    if (crop_cycle_id === undefined && parcel_id === undefined) {
+      return new Response(JSON.stringify({ error: "crop_cycle_id ou parcel_id requis" }), {
+        status: 400,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
 
     // ===== Ownership verification =====
     if (parcel_id) {
@@ -98,12 +131,23 @@ Deno.serve(async (req) => {
     // ===== 1. If geometry provided, update parcel =====
     if (parcel_id && geometry) {
       const geo = geometry as GeoJSONPolygon;
-      if (geo.type === "Polygon" && geo.coordinates?.[0]?.length >= 4) {
+      if (
+        geo.type === "Polygon" &&
+        Array.isArray(geo.coordinates) &&
+        Array.isArray(geo.coordinates[0]) &&
+        geo.coordinates[0].length >= 4 &&
+        geo.coordinates[0].every((point: unknown) =>
+          Array.isArray(point) &&
+          point.length >= 2 &&
+          Number.isFinite(Number(point[0])) &&
+          Number.isFinite(Number(point[1]))
+        )
+      ) {
         const coords = geo.coordinates[0];
         const calculated_area_ha = computePolygonArea(coords);
         const perimeter_m = computePerimeter(coords);
 
-        await supabase
+        const { error: parcelUpdateError } = await supabase
           .from("parcels")
           .update({
             geometry: geo,
@@ -112,6 +156,16 @@ Deno.serve(async (req) => {
             area_ha: Math.round(calculated_area_ha * 1000) / 1000,
           })
           .eq("id", parcel_id);
+
+        if (parcelUpdateError) {
+          console.error("parcel update failed:", parcelUpdateError.message);
+          throw new Error("Impossible de mettre à jour la parcelle");
+        }
+      } else {
+        return new Response(JSON.stringify({ error: "Géométrie Polygon invalide" }), {
+          status: 400,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
       }
     }
 
@@ -163,7 +217,7 @@ Deno.serve(async (req) => {
     }
 
     // ===== 5. Update crop cycle =====
-    await supabase
+    const { error: cycleUpdateError } = await supabase
       .from("crop_cycles")
       .update({
         plant_count,
@@ -172,6 +226,11 @@ Deno.serve(async (req) => {
         climate_coefficient: climateCoeff,
       })
       .eq("id", crop_cycle_id);
+
+    if (cycleUpdateError) {
+      console.error("crop cycle update failed:", cycleUpdateError.message);
+      throw new Error("Impossible de mettre à jour le cycle cultural");
+    }
 
     // ===== 6. Calculate input requirements =====
     const inputReqs = crop?.input_requirements as any;
@@ -186,7 +245,14 @@ Deno.serve(async (req) => {
         unit_price: v.unit_price || 0,
       }));
 
-      await supabase.from("crop_cycle_inputs").delete().eq("crop_cycle_id", crop_cycle_id);
+      const { error: inputDeleteError } = await supabase
+        .from("crop_cycle_inputs")
+        .delete()
+        .eq("crop_cycle_id", crop_cycle_id);
+      if (inputDeleteError) {
+        console.error("crop cycle inputs cleanup failed:", inputDeleteError.message);
+        throw new Error("Impossible de recalculer les intrants");
+      }
 
       for (const inp of inputs) {
         const total_quantity = Math.round((inp.quantity_per_ha || 0) * area * 100) / 100;
@@ -204,7 +270,13 @@ Deno.serve(async (req) => {
       }
 
       if (inputRows.length > 0) {
-        await supabase.from("crop_cycle_inputs").insert(inputRows);
+        const { error: inputInsertError } = await supabase
+          .from("crop_cycle_inputs")
+          .insert(inputRows);
+        if (inputInsertError) {
+          console.error("crop cycle inputs insert failed:", inputInsertError.message);
+          throw new Error("Impossible d'enregistrer les intrants");
+        }
       }
     }
 
@@ -231,7 +303,7 @@ Deno.serve(async (req) => {
         ? Math.round(total_investment / crop.avg_price_per_kg)
         : 0;
 
-    await supabase
+    const { error: investmentError } = await supabase
       .from("investment_plans")
       .upsert(
         {
@@ -248,6 +320,11 @@ Deno.serve(async (req) => {
         { onConflict: "crop_cycle_id" }
       );
 
+    if (investmentError) {
+      console.error("investment plan upsert failed:", investmentError.message);
+      throw new Error("Impossible d'enregistrer le plan d'investissement");
+    }
+
     const result = {
       success: true,
       calculations: {
@@ -256,7 +333,6 @@ Deno.serve(async (req) => {
         expected_yield_kg,
         expected_revenue,
         climate_coefficient: climateCoeff,
-        inputs: inputRows,
         investment: {
           total_input_cost: totalInputCost,
           total_labor_cost: totalLabor,
