@@ -1,6 +1,6 @@
 import { getDb } from './offlineDb';
 
-const CREDENTIALS_KEY = 'offline-credentials';
+const CREDENTIALS_PREFIX = 'credentials:';
 
 interface OfflineCredentials {
   identifier: string; // normalized phone number (digits + optional leading '+')
@@ -50,18 +50,23 @@ async function hashPassword(password: string, salt: string): Promise<string> {
 export async function saveOfflineCredentials(identifier: string, password: string): Promise<void> {
   try {
     const db = await getDb();
+    const normalizedIdentifier = normalizePhoneIdentifier(identifier);
+    if (!normalizedIdentifier) return;
+    const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
+    if (!user) return;
     const salt = randomSalt();
     const passwordHash = await hashPassword(password, salt);
     const creds: OfflineCredentials = {
-      identifier: normalizePhoneIdentifier(identifier),
+      identifier: normalizedIdentifier,
       passwordHash,
       salt,
       version: 2,
       savedAt: Date.now(),
     };
     await db.put('cachedData', {
-      key: CREDENTIALS_KEY,
+      key: `${CREDENTIALS_PREFIX}${normalizedIdentifier}`,
       table: '_credentials',
+      userId: user.id,
       data: [creds],
       cachedAt: Date.now(),
     });
@@ -73,7 +78,9 @@ export async function saveOfflineCredentials(identifier: string, password: strin
 export async function verifyOfflineCredentials(identifier: string, password: string): Promise<boolean> {
   try {
     const db = await getDb();
-    const entry = await db.get('cachedData', CREDENTIALS_KEY);
+    const normalizedIdentifier = normalizePhoneIdentifier(identifier);
+    if (!normalizedIdentifier) return false;
+    const entry = await db.get('cachedData', `${CREDENTIALS_PREFIX}${normalizedIdentifier}`);
     if (!entry?.data?.[0]) return false;
     const creds = entry.data[0] as OfflineCredentials;
     // Credentials saved by older builds used a fixed, public salt. They must be
@@ -93,7 +100,10 @@ export async function verifyOfflineCredentials(identifier: string, password: str
 export async function hasOfflineCredentials(): Promise<boolean> {
   try {
     const db = await getDb();
-    const entry = await db.get('cachedData', CREDENTIALS_KEY);
+    const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
+    if (!user) return false;
+    const normalizedIdentifier = normalizePhoneIdentifier(user.email || '');
+    const entry = await db.get('cachedData', `${CREDENTIALS_PREFIX}${normalizedIdentifier}`);
     if (!entry?.data?.[0]) return false;
     const creds = entry.data[0] as OfflineCredentials;
     return Date.now() - creds.savedAt < 30 * 24 * 60 * 60 * 1000;
@@ -105,7 +115,11 @@ export async function hasOfflineCredentials(): Promise<boolean> {
 export async function clearOfflineCredentials(): Promise<void> {
   try {
     const db = await getDb();
-    await db.delete('cachedData', CREDENTIALS_KEY);
+    const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
+    if (user) {
+      const normalizedIdentifier = normalizePhoneIdentifier(user.email || '');
+      await db.delete('cachedData', `${CREDENTIALS_PREFIX}${normalizedIdentifier}`);
+    }
   } catch (e) {
     console.warn('Failed to clear offline credentials:', e);
   }
