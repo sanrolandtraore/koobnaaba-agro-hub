@@ -140,7 +140,7 @@ const Auth = () => {
         emailForProfile = email.trim().toLowerCase();
       }
 
-      const { error } = await signUp(authId, password, fullName, selectedRole, phoneForProfile, emailForProfile);
+      const { error } = await signUp(authId, password, fullName, selectedRole, phoneForProfile, emailForProfile, idMethod);
       if (error) {
         if (error.message?.includes("already registered")) {
           toast.error(`Un compte ${selectedRole} existe déjà avec ces identifiants. Connectez-vous ou choisissez un autre module.`);
