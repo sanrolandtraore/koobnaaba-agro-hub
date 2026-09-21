@@ -98,7 +98,10 @@ function replaceReferences(value: any, fromId: string, toId: string): any {
 }
 
 export async function syncOnReconnect(): Promise<void> {
-  const count = await getSyncQueueCount();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const count = await getSyncQueueCount(user.id);
   if (count === 0) {
     // Still notify so UIs can refetch fresh server data after reconnect
     if (typeof window !== 'undefined') {
