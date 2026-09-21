@@ -55,9 +55,7 @@ export const MechBookingModal = ({
   userParcels = [],
 }: MechBookingModalProps) => {
   const { user } = useAuth();
-  const [parcelName, setParcelName] = useState(
-    userParcels.length > 0 ? userParcels[0].name : "Parcelle Principale"
-  );
+  const [parcelName, setParcelName] = useState(userParcels[0]?.name ?? "");
   const [areaHa, setAreaHa] = useState<number>(initialData?.areaHa || 3.0);
   const [scheduledDate, setScheduledDate] = useState<string>(
     new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0]
@@ -74,9 +72,9 @@ export const MechBookingModal = ({
   const [fieldAgents, setFieldAgents] = useState<any[]>([]);
   useEffect(() => { if (!open) return; Promise.all([listMechanizationMachines(), listFieldAgents()]).then(([m,a]) => { setMachines(m); setFieldAgents(a); if (a[0]) setSelectedAgentId(a[0].id); if (initialData?.machine?.id) setOperatorPreference(initialData.machine.id); else if (m[0]) setOperatorPreference(m[0].id); }).catch((error) => console.warn("Réseau mécanisation:", error)); }, [open, initialData?.machine?.id]);
 
-  const baseRate = initialData?.service?.baseRatePerHa || initialData?.machine?.pricePerHa || 25000;
-  const computedTotalCost = initialData?.totalCost || Math.round(baseRate * areaHa);
-  const computedDeposit = initialData?.depositAmount || Math.round(computedTotalCost * 0.3);
+  const baseRate = initialData?.service?.baseRatePerHa ?? initialData?.machine?.pricePerHa ?? null;
+  const computedTotalCost = initialData?.totalCost ?? (baseRate !== null ? Math.round(baseRate * areaHa) : 0);
+  const computedDeposit = initialData?.depositAmount ?? Math.round(computedTotalCost * 0.3);
 
   const serviceTitle =
     initialData?.service?.name ||
@@ -84,6 +82,8 @@ export const MechBookingModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!initialData?.service && !initialData?.machine) { toast.error("Aucune prestation réelle sélectionnée."); return; }
+    if (!parcelName.trim() || areaHa <= 0) { toast.error("Renseignez une parcelle et une superficie valides."); return; }
     setIsSubmitting(true);
 
     const selectedAgent = fieldAgents.find((a) => a.id === selectedAgentId);
