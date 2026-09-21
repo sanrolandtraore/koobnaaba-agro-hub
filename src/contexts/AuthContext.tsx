@@ -98,10 +98,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!session) {
-          // Ne jamais déconnecter l'utilisateur sans son accord :
-          // si le jeton expire ou ne peut pas être rafraîchi, on bascule
-          // sur la session locale au lieu de le renvoyer à l'écran de connexion.
-          if (!explicitSignOutRef.current) {
+          // A cached session is read-only and may only be restored while the
+          // device is offline. Falling back while online would mask an expired
+          // or revoked Supabase session as an authenticated account.
+          if (!explicitSignOutRef.current && !navigator.onLine) {
             const restored = await tryOfflineRestore(true);
             if (restored) {
               setSession(null);
@@ -181,42 +181,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (identifier: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string) => {
     const safeRole = role && ['agriculteur', 'eleveur', 'formation', 'partenaire', 'agent_technique'].includes(role) ? role : 'agriculteur';
-    const normalizedPhone = phone?.trim() || (identifier.trim().startsWith("+") || /^\d{8,15}$/.test(identifier.trim()) ? identifier.trim() : "");
-    const normalizedEmail = realEmail?.trim().toLowerCase() || (identifier.includes("@") ? identifier.trim().toLowerCase() : "");
-
-    const payload = {
+    const { error } = await supabase.auth.signUp({
+      email,
       password,
       options: {
         data: {
           full_name: fullName,
           role: safeRole,
-          phone: normalizedPhone,
-          real_email: normalizedEmail,
+          phone: phone || "",
+          real_email: realEmail || "",
         },
         emailRedirectTo: window.location.origin,
       },
-    };
-
-    const result = normalizedPhone
-      ? await supabase.auth.signUp({ phone: normalizedPhone, ...payload })
-      : await supabase.auth.signUp({ email: normalizedEmail, ...payload });
-
-    return { error: result.error };
+    });
+    return { error };
   };
 
-  const signIn = async (identifier: string, password: string) => {
-    const value = identifier.trim();
-    const isPhone = value.startsWith("+") || /^\d{8,15}$/.test(value);
-    const normalizedPhone = isPhone && !value.startsWith("+") && value.length === 8 ? "+226" + value : value;
-
-    const { error } = isPhone
-      ? await supabase.auth.signInWithPassword({ phone: normalizedPhone, password })
-      : await supabase.auth.signInWithPassword({ email: value.toLowerCase(), password });
-
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) {
-      await saveOfflineCredentials(isPhone ? normalizedPhone : value.toLowerCase(), password);
+      // Cache credentials for offline login
+      await saveOfflineCredentials(email, password);
     }
     return { error };
   };
@@ -235,11 +222,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     explicitSignOutRef.current = true;
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // Ignore network error on sign out
-    }
+    try { await supabase.auth.signOut(); } catch {}
 
     await clearOfflineSession();
     await clearOfflineCredentials();
@@ -322,3 +305,4 @@ export const useAuth = () => {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };
+

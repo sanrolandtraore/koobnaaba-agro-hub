@@ -5,6 +5,8 @@ const CREDENTIALS_KEY = 'offline-credentials';
 interface OfflineCredentials {
   identifier: string; // normalized phone number (digits + optional leading '+')
   passwordHash: string;
+  salt: string;
+  version: 2;
   savedAt: number;
 }
 
@@ -25,10 +27,22 @@ export function normalizePhoneIdentifier(input: string): string {
   return base.replace(/[^0-9+]/g, '');
 }
 
-async function hashPassword(password: string): Promise<string> {
+const PBKDF2_ITERATIONS = 210_000;
+
+function randomSalt(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPassword(password: string, salt: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'koobnaaba-salt-2026');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const hashBuffer = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: encoder.encode(salt), iterations: PBKDF2_ITERATIONS },
+    key,
+    256,
+  );
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -36,10 +50,13 @@ async function hashPassword(password: string): Promise<string> {
 export async function saveOfflineCredentials(identifier: string, password: string): Promise<void> {
   try {
     const db = await getDb();
-    const passwordHash = await hashPassword(password);
+    const salt = randomSalt();
+    const passwordHash = await hashPassword(password, salt);
     const creds: OfflineCredentials = {
       identifier: normalizePhoneIdentifier(identifier),
       passwordHash,
+      salt,
+      version: 2,
       savedAt: Date.now(),
     };
     await db.put('cachedData', {
@@ -59,10 +76,13 @@ export async function verifyOfflineCredentials(identifier: string, password: str
     const entry = await db.get('cachedData', CREDENTIALS_KEY);
     if (!entry?.data?.[0]) return false;
     const creds = entry.data[0] as OfflineCredentials;
+    // Credentials saved by older builds used a fixed, public salt. They must be
+    // replaced by a successful online sign-in before offline access is allowed.
+    if (creds.version !== 2 || !creds.salt) return false;
     // Expire after 30 days
     if (Date.now() - creds.savedAt > 30 * 24 * 60 * 60 * 1000) return false;
     if (creds.identifier !== normalizePhoneIdentifier(identifier)) return false;
-    const inputHash = await hashPassword(password);
+    const inputHash = await hashPassword(password, creds.salt);
     return inputHash === creds.passwordHash;
   } catch (e) {
     console.warn('Failed to verify offline credentials:', e);
@@ -90,3 +110,4 @@ export async function clearOfflineCredentials(): Promise<void> {
     console.warn('Failed to clear offline credentials:', e);
   }
 }
+
