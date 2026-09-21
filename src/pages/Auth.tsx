@@ -110,10 +110,10 @@ const Auth = () => {
         return;
       }
 
-      const { error } = await signIn(authId, password);
+      const { error } = await signIn(authId, password, idMethod);
       if (error) {
         toast.error(error.message === "Invalid login credentials"
-          ? "Identifiants incorrects pour ce module. Vérifiez votre profil sélectionné."
+          ? "Identifiants incorrects. Vérifiez votre numéro/email et votre mot de passe."
           : error.message);
       } else {
         toast.success("Connexion réussie !");
