@@ -48,7 +48,7 @@ export const MechUssdSimulator = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const handleDial = (code: string = "*384*226#") => {
+  const handleDial = () => {
     setUssdStep(1);
     setInputVal("");
     setSmsNotification(null);
@@ -88,10 +88,10 @@ export const MechUssdSimulator = () => {
 
       const agent = fieldAgents[0];
       setSmsNotification(
-        `[Aperçu USSD] Demande ${selectedService} — ${surface} ha — ${val}.` +
+        `[Aperçu USSD] Parcours préparé : ${selectedService} — ${surface} ha — ${val}.` +
         (agent ? ` Agent disponible : ${agent.name}${agent.phone ? ` (${agent.phone})` : ""}.` : " Aucun agent terrain disponible dans le catalogue.")
       );
-      toast.success("Demande USSD préparée. Aucune notification SMS réelle n’a été envoyée.");
+      toast.success("Parcours USSD simulé. Aucune notification SMS réelle n’a été envoyée.");
     }
   };
 
@@ -115,9 +115,9 @@ export const MechUssdSimulator = () => {
               <div className="flex items-center justify-between text-[10px] text-emerald-400/80 border-b border-emerald-500/20 pb-1 mb-2">
                 <span className="flex items-center gap-1">
                   <Radio className="h-2.5 w-2.5 animate-pulse" />
-                  RESEAU 2G / ORANGE-MOOV
+                  SIMULATION USSD · HORS RÉSEAU
                 </span>
-                <span>USSD *384*226#</span>
+                <span>SIMULATION USSD</span>
               </div>
 
               {ussdStep === 0 && (
@@ -125,7 +125,7 @@ export const MechUssdSimulator = () => {
                   <Smartphone className="h-10 w-10 mx-auto text-emerald-400 opacity-80" />
                   <p className="text-xs font-bold text-emerald-200">KoobNaaba Offline Engine</p>
                   <p className="text-[10px] text-emerald-400/90 leading-relaxed">
-                    Accessible sans internet ni smartphone depuis n'importe quel téléphone à touches.
+                    Simulation de parcours USSD. Aucun appel réseau USSD réel n’est déclenché depuis cette interface.
                   </p>
                   <Button
                     type="button"
@@ -133,7 +133,7 @@ export const MechUssdSimulator = () => {
                     onClick={() => handleDial()}
                     className="h-8 text-xs bg-emerald-500 text-emerald-950 font-bold hover:bg-emerald-400 rounded-xl"
                   >
-                    Composer *384*226#
+                    Lancer la simulation USSD
                   </Button>
                 </div>
               )}
@@ -174,7 +174,7 @@ export const MechUssdSimulator = () => {
 
               {ussdStep === 5 && (
                 <div className="space-y-1.5 text-xs">
-                  <p className="font-bold text-white">✅ DEMANDE ENREGISTRÉE</p>
+                  <p className="font-bold text-white">✅ PARCOURS PRÉPARÉ</p>
                   <p className="text-[11px]">
                     Opération : <span className="text-amber-300">{selectedService.split(" ")[0]}</span>
                   </p>
@@ -182,7 +182,7 @@ export const MechUssdSimulator = () => {
                     Surface : <span className="text-amber-300">{surface} ha</span> à {commune}
                   </p>
                   <p className="text-[10px] text-emerald-300 mt-1">
-                    Un agent de terrain agréé vous contacte par appel/SMS dans les 30 min.
+                    Aucune demande réseau, aucun appel et aucun SMS réel ne sont déclenchés par ce simulateur.
                   </p>
                 </div>
               )}
@@ -250,7 +250,7 @@ export const MechUssdSimulator = () => {
             <div className="mt-3 w-full max-w-[340px] p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs animate-fade-in">
               <p className="font-semibold flex items-center gap-1.5 text-primary">
                 <MessageSquare className="h-3.5 w-3.5" />
-                SMS de confirmation reçu :
+                Aperçu de notification :
               </p>
               <p className="mt-1 text-muted-foreground text-[11px] leading-relaxed">
                 {smsNotification}
@@ -325,13 +325,13 @@ export const MechUssdSimulator = () => {
                 </p>
                 <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
                   <li>
-                    <strong className="text-foreground">Inclusion Totale :</strong> Même sans connexion internet, le producteur compose le code USSD gratuit ou sollicite l'agent de terrain de son village.
+                    <strong className="text-foreground">Inclusion Totale :</strong> ce composant simule le parcours utilisateur ; le raccordement à un opérateur USSD réel devra être ajouté séparément.
                   </li>
                   <li>
-                    <strong className="text-foreground">Paiement Mobile Money Séquestre :</strong> L'argent reste sécurisé jusqu'à validation contradictoire du labour ou de la moisson.
+                    <strong className="text-foreground">Paiement à intégrer :</strong> aucun séquestre Mobile Money réel n'est exécuté par ce composant.
                   </li>
                   <li>
-                    <strong className="text-foreground">Audit Qualité Terrain :</strong> L'agent de terrain certifie la profondeur de labour (25-30 cm) et la densité de semis avec géotagging photo.
+                    <strong className="text-foreground">Contrôle qualité à intégrer :</strong> les workflows de certification, géotagging et preuve photo devront être raccordés à de vraies données et actions.
                   </li>
                 </ul>
               </div>
