@@ -106,7 +106,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
                 <span>Type d'opération mécanisée</span>
-                <span className="text-[11px] text-muted-foreground">7 services disponibles</span>
+                <span className="text-[11px] text-muted-foreground">{services.length} service{services.length > 1 ? "s" : ""} disponible{services.length > 1 ? "s" : ""}</span>
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {services.map((s) => {
@@ -143,7 +143,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
                 })}
               </div>
               <p className="text-xs text-muted-foreground bg-muted/40 p-2.5 rounded-xl border border-border/40">
-                ℹ️ <strong className="text-foreground">{service.name} :</strong> {service.description}
+                ℹ️ <strong className="text-foreground">{service?.name ?? "Aucun service"} :</strong> {service?.description ?? "Sélectionnez un service disponible."}
               </p>
             </div>
 
@@ -256,7 +256,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
 
                 <div className="flex items-baseline justify-between">
                   <span className="text-xs text-muted-foreground">Tarif unitaire de base</span>
-                  <span className="text-xs font-mono">{service.baseRatePerHa.toLocaleString()} F / ha</span>
+                  <span className="text-xs font-mono">{service ? `${service.baseRatePerHa.toLocaleString()} F / ha` : "—"}</span>
                 </div>
 
                 {soilFactor.cost !== 1 && (
@@ -286,7 +286,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
                     <div>
                       <p className="text-[10px] text-muted-foreground">Gasoil estimé</p>
                       <p className="text-xs font-bold font-mono">
-                        {service.fuelPerHaLiters === 0 ? "0 L (Électrique)" : `~ ${fuelLiters} Litres`}
+                        {service ? (service.fuelPerHaLiters === 0 ? "0 L (Électrique)" : `~ ${fuelLiters} Litres`) : "—"}
                       </p>
                     </div>
                   </div>
@@ -312,7 +312,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
             <Button
               type="button"
               size="lg"
-              disabled={!service}
+              disabled={!service || services.length === 0}
               onClick={() => service && onBookNow({
                   service,
                   areaHa,
