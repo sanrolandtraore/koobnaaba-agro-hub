@@ -24,6 +24,11 @@ function randomHex(bytes: number): string {
   return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+async function currentUserId(): Promise<string | null> {
+  const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
 async function sha256(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
   const buf = await crypto.subtle.digest('SHA-256', data);
@@ -59,7 +64,7 @@ export async function setupPin(userId: string, identifier: string, pin: string):
       createdAt: Date.now(),
       lastUsedAt: Date.now(),
     };
-    await db.put('cachedData', { key: PIN_KEY, table: '_pin', data: [record], cachedAt: Date.now() });
+    await db.put('cachedData', { key: `${PIN_KEY}:${userId}`, table: '_pin', userId, data: [record], cachedAt: Date.now() });
     return { ok: true };
   } catch (e: any) {
     return { ok: false, error: e?.message || 'Erreur stockage PIN' };
@@ -69,7 +74,7 @@ export async function setupPin(userId: string, identifier: string, pin: string):
 export async function getPinRecord(): Promise<PinRecord | null> {
   try {
     const db = await getDb();
-    const entry = await db.get('cachedData', PIN_KEY);
+    const entry = await db.get('cachedData', `${PIN_KEY}:${(await currentUserId()) ?? ''}`);
     return (entry?.data?.[0] as PinRecord) ?? null;
   } catch {
     return null;
@@ -92,7 +97,7 @@ export async function verifyPin(pin: string): Promise<{ ok: boolean; record?: Pi
   // update lastUsedAt
   try {
     const db = await getDb();
-    await db.put('cachedData', { key: PIN_KEY, table: '_pin', data: [{ ...rec, lastUsedAt: Date.now() }], cachedAt: Date.now() });
+    await db.put('cachedData', { key: `${PIN_KEY}:${rec.userId}`, table: '_pin', userId: rec.userId, data: [{ ...rec, lastUsedAt: Date.now() }], cachedAt: Date.now() });
   } catch {
     // Ignore cache update failure
   }
@@ -102,7 +107,8 @@ export async function verifyPin(pin: string): Promise<{ ok: boolean; record?: Pi
 export async function clearPin(): Promise<void> {
   try {
     const db = await getDb();
-    await db.delete('cachedData', PIN_KEY);
+    const userId = await currentUserId();
+    if (userId) await db.delete('cachedData', `${PIN_KEY}:${userId}`);
   } catch {
     // Ignore cache deletion failure
   }
