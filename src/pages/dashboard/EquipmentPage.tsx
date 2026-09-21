@@ -161,20 +161,43 @@ export const EquipmentPage = () => {
     setActiveTab("chantiers");
   };
 
-  const handleValidateJob = (jobId: string) => {
-    const updated = jobs.map((j) => {
-      if (j.id === jobId) {
-        return {
-          ...j,
-          jobStatus: "termine" as const,
-          escrowStatus: "solde_debloque" as const,
-        };
-      }
-      return j;
-    });
-    setJobs(updated);
-    localStorage.setItem("koobnaaba_mechanization_jobs", JSON.stringify(updated));
-    toast.success("Chantier validé ! Solde séquestre débloqué vers le prestataire.");
+  const handleValidateJob = async (jobId: string) => {
+    const { data, error } = await supabase
+      .from("mechanization_jobs")
+      .update({ job_status: "termine", escrow_status: "solde_debloque" })
+      .eq("id", jobId)
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      console.error("Validation chantier:", error);
+      toast.error("Impossible de valider le chantier.");
+      return;
+    }
+
+    const updatedJob: MechanizationJob = {
+      id: data.id,
+      serviceType: data.service_type,
+      parcelName: data.parcel_name,
+      areaHa: Number(data.area_ha),
+      totalCost: Number(data.total_cost),
+      depositAmount: Number(data.deposit_amount),
+      paymentMethod: data.payment_method,
+      escrowStatus: data.escrow_status,
+      jobStatus: data.job_status,
+      operatorName: data.operator_name ?? "En attente d'affectation",
+      operatorPhone: data.operator_phone ?? "",
+      fieldAgentName: data.field_agent_name ?? "Non affecté",
+      fieldAgentPhone: data.field_agent_phone ?? "",
+      scheduledDate: data.scheduled_date,
+      machineName: data.machine_name ?? "À affecter",
+      engineHoursStart: data.engine_hours_start == null ? undefined : Number(data.engine_hours_start),
+      engineHoursEnd: data.engine_hours_end == null ? undefined : Number(data.engine_hours_end),
+      notes: data.notes ?? "",
+    };
+
+    setJobs((current) => current.map((job) => job.id === jobId ? updatedJob : job));
+    toast.success("Chantier validé.");
   };
 
   // Filter machines
