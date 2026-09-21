@@ -22,8 +22,8 @@ async function bootstrap() {
     throw new Error("KoobNaaba: #root introuvable");
   }
 
-  // Keep every application import behind the fatal-error guard. A broken CSS,
-  // i18n, or App module must never result in an unexplained white screen.
+  // Keep application imports behind the fatal-error guard so startup failures
+  // render a diagnostic screen instead of an unexplained white screen.
   await import("./index.css");
 
   const { default: App } = await import("./App");
