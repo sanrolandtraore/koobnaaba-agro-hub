@@ -93,7 +93,7 @@ export async function verifyPin(pin: string): Promise<{ ok: boolean; record?: Pi
   if (!rec) return { ok: false, error: 'Aucun PIN configuré sur cet appareil' };
   const deviceId = await getDeviceFingerprint();
   if (rec.deviceId !== deviceId) return { ok: false, error: 'Cet appareil n\'est pas reconnu' };
-  const candidate = await sha256(`${pin}|${rec.salt}|${rec.deviceId}|koobnaaba-pin-2026`);
+  const candidate = await sha256(`${pin}|${rec.salt}|${rec.deviceId}`);
   if (candidate !== rec.pinHash) return { ok: false, error: 'Code PIN incorrect' };
   // update lastUsedAt
   try {
