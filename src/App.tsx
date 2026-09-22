@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import OfflineIndicator from "@/components/OfflineIndicator";
@@ -11,8 +11,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import PinSetup from "./pages/PinSetup";
-import PinUnlock from "./pages/PinUnlock";
 import MentionsLegales from "./pages/MentionsLegales";
 import ConditionsUtilisation from "./pages/ConditionsUtilisation";
 import PolitiqueConfidentialite from "./pages/PolitiqueConfidentialite";
@@ -58,6 +56,7 @@ const ExpertPrescriptionsPage = lazy(() => import("./pages/dashboard/expert/Expe
 const CropLibraryPage = lazy(() => import("./pages/dashboard/expert/CropLibraryPage"));
 const ExpertClientsPage = lazy(() => import("./pages/dashboard/expert/ExpertClientsPage"));
 const ExpertAnalyticsPage = lazy(() => import("./pages/dashboard/expert/ExpertAnalyticsPage"));
+const PartnerStorefrontPage = lazy(() => import("./pages/partner/PartnerStorefrontPage"));
 const FournisseursPage = lazy(() => import("./pages/dashboard/partenaire/FournisseursPage"));
 const AssurancePage = lazy(() => import("./pages/dashboard/partenaire/AssurancePage"));
 const ProgrammesPage = lazy(() => import("./pages/dashboard/partenaire/ProgrammesPage"));
@@ -65,6 +64,12 @@ const ServicesBancairesPage = lazy(() => import("./pages/dashboard/partenaire/Se
 const PartnersDirectoryPage = lazy(() => import("./pages/dashboard/PartnersDirectoryPage"));
 const ProviderSubscriptionPage = lazy(() => import("./pages/dashboard/partenaire/ProviderSubscriptionPage"));
 const MyOffersPage = lazy(() => import("./pages/provider/MyOffersPage"));
+const MissionsPage = lazy(() => import("./pages/provider/MissionsPage"));
+const InterventionsPage = lazy(() => import("./pages/provider/InterventionsPage"));
+const ProviderClientsPage = lazy(() => import("./pages/provider/ProviderClientsPage"));
+const QuoteRequestsPage = lazy(() => import("./pages/provider/QuoteRequestsPage"));
+const RevenuePage = lazy(() => import("./pages/provider/RevenuePage"));
+const PartnerMarketplacePage = lazy(() => import("./pages/provider/PartnerMarketplacePage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -98,10 +103,12 @@ const App = () => (
               <Route path="/mentions-legales" element={<MentionsLegales />} />
               <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
               <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+              <Route path="/partenaire/:partnerId" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
+              <Route path="/partners/:partnerId" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
               <Route element={<AuthProvider><><OfflineIndicator /><Outlet /></></AuthProvider>}>
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/pin-setup" element={<PinSetup />} />
-                <Route path="/auth/pin" element={<PinUnlock />} />
+                <Route path="/auth/pin-setup" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/auth/pin" element={<Navigate to="/auth" replace />} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
                 <Route path="farms" element={<Suspense fallback={<PageLoader />}><FarmsPage /></Suspense>} />
@@ -123,6 +130,7 @@ const App = () => (
                 <Route path="education/:slug" element={<Suspense fallback={<PageLoader />}><CourseDetailPage /></Suspense>} />
                 <Route path="export" element={<Suspense fallback={<PageLoader />}><RoleExportRouter /></Suspense>} />
                 <Route element={<Suspense fallback={<PageLoader />}><LivestockLayout /></Suspense>}>
+                  <Route path="livestock" element={<Suspense fallback={<PageLoader />}><LivestockDashboardPage /></Suspense>} />
                   <Route path="animals" element={<Suspense fallback={<PageLoader />}><AnimalsPage /></Suspense>} />
                   <Route path="animal-health" element={<Suspense fallback={<PageLoader />}><AnimalHealthPage /></Suspense>} />
                   <Route path="animal-feeding" element={<Suspense fallback={<PageLoader />}><AnimalFeedingPage /></Suspense>} />
@@ -143,11 +151,19 @@ const App = () => (
                 <Route path="expert-analytics" element={<Suspense fallback={<PageLoader />}><ExpertAnalyticsPage /></Suspense>} />
                 <Route path="partenaire-abonnement" element={<Suspense fallback={<PageLoader />}><ProviderSubscriptionPage /></Suspense>} />
                 <Route path="partenaire-mes-offres" element={<Suspense fallback={<PageLoader />}><MyOffersPage /></Suspense>} />
+                <Route path="missions" element={<Suspense fallback={<PageLoader />}><MissionsPage /></Suspense>} />
+                <Route path="interventions" element={<Suspense fallback={<PageLoader />}><InterventionsPage /></Suspense>} />
+                <Route path="clients" element={<Suspense fallback={<PageLoader />}><ProviderClientsPage /></Suspense>} />
+                <Route path="provider-clients" element={<Suspense fallback={<PageLoader />}><ProviderClientsPage /></Suspense>} />
+                <Route path="quote-requests" element={<Suspense fallback={<PageLoader />}><QuoteRequestsPage /></Suspense>} />
+                <Route path="revenus" element={<Suspense fallback={<PageLoader />}><RevenuePage /></Suspense>} />
+                <Route path="partner-marketplace" element={<Suspense fallback={<PageLoader />}><PartnerMarketplacePage /></Suspense>} />
                 <Route path="partenaire-fournisseurs" element={<Suspense fallback={<PageLoader />}><FournisseursPage /></Suspense>} />
                 <Route path="partenaire-assurance" element={<Suspense fallback={<PageLoader />}><AssurancePage /></Suspense>} />
                 <Route path="partenaire-programmes" element={<Suspense fallback={<PageLoader />}><ProgrammesPage /></Suspense>} />
                 <Route path="partenaire-banques" element={<Suspense fallback={<PageLoader />}><ServicesBancairesPage /></Suspense>} />
                 <Route path="partners-directory" element={<Suspense fallback={<PageLoader />}><PartnersDirectoryPage /></Suspense>} />
+                <Route path="partenaire-vitrine" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />

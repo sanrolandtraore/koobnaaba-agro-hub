@@ -112,9 +112,9 @@ const DashboardHome = () => {
   const quickActions = [
     { to: "/dashboard/parcels", label: "Parcelles", icon: MapPin, tone: "bg-secondary/40" },
     { to: "/dashboard/crop-cycles", label: "Cultures", icon: Wheat, tone: "bg-amber-100 dark:bg-amber-950/40" },
+    { to: "/dashboard/crop-planning", label: "Planification", icon: Calculator, tone: "bg-primary/15" },
     { to: "/dashboard/activities", label: "Activités", icon: Activity, tone: "bg-sky-100 dark:bg-sky-950/40" },
     { to: "/dashboard/calendar", label: "Calendrier", icon: CalendarDays, tone: "bg-rose-100 dark:bg-rose-950/40" },
-    { to: "/dashboard/expert-diagnosis", label: "Diagnostic IA", icon: Microscope, tone: "bg-primary/15" },
     { to: "/dashboard/costs", label: "Coûts", icon: DollarSign, tone: "bg-muted" },
   ];
 

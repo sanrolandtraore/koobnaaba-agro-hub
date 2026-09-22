@@ -8,6 +8,7 @@ import {
   Heart, Baby, Wallet, AlertTriangle, WifiOff, ArrowUpRight,
   Stethoscope, Wheat, Sprout, ShoppingCart, TrendingUp, TrendingDown, Bird, Fish,
 } from "lucide-react";
+import { LivestockZootechnicCard } from "@/components/livestock/LivestockZootechnicCard";
 
 const speciesLabels: Record<string, string> = {
   bovin: "Bovins",
@@ -269,6 +270,9 @@ const LivestockDashboardPage = () => {
           <p className="text-[11px] text-muted-foreground mt-1">FCFA balance</p>
         </div>
       </section>
+      
+      {/* Simulateur zootechnique d'élevage */}
+      <LivestockZootechnicCard />
 
       {/* Activité récente */}
       <section className="livestock-bento-tile">

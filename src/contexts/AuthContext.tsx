@@ -3,7 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { saveOfflineSession, getOfflineSession, clearOfflineSession, clearUserOfflineData } from "@/lib/offlineDb";
 import { saveOfflineCredentials, verifyOfflineCredentials, clearOfflineCredentials } from "@/lib/offlineAuth";
-import { setupPin as setupPinLib, verifyPin as verifyPinLib, hasPin as hasPinLib, clearPin as clearPinLib, getPinRecord } from "@/lib/pinAuth";
+import {
+  PartnerProfileType,
+  getStoredPartnerProfileType,
+  saveStoredPartnerProfileType,
+} from "@/lib/partnerProfiles";
+import { saveProviderSubscription, getStoredProviderSubscription } from "@/lib/providerSubscription";
 
 interface AuthContextType {
   user: User | null;
@@ -12,18 +17,28 @@ interface AuthContextType {
   profile: { full_name: string; phone: string | null; email: string | null; avatar_url: string | null } | null;
   roles: string[];
   primaryRole: string | null;
+  partnerType: PartnerProfileType;
+  setPartnerType: (type: PartnerProfileType) => void;
   isOfflineSession: boolean;
-  signUp: (identifier: string, password: string, fullName: string, role?: string, phone?: string, realEmail?: string, method?: "email" | "phone") => Promise<{ error: any }>;
+  signUp: (
+    identifier: string,
+    password: string,
+    fullName: string,
+    role?: string,
+    phone?: string,
+    realEmail?: string,
+    method?: "email" | "phone",
+    partnerMetadata?: {
+      partner_type?: PartnerProfileType;
+      company_name?: string;
+      services_offered?: string;
+      service_area?: string;
+    }
+  ) => Promise<{ error: any }>;
   signIn: (identifier: string, password: string, method?: "email" | "phone") => Promise<{ error: any }>;
   signInOffline: (identifier: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
-  // PIN helpers
-  setupPin: (pin: string) => Promise<{ ok: boolean; error?: string }>;
-  unlockWithPin: (pin: string) => Promise<{ ok: boolean; error?: string }>;
-  hasPin: () => Promise<boolean>;
-  clearPin: () => Promise<void>;
-  getPinIdentifier: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,10 +49,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<string[]>([]);
+  const [partnerType, setPartnerTypeState] = useState<PartnerProfileType>(() => getStoredPartnerProfileType());
   const [isOfflineSession, setIsOfflineSession] = useState(false);
   // Vrai uniquement quand l'utilisateur clique lui-même sur « Se déconnecter »
   const explicitSignOutRef = useRef(false);
 
+  const setPartnerType = (type: PartnerProfileType) => {
+    setPartnerTypeState(type);
+    saveStoredPartnerProfileType(type, user?.id);
+    const sub = getStoredProviderSubscription();
+    saveProviderSubscription({
+      ...sub,
+      activityType: type as any,
+    });
+  };
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -75,8 +100,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Try to restore offline session. By default only when offline; pass
-  // `force=true` to restore even when online (used by PIN unlock fallback).
   const tryOfflineRestore = async (force = false) => {
     if (!force && navigator.onLine) return false;
     try {
@@ -86,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(cached.profile);
         setRoles(cached.roles);
         setIsOfflineSession(true);
+        setPartnerTypeState(getStoredPartnerProfileType(cached.userId));
         return true;
       }
     } catch (e) {
@@ -98,9 +122,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!session) {
-          // A cached session is read-only and may only be restored while the
-          // device is offline. Falling back while online would mask an expired
-          // or revoked Supabase session as an authenticated account.
           if (!explicitSignOutRef.current && !navigator.onLine) {
             const restored = await tryOfflineRestore(true);
             if (restored) {
@@ -120,6 +141,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session.user);
         setIsOfflineSession(false);
+
+        // Synchroniser le profil de partenaire spécifique
+        const metaPartnerType = session.user.user_metadata?.partner_type as PartnerProfileType | undefined;
+        if (metaPartnerType) {
+          setPartnerTypeState(metaPartnerType);
+          saveStoredPartnerProfileType(metaPartnerType, session.user.id);
+        } else {
+          setPartnerTypeState(getStoredPartnerProfileType(session.user.id));
+        }
+
         setTimeout(async () => {
           const p = await fetchProfile(session.user.id);
           const r = await fetchRoles(session.user.id);
@@ -129,17 +160,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        const metaPartnerType = session.user.user_metadata?.partner_type as PartnerProfileType | undefined;
+        if (metaPartnerType) {
+          setPartnerTypeState(metaPartnerType);
+          saveStoredPartnerProfileType(metaPartnerType, session.user.id);
+        } else {
+          setPartnerTypeState(getStoredPartnerProfileType(session.user.id));
+        }
         const p = await fetchProfile(session.user.id);
         const r = await fetchRoles(session.user.id);
         await cacheSession(session.user.id, session.user.email || '', p, r);
         setLoading(false);
       } else {
-        // No online session — try offline restore
         const restored = await tryOfflineRestore();
         if (!restored) {
           setProfile(null);
@@ -148,7 +184,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     }).catch(async () => {
-      // Network error — try offline
       const restored = await tryOfflineRestore();
       if (!restored) {
         setProfile(null);
@@ -157,7 +192,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    // Listen for coming back online to re-validate session & refresh data
     const handleOnline = async () => {
       try {
         const { data: { session: fresh } } = await supabase.auth.getSession();
@@ -175,9 +209,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     window.addEventListener('online', handleOnline);
 
+    const handlePartnerTypeEvent = (e: any) => {
+      if (e?.detail?.type) {
+        setPartnerTypeState(e.detail.type);
+      }
+    };
+    window.addEventListener("koobnaaba-partner-type-updated", handlePartnerTypeEvent);
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('online', handleOnline);
+      window.removeEventListener("koobnaaba-partner-type-updated", handlePartnerTypeEvent);
     };
   }, []);
 
@@ -189,14 +231,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     phone?: string,
     realEmail?: string,
     method: "email" | "phone" = "email",
+    partnerMetadata?: {
+      partner_type?: PartnerProfileType;
+      company_name?: string;
+      services_offered?: string;
+      service_area?: string;
+    }
   ) => {
     const safeRole = role && ['agriculteur', 'eleveur', 'formation', 'partenaire', 'agent_technique'].includes(role) ? role : 'agriculteur';
-    const metadata = {
+    const metadata: Record<string, any> = {
       full_name: fullName,
       role: safeRole,
       phone: phone || "",
       real_email: realEmail || "",
     };
+
+    if (safeRole === "partenaire" && partnerMetadata) {
+      if (partnerMetadata.partner_type) {
+        metadata.partner_type = partnerMetadata.partner_type;
+        setPartnerTypeState(partnerMetadata.partner_type);
+        saveStoredPartnerProfileType(partnerMetadata.partner_type);
+      }
+      if (partnerMetadata.company_name) metadata.company_name = partnerMetadata.company_name;
+      if (partnerMetadata.services_offered) metadata.services_offered = partnerMetadata.services_offered;
+      if (partnerMetadata.service_area) metadata.service_area = partnerMetadata.service_area;
+
+      // Initialiser la souscription partenaire avec son profil d'activité
+      const sub = getStoredProviderSubscription();
+      saveProviderSubscription({
+        ...sub,
+        companyName: partnerMetadata.company_name || fullName,
+        activityType: (partnerMetadata.partner_type as any) || "services_agronomiques",
+        phone: phone || sub.phone,
+        email: realEmail || sub.email,
+        location: partnerMetadata.service_area || sub.location,
+      });
+    }
 
     if (method === "phone") {
       const { error } = await supabase.auth.signUp({
@@ -224,7 +294,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       : { email: identifier, password };
     const { error } = await supabase.auth.signInWithPassword(credentials);
     if (!error) {
-      // Cache credentials for offline login
       await saveOfflineCredentials(identifier, password);
     }
     return { error };
@@ -250,8 +319,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (currentUserId) await clearUserOfflineData(currentUserId);
     await clearOfflineSession();
     await clearOfflineCredentials();
-    // Explicit sign-out clears the local PIN together with account-local offline data.
-    // This prevents a later device user from unlocking the previous account.
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -262,63 +329,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hasRole = (role: string) => roles.includes(role);
   const primaryRole = roles.length > 0 ? roles[0] : null;
 
-  // ── PIN helpers ──
-  const setupPin = async (pin: string) => {
-    if (!user) return { ok: false, error: "Vous devez être connecté pour configurer un PIN" };
-    return setupPinLib(user.id, user.email || '', pin);
-  };
-
-  const unlockWithPin = async (pin: string) => {
-    const result = await verifyPinLib(pin);
-    if (!result.ok || !result.record) return { ok: false, error: result.error };
-
-    // If online, try to silently re-establish a real Supabase JWT session
-    // by reusing the cached offline credentials (auto-login total).
-    if (navigator.onLine) {
-      try {
-        const db = await (await import("@/lib/offlineDb")).getDb();
-        const identifier = result.record.identifier.toLowerCase();
-        const entry = await db.get("cachedData", `credentials:${identifier}`);
-        const creds = entry?.data?.[0];
-        if (creds?.identifier) {
-          // We only have the hash; we cannot replay the password. Fall back to
-          // refreshing any existing Supabase session token if available.
-          const { data } = await supabase.auth.getSession();
-          if (data.session?.user) {
-            setSession(data.session);
-            setUser(data.session.user);
-            setIsOfflineSession(false);
-            const p = await fetchProfile(data.session.user.id);
-            const r = await fetchRoles(data.session.user.id);
-            await cacheSession(data.session.user.id, data.session.user.email || "", p, r);
-            return { ok: true };
-          }
-        }
-      } catch (e) {
-        console.warn("PIN unlock: online refresh failed, falling back to offline session", e);
-      }
-    }
-
-    // Offline (or no JWT available) — restore cached read-only session
-    const restored = await tryOfflineRestore(true);
-    if (!restored) {
-      return { ok: false, error: "Session locale introuvable. Reconnectez-vous avec votre mot de passe." };
-    }
-    return { ok: true };
-  };
-
-  const hasPin = () => hasPinLib();
-  const clearPin = () => clearPinLib();
-  const getPinIdentifier = async () => {
-    const rec = await getPinRecord();
-    return rec?.identifier ?? null;
-  };
-
   return (
     <AuthContext.Provider value={{
-      user, session, loading, profile, roles, primaryRole, isOfflineSession,
+      user, session, loading, profile, roles, primaryRole, partnerType, setPartnerType, isOfflineSession,
       signUp, signIn, signInOffline, signOut, hasRole,
-      setupPin, unlockWithPin, hasPin, clearPin, getPinIdentifier,
     }}>
       {children}
     </AuthContext.Provider>
@@ -330,4 +344,3 @@ export const useAuth = () => {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };
-

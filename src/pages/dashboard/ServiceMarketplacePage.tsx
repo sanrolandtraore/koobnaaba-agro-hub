@@ -437,7 +437,7 @@ const ServiceMarketplacePage = () => {
                   <CardContent className="pt-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-semibold text-sm">{sup.name}</h3>
-                      {sup.is_verified && <Badge variant="default" className="text-[10px] shrink-0">Vérifié ✓</Badge>}
+                      {sup.is_verified && <Badge variant="default" className="text-[10px] shrink-0">Partenaire Agréé</Badge>}
                     </div>
                     {sup.description && <p className="text-xs text-muted-foreground line-clamp-3">{sup.description}</p>}
                     <div className="space-y-1.5 text-xs">

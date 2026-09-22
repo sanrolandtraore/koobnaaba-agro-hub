@@ -8,20 +8,11 @@ import { cn } from "@/lib/utils";
  * in localStorage, no page reload required.
  */
 const LanguageSelector = ({ className }: { className?: string }) => {
-  const { i18n, t } = useTranslation();
-  const current = i18n.resolvedLanguage === "en" ? "en" : "fr";
-
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className={cn("gap-2", className)}
-      aria-label={t("common.language")}
-      onClick={() => i18n.changeLanguage(current === "fr" ? "en" : "fr")}
-    >
-      <Languages className="h-4 w-4" aria-hidden="true" />
-      <span className="text-xs font-semibold uppercase">{current === "fr" ? "FR" : "EN"}</span>
-    </Button>
+    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/40 text-muted-foreground", className)}>
+      <Languages className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
+      <span className="text-[11px] font-semibold text-foreground uppercase tracking-wider">FR • Français</span>
+    </div>
   );
 };
 

@@ -1,122 +1,136 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-
-interface Mission {
-  id: string; title: string; client_name: string; domain: string; status: string;
-  scheduled_date: string; completed_date: string | null; price: number | null; paid: boolean;
-}
+import { Wallet, TrendingUp, Clock, CheckCircle2, DollarSign, Calendar } from "lucide-react";
+import { toast } from "sonner";
+import { partnerStorage, PartnerMission } from "@/lib/partnerStorage";
 
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
 export default function RevenuePage() {
   const { user } = useAuth();
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const [missions, setMissions] = useState<PartnerMission[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    if (!user) return;
+  const loadData = async () => {
     setLoading(true);
-    const { data } = await supabase.from("provider_missions")
-      .select("id, title, client_name, domain, status, scheduled_date, completed_date, price, paid")
-      .eq("provider_id", user.id).order("scheduled_date", { ascending: false });
-    setMissions((data ?? []) as Mission[]);
-    setLoading(false);
+    try {
+      const data = await partnerStorage.getMissions(user?.id);
+      setMissions(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load();   }, [user]);
+  useEffect(() => {
+    loadData();
+    const handleUpdate = () => loadData();
+    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+  }, [user]);
 
-  const billable = useMemo(() => missions.filter((m) => m.status === "terminee" && m.price), [missions]);
-  const total = billable.reduce((s, m) => s + Number(m.price), 0);
-  const paid = billable.filter((m) => m.paid).reduce((s, m) => s + Number(m.price), 0);
+  const billable = useMemo(() => missions.filter((m) => m.price), [missions]);
+  const total = billable.reduce((s, m) => s + Number(m.price || 0), 0);
+  const paid = billable.filter((m) => m.paid).reduce((s, m) => s + Number(m.price || 0), 0);
   const pending = total - paid;
 
-  const byMonth = useMemo(() => {
-    const map = new Map<string, number>();
-    billable.forEach((m) => {
-      const key = (m.completed_date ?? m.scheduled_date).slice(0, 7);
-      map.set(key, (map.get(key) ?? 0) + Number(m.price));
-    });
-    return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0])).slice(0, 6);
-  }, [billable]);
-
-  const togglePaid = async (m: Mission) => {
-    const { error } = await supabase.from("provider_missions").update({ paid: !m.paid }).eq("id", m.id);
-    if (error) return toast({ title: "Mise à jour impossible", variant: "destructive" });
-    load();
+  const togglePaid = async (m: PartnerMission) => {
+    try {
+      await partnerStorage.saveMission({
+        ...m,
+        paid: !m.paid,
+      });
+      toast.success(m.paid ? "Marqué comme non payé" : "Paiement encaissé avec succès !");
+      loadData();
+    } catch (e: any) {
+      toast.error(e.message || "Erreur de mise à jour");
+    }
   };
 
   const tiles = [
-    { label: "Chiffre d'affaires", value: fcfa(total), icon: TrendingUp },
-    { label: "Encaissé", value: fcfa(paid), icon: CheckCircle2 },
-    { label: "En attente", value: fcfa(pending), icon: Clock },
+    { label: "Chiffre d'affaires total", value: fcfa(total), icon: TrendingUp, color: "text-primary" },
+    { label: "Encaissé (réglé)", value: fcfa(paid), icon: CheckCircle2, color: "text-emerald-600" },
+    { label: "En attente d'encaissement", value: fcfa(pending), icon: Clock, color: "text-amber-600" },
   ];
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Wallet className="h-5 w-5" /> Revenus</h1>
-        <p className="text-sm text-muted-foreground">Suivi des prestations facturées et des paiements</p>
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+          <Wallet className="h-6 w-6" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-heading font-bold">Chiffre d'Affaires & Facturation</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Suivi des recettes, règlements Mobile Money / virement et paiements en attente.
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {tiles.map(({ label, value, icon: Icon }) => (
-          <Card key={label}>
-            <CardHeader className="pb-2 flex flex-row items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {tiles.map(({ label, value, icon: Icon, color }) => (
+          <Card key={label} className="hover:border-primary/50 transition-all">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-medium text-muted-foreground">{label}</CardTitle>
+              <div className={`p-2 rounded-lg bg-muted/60 ${color}`}>
+                <Icon className="h-4 w-4" />
+              </div>
             </CardHeader>
-            <CardContent><p className="text-xl font-bold">{value}</p></CardContent>
+            <CardContent>
+              <p className="text-2xl font-heading font-bold">{value}</p>
+            </CardContent>
           </Card>
         ))}
       </div>
 
-      {byMonth.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Par mois</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {byMonth.map(([month, amount]) => (
-              <div key={month} className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {new Date(`${month}-01`).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
-                </span>
-                <span className="font-medium">{fcfa(amount)}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Prestations terminées</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
+        <CardHeader>
+          <CardTitle className="text-base font-bold">Historique des prestations & paiements</CardTitle>
+          <CardDescription className="text-xs">
+            Basculez le statut d'encaissement en un clic dès réception du règlement client.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
           {loading ? (
             <p className="text-sm text-muted-foreground">Chargement…</p>
           ) : billable.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune prestation facturée pour le moment.</p>
+            <p className="text-sm text-muted-foreground text-center py-6">
+              Aucune prestation facturable enregistrée pour le moment.
+            </p>
           ) : (
-            billable.map((m) => (
-              <div key={m.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{m.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {m.client_name} · {new Date(m.completed_date ?? m.scheduled_date).toLocaleDateString("fr-FR")}
-                  </p>
+            <div className="space-y-2">
+              {billable.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border bg-card hover:bg-muted/30 transition-colors gap-3"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{m.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Client : <strong>{m.client_name}</strong> · Prévu le {new Date(m.scheduled_date).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                    <span className="font-heading font-bold text-base text-foreground">
+                      {fcfa(Number(m.price))}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant={m.paid ? "secondary" : "outline"}
+                      onClick={() => togglePaid(m)}
+                      className={`text-xs h-8 ${m.paid ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 border-emerald-500/30" : "text-amber-700 border-amber-500/30 hover:bg-amber-50"}`}
+                    >
+                      {m.paid ? "✅ Encaissé" : "⏳ Marquer payé"}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-sm font-semibold">{fcfa(Number(m.price))}</span>
-                  <Badge variant={m.paid ? "secondary" : "outline"}>{m.paid ? "Payé" : "À encaisser"}</Badge>
-                  <Button size="sm" variant="ghost" onClick={() => togglePaid(m)}>
-                    {m.paid ? "Annuler" : "Marquer payé"}
-                  </Button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

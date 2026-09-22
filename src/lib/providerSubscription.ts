@@ -88,7 +88,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       "Gestion de la flotte de matériel en location & réservations avec acompte séquestre",
       "Carnet de suivi des exploitations clientes et tournées",
       "Export PDF/CSV des diagnostics et comptes-rendus d'intervention",
-      "Badge vérifié 'Prestataire Agréé KoobNaaba'",
+      "Badge officiel 'Partenaire Agréé KoobNaaba'",
     ],
     toolsIncluded: [
       { name: "Diagnostic IA Végétal", description: "Analyse instantanée par vision IA", route: "/dashboard/expert-diagnosis" },

@@ -1,9 +1,17 @@
 import { useNavigate, Link } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight, Microscope, FileText, Calculator, Eye, Sparkles, Tractor } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  MapPin, ArrowRight, Mail, Phone, MapPinned, ChevronLeft, ChevronRight,
+  Microscope, FileText, Calculator, Eye, Sparkles, Tractor, Store, ShieldCheck,
+  ExternalLink, Send, CheckCircle2
+} from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { partnerStorage, PartnerOffer, PartnerEntry } from "@/lib/partnerStorage";
+import ProductMediaViewer from "@/components/partner/ProductMediaViewer";
 import logo from "@/assets/logo.png";
 import galleryFarmField from "@/assets/gallery/farm-field.jpg";
 import galleryLivestock from "@/assets/gallery/livestock.jpg";
@@ -15,7 +23,7 @@ import videoHarvest from "@/assets/gallery/harvest-video.mp4";
 import videoLivestock from "@/assets/gallery/livestock-video.mp4";
 import videoIrrigation from "@/assets/gallery/irrigation-video.mp4";
 
-// Partner data is loaded from the real public service catalog. No fictional partner list is shipped in the frontend.\n// ── Gallery data ──
+// ── Données galerie KoobNaaba ──
 const galleryItems: { src: string; title: string; desc: string; type: "image" | "video" }[] = [
   { src: galleryFarmField, title: "Champs de mil au coucher du soleil", desc: "Récolte traditionnelle dans la savane", type: "image" },
   { src: videoHarvest, title: "Récolte en action", desc: "Scènes de récolte sous le soleil doré", type: "video" },
@@ -26,6 +34,15 @@ const galleryItems: { src: string; title: string; desc: string; type: "image" | 
   { src: videoIrrigation, title: "Irrigation moderne", desc: "Systèmes d'arrosage en fonctionnement", type: "video" },
   { src: galleryDigital, title: "Agriculture numérique", desc: "La technologie au service du terrain", type: "image" },
   { src: galleryIrrigation, title: "Systèmes d'irrigation", desc: "Modernisation des pratiques agricoles", type: "image" },
+];
+
+const HOME_CATEGORY_FILTERS = [
+  { value: "all", label: "Toutes les offres" },
+  { value: "materiel", label: "🚜 Matériel & Machinisme" },
+  { value: "intrants", label: "🧪 Intrants & Fertilisants" },
+  { value: "semences", label: "🌱 Semences Certifiées" },
+  { value: "elevage", label: "🐄 Élevage & Nutrition" },
+  { value: "service", label: "🛠️ Services & Travaux" },
 ];
 
 // ── Auto-scroll carousel hook ──
@@ -42,28 +59,38 @@ function useCarousel(length: number, interval = 4000) {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [partners, setPartners] = useState<{ name: string; category: string }[]>([]);
-  const partnerCarousel = useCarousel(Math.max(partners.length, 1), 3000);
+  const [partnerOffers, setPartnerOffers] = useState<PartnerOffer[]>([]);
+  const [partnersList, setPartnersList] = useState<PartnerEntry[]>([]);
+  const [selectedCat, setSelectedCat] = useState("all");
+  const [loadingPartners, setLoadingPartners] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    const loadPartners = async () => {
-      const { data, error } = await supabase
-        .from("service_offers")
-        .select("id,title,category,service_area")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(12);
-      if (!cancelled && !error) {
-        setPartners((data ?? []).map((offer) => ({
-          name: offer.title,
-          category: offer.category || offer.service_area || "Service agricole",
-        })));
+    const loadData = async () => {
+      try {
+        const [offers, pList] = await Promise.all([
+          partnerStorage.getOffers(),
+          partnerStorage.getPartners(),
+        ]);
+        if (!cancelled) {
+          setPartnerOffers(offers.filter(o => o.is_active));
+          setPartnersList(pList);
+        }
+      } catch (e) {
+        console.error("Error loading partner data", e);
+      } finally {
+        if (!cancelled) setLoadingPartners(false);
       }
     };
-    void loadPartners();
+    void loadData();
     return () => { cancelled = true; };
   }, []);
+
+  const filteredOffers = useMemo(() => {
+    if (selectedCat === "all") return partnerOffers;
+    return partnerOffers.filter(o => o.category === selectedCat);
+  }, [partnerOffers, selectedCat]);
+
   const galleryCarousel = useCarousel(galleryItems.length, 5000);
 
   return (
@@ -99,46 +126,168 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Live provider catalog — only real active offers from Supabase */}
-      <section className="py-10 bg-muted/30 border-y border-border overflow-hidden">
-        <div className="container max-w-5xl mx-auto px-4">
-          <h3 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-6">
-            Prestataires et services présents sur KoobNaaba
-          </h3>
-          {partners.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Les prestataires actifs apparaîtront ici dès leur publication sur KoobNaaba.
+      {/* OFFRES & PRODUITS DES PARTENAIRES AGRÉÉS (Photos, Vidéos & Vitrines Dédiées) */}
+      <section className="py-16 bg-muted/30 border-y border-border">
+        <div className="container max-w-6xl mx-auto px-4 space-y-8">
+          <div className="text-center max-w-3xl mx-auto space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+              <Store className="h-3.5 w-3.5" /> Catalogue & Vitrines Partenaires
+            </div>
+            <h2 className="text-3xl font-heading font-bold">
+              Offres & Équipements de nos <span className="text-gradient-warm">Partenaires Agréés</span>
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Découvrez les semences certifiées, fertilisants, matériels motorisés et services publiés par nos entreprises partenaires avec démonstrations vidéos. Chaque partenaire dispose de sa boutique unique.
             </p>
+          </div>
+
+          {/* Filtres par catégorie */}
+          <div className="flex flex-wrap justify-center gap-2">
+            {HOME_CATEGORY_FILTERS.map((cat) => (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => setSelectedCat(cat.value)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  selectedCat === cat.value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card hover:bg-muted text-foreground border border-border"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Grille des offres partenaires */}
+          {loadingPartners ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-72 rounded-2xl bg-card border animate-pulse" />
+              ))}
+            </div>
+          ) : filteredOffers.length === 0 ? (
+            <div className="text-center py-12 text-sm text-muted-foreground bg-card border rounded-2xl p-8">
+              Aucune offre dans cette catégorie pour le moment.
+            </div>
           ) : (
-            <div className="relative">
-              <button onClick={partnerCarousel.prev} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors" aria-label="Précédent">
-                <ChevronLeft className="h-4 w-4 text-foreground" />
-              </button>
-              <button onClick={partnerCarousel.next} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/80 border border-border shadow-sm hover:bg-accent transition-colors" aria-label="Suivant">
-                <ChevronRight className="h-4 w-4 text-foreground" />
-              </button>
-              <div className="overflow-hidden mx-10">
-                <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${partnerCarousel.index * (100 / 4)}%)` }}>
-                  {[...partners, ...partners].map((p, i) => (
-                    <div key={`${p.name}-${i}`} className="flex-shrink-0 w-1/2 md:w-1/4 px-3">
-                      <div className="bg-card border border-border rounded-xl p-5 text-center h-full flex flex-col items-center justify-center gap-2">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
-                          {p.name.charAt(0)}
-                        </div>
-                        <span className="text-sm font-semibold text-foreground leading-tight">{p.name}</span>
-                        <span className="text-xs text-muted-foreground">{p.category}</span>
-                      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredOffers.slice(0, 6).map((offer) => (
+                <Card key={offer.id} className="overflow-hidden flex flex-col justify-between hover:shadow-warm transition-all duration-300 border-border/80 hover:border-primary/40 bg-card">
+                  <div>
+                    {/* Visionneuse média intégrée avec vidéos/photos */}
+                    <div className="bg-muted">
+                      <ProductMediaViewer media={offer.media || []} title={offer.title} />
                     </div>
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-center gap-1.5 mt-5">
-                {partners.map((_, i) => (
-                  <button key={i} onClick={() => partnerCarousel.setIndex(i)} className={`h-2 rounded-full transition-all duration-300 ${i === partnerCarousel.index ? "w-6 bg-primary" : "w-2 bg-border hover:bg-muted-foreground/40"}`} aria-label={`Prestataire ${i + 1}`} />
-                ))}
-              </div>
+
+                    <CardContent className="p-4 space-y-3">
+                      {/* En-tête partenaire & lien vers sous-page unique */}
+                      <div className="flex items-center justify-between gap-2">
+                        <Link
+                          to={`/partenaire/${offer.owner_id}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline group truncate"
+                          title="Visiter la vitrine dédiée du partenaire"
+                        >
+                          <Store className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
+                          <span className="truncate">{offer.partner_name}</span>
+                        </Link>
+                        <Badge variant="outline" className="text-[10px] shrink-0 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 flex items-center gap-1">
+                          <ShieldCheck className="h-3 w-3" /> Agréé
+                        </Badge>
+                      </div>
+
+                      {/* Titre & Prix */}
+                      <div>
+                        <h3 className="font-heading font-bold text-base leading-snug line-clamp-2">
+                          {offer.title}
+                        </h3>
+                        {offer.price_indication ? (
+                          <div className="mt-1 flex items-baseline gap-1">
+                            <span className="text-lg font-heading font-bold text-primary">
+                              {offer.price_indication}
+                            </span>
+                            {offer.unit && (
+                              <span className="text-xs text-muted-foreground">/ {offer.unit}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="mt-1 text-xs font-semibold text-muted-foreground">Tarif sur devis</p>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      {offer.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {offer.description}
+                        </p>
+                      )}
+
+                      {/* Localisation */}
+                      {offer.location_name && (
+                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <MapPin className="h-3 w-3 text-rose-500 shrink-0" />
+                          <span>{offer.location_name}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </div>
+
+                  {/* Boutons d'action */}
+                  <div className="p-4 pt-0 border-t border-border/40 mt-3 grid grid-cols-2 gap-2">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-semibold w-full"
+                    >
+                      <Link to={`/partenaire/${offer.owner_id}`}>
+                        <Store className="h-3.5 w-3.5 mr-1 text-primary" />
+                        Vitrine
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      size="sm"
+                      className="gradient-primary text-primary-foreground text-xs font-semibold w-full shadow-xs"
+                    >
+                      <Link to="/auth">
+                        <Send className="h-3.5 w-3.5 mr-1" />
+                        Commander
+                      </Link>
+                    </Button>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
+
+          {/* Bandeau des boutiques et partenaires officiels */}
+          <div className="pt-4 border-t border-border/60">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center mb-4">
+              Boutiques officielles & Partenaires agréés KoobNaaba
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {partnersList.slice(0, 6).map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/partenaire/${p.id}`}
+                  className="bg-card border border-border/80 hover:border-primary/50 hover:shadow-xs p-3 rounded-xl flex flex-col items-center text-center gap-2 transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm group-hover:scale-105 transition-transform">
+                    {p.name.charAt(0)}
+                  </div>
+                  <div className="w-full">
+                    <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                      {p.name}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground truncate block">
+                      {p.location || "Burkina Faso"}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -160,7 +309,7 @@ const Index = () => {
               { icon: Calculator, title: "Calculatrice Agro & Doses", desc: "Calculez précisément les densités de semis, fractionnements NPK, besoins en eau ETc et projections de rendement." },
               { icon: Eye, title: "Scouting Terrain Géolocalisé", desc: "Relevés d'observations sur le terrain avec capture GPS, photos datées et génération de rapports de patrouille." },
               { icon: MapPin, title: "Cartographie & Parcelles", desc: "Délimitez vos parcelles par GPS, calculez les surfaces réelles et pilotez les cycles culturaux saison par saison." },
-              { icon: Tractor, title: "Mécanisation & Intrants", desc: "Accédez en direct aux prestataires agricoles vérifiés : labour tracteur, drones de pulvérisation, semences et fertilisants." },
+              { icon: Tractor, title: "Mécanisation & Intrants", desc: "Accédez en direct aux partenaires agricoles agréés KoobNaaba : labour tracteur, pulvérisation de précision, semences certifiées et fertilisants." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-warm transition-all duration-300 hover:-translate-y-1">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-4">

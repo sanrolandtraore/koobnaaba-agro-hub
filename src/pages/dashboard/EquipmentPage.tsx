@@ -216,7 +216,7 @@ export const EquipmentPage = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* MechAfrica-Inspired Field Mechanization Hero Header */}
+      {/* KoobNaaba Field Mechanization Hero Header */}
       <section className="rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden bg-gradient-to-br from-stone-950 via-emerald-950 to-amber-950 shadow-2xl border border-emerald-500/20">
         <div className="absolute -right-6 -bottom-8 opacity-10 select-none text-[13rem] pointer-events-none font-mono">
           🚜
@@ -229,7 +229,7 @@ export const EquipmentPage = () => {
             <div className="flex items-center gap-2">
               <Badge className="bg-amber-400 text-stone-950 font-black tracking-wider text-[11px] px-3 py-1 uppercase rounded-md shadow-sm">
                 <Sparkles className="h-3.5 w-3.5 mr-1.5 text-stone-950" />
-                MÉCANISATION AFRIQUE
+                KOOBNAABA MÉCANISATION
               </Badge>
               <Badge variant="outline" className="text-emerald-300 border-emerald-500/30 bg-emerald-950/40 text-[11px] font-medium backdrop-blur">
                 <ShieldCheck className="h-3.5 w-3.5 mr-1 text-emerald-400" />
@@ -256,7 +256,7 @@ export const EquipmentPage = () => {
               Louez ou Déployez du Matériel Agricole de Précision
             </h1>
             <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-normal">
-              Plateforme inspirée des standards <strong>MechAfrica / MechLink</strong> : réservation sans friction de tracteurs 4WD, pulvérisateurs drones RTK et moissonneuses. Réservation en ligne ou par <strong>code USSD *384*226#</strong>, chauffeurs formés et paiement sécurisé libéré uniquement à la validation des travaux.
+              Service officiel <strong>KoobNaaba Mécanisation</strong> : réservation sans friction de tracteurs 4WD, pulvérisateurs drones RTK et moissonneuses. Réservation en ligne ou par <strong>code USSD *384*226#</strong>, opérateurs qualifiés et paiement sécurisé libéré uniquement à la validation des travaux sur le terrain.
             </p>
           </div>
 
@@ -365,10 +365,10 @@ export const EquipmentPage = () => {
               <div>
                 <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                  Catalogue de Matériel & Prestataires Vérifiés
+                  Catalogue de Matériel & Partenaires Agréés KoobNaaba
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Engins géolocalisés avec opérateurs certifiés et carburant inclus
+                  Engins géolocalisés avec opérateurs qualifiés et carburant inclus
                 </p>
               </div>
 
@@ -407,7 +407,7 @@ export const EquipmentPage = () => {
               ))}
             </div>
 
-            {/* Machines Grid - MechAfrica Equipment Catalog Style */}
+            {/* Machines Grid - Catalogue KoobNaaba */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredMachines.map((machine) => (
                 <Card

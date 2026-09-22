@@ -92,7 +92,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
             </div>
           </div>
           <div className="text-right hidden sm:block">
-            <span className="text-[11px] text-amber-400 uppercase tracking-wider font-bold">Standard MechAfrica</span>
+            <span className="text-[11px] text-amber-400 uppercase tracking-wider font-bold">Standard KoobNaaba</span>
             <p className="text-xs font-medium text-stone-300">Paiement Mobile Money échelonné (30% / 70%)</p>
           </div>
         </div>
@@ -303,7 +303,7 @@ export const MechEstimatorCard = ({ onBookNow, userParcels = [] }: MechEstimator
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-stone-800 dark:text-stone-200 flex items-start gap-2.5">
                   <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                   <span>
-                    <strong>Protocole Séquestre MechAfrica :</strong> L'acompte de 30% reste bloqué sur le compte séquestre. Le prestataire n'est crédité qu'après vérification de conformité par le producteur ou l'agent terrain.
+                    <strong>Protocole Séquestre KoobNaaba :</strong> L'acompte de 30% reste consigné sur le compte séquestre sécurisé. Le prestataire n'est rémunéré qu'après attestation de conformité des travaux sur le terrain.
                   </span>
                 </div>
               </div>

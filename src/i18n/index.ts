@@ -13,22 +13,14 @@ export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
  * The chosen language is persisted in localStorage ("koobnaaba-lang").
  */
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
       fr: { translation: fr },
-      en: { translation: en },
     },
+    lng: "fr",
     fallbackLng: "fr",
-    supportedLngs: SUPPORTED_LANGUAGES as unknown as string[],
-    nonExplicitSupportedLngs: true,
     interpolation: { escapeValue: false },
-    detection: {
-      order: ["localStorage", "navigator"],
-      lookupLocalStorage: "koobnaaba-lang",
-      caches: ["localStorage"],
-    },
   });
 
 i18n.on("languageChanged", (lng) => {

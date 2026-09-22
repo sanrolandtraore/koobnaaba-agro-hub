@@ -38,7 +38,9 @@
     "backHome": "Back to home"
   },
   "roles": {
-    "agriculteur": "Agronomy Expert",
+    "agriculteur": "Farmer",
+    "agent_technique": "Agronomy Expert",
+    "expert": "Agronomy Expert",
     "eleveur": "Livestock farmer",
     "partenaire": "Partner",
     "admin": "Administrator",
@@ -90,6 +92,11 @@
     "education": "Courses",
     "providerSubscription": "Company Subscription",
     "myOffers": "My Offers & Sales",
-    "equipmentFleet": "Machinery & Rental"
+    "equipmentFleet": "Machinery & Rental",
+    "missions": "Missions & Works",
+    "interventions": "Field Interventions",
+    "quoteRequests": "Quote Requests",
+    "revenue": "Revenue & Billing",
+    "providerClients": "Client Portfolio"
   }
 }

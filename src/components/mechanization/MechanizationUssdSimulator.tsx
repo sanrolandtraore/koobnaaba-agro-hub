@@ -239,9 +239,9 @@ export const MechUssdSimulator = () => {
                 className="text-[11px] text-stone-400 hover:text-white gap-1 h-7"
               >
                 <RotateCcw className="h-3 w-3" />
-                Raccrocher / Reset
+                Raccrocher / Réinitialiser
               </Button>
-              <span className="text-[10px] text-stone-500">MechLink Protocol</span>
+              <span className="text-[10px] text-stone-500">Passerelle USSD KoobNaaba</span>
             </div>
           </Card>
 

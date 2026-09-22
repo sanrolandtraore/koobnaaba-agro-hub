@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit, Map, Navigation, Eye, EyeOff, WifiOff } from "lucide-react";
-import { GPSPolygonCapture, coordsToGeoJSON } from "@/components/GPSPolygonCapture";
+import { GPSPolygonCapture, coordsToGeoJSON, computeAreaHa, computePerimeterM } from "@/components/GPSPolygonCapture";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOfflineData } from "@/hooks/useOfflineData";
 
@@ -64,10 +64,21 @@ const ParcelsPage = () => {
       return;
     }
     const geometry = coordsToGeoJSON(gpsPoints);
+    let calculatedArea = 0;
+    let perimeterM = 0;
+    if (gpsPoints.length >= 3) {
+      calculatedArea = computeAreaHa(gpsPoints);
+      perimeterM = computePerimeterM(gpsPoints);
+    }
+    const inputArea = parseFloat(form.area_ha);
+    const effectiveArea = Number.isFinite(inputArea) && inputArea > 0 ? inputArea : calculatedArea;
+
     const payload: any = {
       name: form.name,
       farm_id: form.farm_id,
-      area_ha: parseFloat(form.area_ha) || 0,
+      area_ha: effectiveArea,
+      calculated_area_ha: calculatedArea > 0 ? calculatedArea : null,
+      perimeter_m: perimeterM > 0 ? perimeterM : null,
       soil_type: form.soil_type || null,
       irrigation_type: form.irrigation_type || null,
       status: form.status,

@@ -10,9 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Wheat, Package, WifiOff } from "lucide-react";
+import { Plus, Trash2, Wheat, Package, WifiOff, Calculator } from "lucide-react";
 import { useOfflineData } from "@/hooks/useOfflineData";
 import { useDefaultLivestockFarm } from "@/hooks/useDefaultLivestockFarm";
+import { LivestockZootechnicCard } from "@/components/livestock/LivestockZootechnicCard";
 
 const feedTypes = [
   { value: "Fourrage vert", label: "🌿 Fourrage vert" },
@@ -134,6 +135,7 @@ const AnimalFeedingPage = () => {
         <TabsList>
           <TabsTrigger value="feedings"><Wheat className="h-4 w-4 mr-1" />Alimentation</TabsTrigger>
           <TabsTrigger value="stocks"><Package className="h-4 w-4 mr-1" />Stocks ({stocks.length})</TabsTrigger>
+          <TabsTrigger value="simulation"><Calculator className="h-4 w-4 mr-1" />Calculateur Rations & Rentabilité</TabsTrigger>
         </TabsList>
 
         <TabsContent value="feedings" className="space-y-4">
@@ -249,6 +251,10 @@ const AnimalFeedingPage = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="simulation" className="space-y-4 pt-2">
+          <LivestockZootechnicCard />
         </TabsContent>
       </Tabs>
     </div>

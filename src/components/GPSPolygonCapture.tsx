@@ -16,8 +16,8 @@ interface GPSPolygonCaptureProps {
 
 const MAX_POINTS = 4;
 
-// Haversine area calculation (client-side preview)
-function computeAreaHa(coords: Coordinate[]): number {
+// Haversine area calculation (client-side preview & offline calculation)
+export function computeAreaHa(coords: Coordinate[]): number {
   if (coords.length < 3) return 0;
   const R = 6371000;
   const toRad = (d: number) => (d * Math.PI) / 180;
@@ -34,7 +34,7 @@ function computeAreaHa(coords: Coordinate[]): number {
   return Math.round((area / 10000) * 1000) / 1000;
 }
 
-function computePerimeterM(coords: Coordinate[]): number {
+export function computePerimeterM(coords: Coordinate[]): number {
   if (coords.length < 2) return 0;
   const R = 6371000;
   const toRad = (d: number) => (d * Math.PI) / 180;

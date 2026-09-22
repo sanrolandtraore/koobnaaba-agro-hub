@@ -1,8 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
-import DashboardHome from "@/pages/dashboard/DashboardHome";
 import LivestockDashboardPage from "@/pages/livestock/LivestockDashboardPage";
-import EducationCatalogPage from "@/pages/dashboard/education/EducationCatalogPage";
 import PartenaireDashboard from "@/pages/dashboard/partenaire/PartenaireDashboard";
+import CropPlanningPage from "@/pages/dashboard/CropPlanningPage";
 
 const RoleDashboardHome = () => {
   const { primaryRole } = useAuth();
@@ -10,12 +9,15 @@ const RoleDashboardHome = () => {
   switch (primaryRole) {
     case "eleveur":
       return <LivestockDashboardPage />;
-    case "formation":
-      return <EducationCatalogPage />;
+    case "agriculteur":
+    case "farmer":
+      return <CropPlanningPage />;
     case "partenaire":
-      return <PartenaireDashboard />;
+    case "agent_technique":
+    case "expert":
+    case "formation":
     default:
-      return <DashboardHome />;
+      return <PartenaireDashboard />;
   }
 };
 

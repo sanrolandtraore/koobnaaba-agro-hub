@@ -176,7 +176,7 @@ export async function clearUserOfflineData(userId: string): Promise<void> {
   const cacheStore = tx.objectStore('cachedData');
   let cacheCursor = await cacheStore.openCursor();
   while (cacheCursor) {
-    if (cacheCursor.value.userId === userId || cacheCursor.value.table === '_session' || cacheCursor.value.table === '_credentials' || cacheCursor.value.table === '_pin') {
+    if (cacheCursor.value.userId === userId || cacheCursor.value.table === '_session' || cacheCursor.value.table === '_credentials') {
       await cacheCursor.delete();
     }
     cacheCursor = await cacheCursor.continue();

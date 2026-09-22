@@ -569,7 +569,7 @@ const ExpertCartographyPage = () => {
         </p>
       </div>
 
-      {/* ─── Field-Ready Cartography Toolbar (MechAfrica Standard) ─── */}
+      {/* ─── Barre d'outils cartographie terrain KoobNaaba ─── */}
       <Card className="shadow-md border-stone-200 dark:border-stone-800 bg-card overflow-hidden">
         <div className="bg-gradient-to-r from-stone-900 to-stone-950 px-4 py-2.5 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,23 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, Plus, Trash2, MapPin } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-
-interface Mission { id: string; title: string; client_name: string; }
-interface Intervention {
-  id: string; mission_id: string; intervention_date: string; intervention_type: string;
-  observations: string | null; actions_done: string | null; recommendations: string | null;
-  products_used: string | null; duration_hours: number | null; cost: number | null;
-  latitude: number | null; longitude: number | null;
-}
+import { ClipboardList, Plus, Trash2, MapPin, Calendar, Clock, DollarSign } from "lucide-react";
+import { toast } from "sonner";
+import { partnerStorage, MissionIntervention, PartnerMission } from "@/lib/partnerStorage";
 
 const TYPES = ["visite de suivi", "diagnostic", "traitement", "conseil technique", "formation", "autre"];
 
 export default function InterventionsPage() {
   const { user } = useAuth();
-  const [items, setItems] = useState<Intervention[]>([]);
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const [items, setItems] = useState<MissionIntervention[]>([]);
+  const [missions, setMissions] = useState<PartnerMission[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -39,175 +31,299 @@ export default function InterventionsPage() {
   const [products, setProducts] = useState("");
   const [duration, setDuration] = useState("");
   const [cost, setCost] = useState("");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-  const load = async () => {
-    if (!user) return;
+  const loadData = async () => {
     setLoading(true);
-    const [i, m] = await Promise.all([
-      supabase.from("mission_interventions").select("*").eq("provider_id", user.id).order("intervention_date", { ascending: false }),
-      supabase.from("provider_missions").select("id, title, client_name").eq("provider_id", user.id).order("scheduled_date", { ascending: false }),
-    ]);
-    setItems((i.data ?? []) as Intervention[]);
-    setMissions((m.data ?? []) as Mission[]);
-    setLoading(false);
+    try {
+      const [i, m] = await Promise.all([
+        partnerStorage.getInterventions(user?.id),
+        partnerStorage.getMissions(user?.id),
+      ]);
+      setItems(i);
+      setMissions(m);
+      if (m.length > 0 && !missionId) {
+        setMissionId(m[0].id);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load();   }, [user]);
+  useEffect(() => {
+    loadData();
+    const handleUpdate = () => loadData();
+    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+  }, [user]);
 
   const reset = () => {
-    setMissionId(missions[0]?.id ?? ""); setDate(new Date().toISOString().slice(0, 10));
-    setType(TYPES[0]); setObservations(""); setActions(""); setReco("");
-    setProducts(""); setDuration(""); setCost(""); setCoords(null);
-  };
-
-  const capture = () => {
-    if (!navigator.geolocation) return toast({ title: "GPS indisponible", variant: "destructive" });
-    navigator.geolocation.getCurrentPosition(
-      (p) => { setCoords({ lat: p.coords.latitude, lng: p.coords.longitude }); toast({ title: "Position enregistrée" }); },
-      () => toast({ title: "Impossible d'obtenir la position", variant: "destructive" })
-    );
+    setMissionId(missions[0]?.id ?? "");
+    setDate(new Date().toISOString().slice(0, 10));
+    setType(TYPES[0]);
+    setObservations("");
+    setActions("");
+    setReco("");
+    setProducts("");
+    setDuration("");
+    setCost("");
   };
 
   const save = async () => {
-    if (!user) return;
-    if (!missionId) return toast({ title: "Choisissez une mission", variant: "destructive" });
+    if (!missionId) {
+      toast.error("Veuillez sélectionner ou créer une mission au préalable.");
+      return;
+    }
     setSaving(true);
-    const { error } = await supabase.from("mission_interventions").insert({
-      provider_id: user.id, mission_id: missionId, intervention_date: date, intervention_type: type,
-      observations: observations || null, actions_done: actions || null, recommendations: reco || null,
-      products_used: products || null,
-      duration_hours: duration ? Number(duration) : null,
-      cost: cost ? Number(cost) : null,
-      latitude: coords?.lat ?? null, longitude: coords?.lng ?? null,
-    });
-    setSaving(false);
-    if (error) return toast({ title: "Enregistrement impossible", description: error.message, variant: "destructive" });
-    toast({ title: "Intervention enregistrée" });
-    setOpen(false); load();
+    try {
+      await partnerStorage.saveIntervention({
+        provider_id: user?.id || "demo-partner-id",
+        mission_id: missionId,
+        intervention_date: date,
+        intervention_type: type,
+        observations: observations.trim() || null,
+        actions_done: actions.trim() || null,
+        recommendations: reco.trim() || null,
+        products_used: products.trim() || null,
+        duration_hours: duration ? Number(duration) : null,
+        cost: cost ? Number(cost) : null,
+      });
+
+      toast.success("Compte-rendu d'intervention enregistré !");
+      setOpen(false);
+      reset();
+      loadData();
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'enregistrement");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const remove = async (id: string) => {
-    const { error } = await supabase.from("mission_interventions").delete().eq("id", id);
-    if (error) return toast({ title: "Suppression impossible", variant: "destructive" });
-    load();
+    if (confirm("Supprimer ce compte-rendu d'intervention ?")) {
+      await partnerStorage.deleteIntervention(id);
+      toast.success("Intervention supprimée");
+      loadData();
+    }
   };
 
-  const missionOf = (id: string) => missions.find((m) => m.id === id);
+  const missionTitle = (id: string) => {
+    const m = missions.find((x) => x.id === id);
+    return m ? `${m.title} (${m.client_name})` : "Mission générale";
+  };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><ClipboardList className="h-5 w-5" /> Interventions</h1>
-          <p className="text-sm text-muted-foreground">Journal de vos passages sur le terrain</p>
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+            <ClipboardList className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-heading font-bold">Interventions Terrain</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Journal des passages, travaux réalisés, produits appliqués et recommandations.
+            </p>
+          </div>
         </div>
-        <Button onClick={() => { reset(); setOpen(true); }} disabled={missions.length === 0}>
-          <Plus className="h-4 w-4 mr-1" /> Ajouter
+        <Button
+          onClick={() => { reset(); setOpen(true); }}
+          className="gradient-primary text-primary-foreground font-semibold shadow-xs"
+        >
+          <Plus className="h-4 w-4 mr-1.5" /> Nouvelle intervention
         </Button>
       </div>
 
-      {missions.length === 0 && !loading && (
-        <Card><CardContent className="py-6 text-sm text-muted-foreground">Créez d'abord une mission pour enregistrer une intervention.</CardContent></Card>
-      )}
-
       {loading ? (
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[1, 2].map((i) => (
+            <Card key={i} className="h-36 animate-pulse bg-muted/40" />
+          ))}
+        </div>
       ) : items.length === 0 ? (
-        <Card><CardContent className="py-6 text-sm text-muted-foreground">Aucune intervention enregistrée.</CardContent></Card>
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center text-muted-foreground text-sm space-y-2">
+            <p>Aucune intervention terrain enregistrée.</p>
+            <Button size="sm" variant="outline" onClick={() => { reset(); setOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Rédiger un compte-rendu
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {items.map((it) => (
-            <Card key={it.id}>
-              <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <CardTitle className="text-base truncate">{missionOf(it.mission_id)?.title ?? "Mission"}</CardTitle>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {missionOf(it.mission_id)?.client_name} · {new Date(it.intervention_date).toLocaleDateString("fr-FR")}
-                  </p>
+            <Card key={it.id} className="hover:border-primary/50 transition-all flex flex-col justify-between">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <Badge variant="outline" className="text-[11px] capitalize">
+                    {it.intervention_type}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(it.intervention_date).toLocaleDateString("fr-FR")}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge variant="secondary">{it.intervention_type}</Badge>
-                  <Button variant="ghost" size="icon" onClick={() => remove(it.id)} aria-label="Supprimer l'intervention">
-                    <Trash2 className="h-4 w-4" />
+                <CardTitle className="text-base font-bold leading-snug pt-1">
+                  {missionTitle(it.mission_id)}
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-2.5 text-xs">
+                {it.observations && (
+                  <div>
+                    <span className="font-semibold text-foreground">Observations : </span>
+                    <span className="text-muted-foreground">{it.observations}</span>
+                  </div>
+                )}
+                {it.actions_done && (
+                  <div>
+                    <span className="font-semibold text-foreground">Actions réalisées : </span>
+                    <span className="text-muted-foreground">{it.actions_done}</span>
+                  </div>
+                )}
+                {it.products_used && (
+                  <div>
+                    <span className="font-semibold text-foreground">Produits / Matériel : </span>
+                    <span className="text-muted-foreground">{it.products_used}</span>
+                  </div>
+                )}
+                {it.recommendations && (
+                  <div className="bg-primary/5 p-2 rounded-md border border-primary/20 text-foreground">
+                    <span className="font-semibold">Conseils au producteur : </span>
+                    <span>{it.recommendations}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2 border-t text-muted-foreground">
+                  <div className="flex items-center gap-3">
+                    {it.duration_hours != null && <span>⏱️ {it.duration_hours}h</span>}
+                    {it.cost != null && <span className="font-medium text-foreground">{it.cost.toLocaleString("fr-FR")} FCFA</span>}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                    onClick={() => remove(it.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm">
-                {it.observations && <p><span className="text-muted-foreground">Observations : </span>{it.observations}</p>}
-                {it.actions_done && <p><span className="text-muted-foreground">Actions : </span>{it.actions_done}</p>}
-                {it.recommendations && <p><span className="text-muted-foreground">Recommandations : </span>{it.recommendations}</p>}
-                {it.products_used && <p><span className="text-muted-foreground">Produits : </span>{it.products_used}</p>}
-                <p className="text-xs text-muted-foreground">
-                  {it.duration_hours ? `${it.duration_hours} h · ` : ""}
-                  {it.cost ? `${Number(it.cost).toLocaleString("fr-FR")} FCFA` : ""}
-                  {it.latitude ? ` · GPS ${it.latitude.toFixed(4)}, ${it.longitude?.toFixed(4)}` : ""}
-                </p>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
 
+      {/* Modal Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Nouvelle intervention</DialogTitle></DialogHeader>
-          <div className="space-y-3">
+        <DialogContent className="max-w-lg p-5">
+          <DialogHeader>
+            <DialogTitle className="text-base font-heading font-bold">
+              Compte-rendu d'intervention terrain
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
             <div className="space-y-1">
-              <Label>Mission</Label>
+              <Label>Mission rattachée *</Label>
               <Select value={missionId} onValueChange={setMissionId}>
-                <SelectTrigger><SelectValue placeholder="Choisir une mission" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Choisir la mission" /></SelectTrigger>
                 <SelectContent>
-                  {missions.map((m) => <SelectItem key={m.id} value={m.id}>{m.title} — {m.client_name}</SelectItem>)}
+                  {missions.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.title} — {m.client_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="int-date">Date</Label>
-                <Input id="int-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Type</Label>
+                <Label>Type d'intervention</Label>
                 <Select value={type} onValueChange={setType}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {TYPES.map((t) => (
+                      <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1">
+                <Label>Date de passage</Label>
+                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              </div>
             </div>
+
             <div className="space-y-1">
-              <Label htmlFor="int-obs">Observations</Label>
-              <Textarea id="int-obs" value={observations} onChange={(e) => setObservations(e.target.value)} />
+              <Label>Constats / Observations sur la parcelle ou le troupeau</Label>
+              <Textarea
+                rows={2}
+                placeholder="État végétatif, présence d'adventices, ravageurs observés..."
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+              />
             </div>
+
             <div className="space-y-1">
-              <Label htmlFor="int-act">Actions réalisées</Label>
-              <Textarea id="int-act" value={actions} onChange={(e) => setActions(e.target.value)} />
+              <Label>Travaux & Actions effectués</Label>
+              <Textarea
+                rows={2}
+                placeholder="Labour à 25cm, pulvérisation 200L/ha, réglage semoir..."
+                value={actions}
+                onChange={(e) => setActions(e.target.value)}
+              />
             </div>
+
             <div className="space-y-1">
-              <Label htmlFor="int-reco">Recommandations</Label>
-              <Textarea id="int-reco" value={reco} onChange={(e) => setReco(e.target.value)} />
+              <Label>Produits et intrants appliqués</Label>
+              <Input
+                placeholder="ex. NPK 14-23-14 (3 sacs), bio-insecticide (2L)..."
+                value={products}
+                onChange={(e) => setProducts(e.target.value)}
+              />
             </div>
+
             <div className="space-y-1">
-              <Label htmlFor="int-prod">Produits utilisés</Label>
-              <Input id="int-prod" value={products} onChange={(e) => setProducts(e.target.value)} />
+              <Label>Recommandations données au producteur</Label>
+              <Textarea
+                rows={2}
+                placeholder="Prochaine irrigation dans 3 jours, buttage, surveillance..."
+                value={reco}
+                onChange={(e) => setReco(e.target.value)}
+              />
             </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="int-dur">Durée (heures)</Label>
-                <Input id="int-dur" type="number" inputMode="decimal" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                <Label>Durée (heures)</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  placeholder="ex: 3.5"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="int-cost">Coût (FCFA)</Label>
-                <Input id="int-cost" type="number" inputMode="numeric" value={cost} onChange={(e) => setCost(e.target.value)} />
+                <Label>Coût facturé (FCFA)</Label>
+                <Input
+                  type="number"
+                  placeholder="ex: 25000"
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                />
               </div>
             </div>
-            <Button type="button" variant="outline" onClick={capture} className="w-full">
-              <MapPin className="h-4 w-4 mr-1" /> {coords ? "Position enregistrée" : "Enregistrer ma position"}
-            </Button>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button onClick={save} disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</Button>
+            <Button onClick={save} disabled={saving} className="gradient-primary text-primary-foreground font-semibold">
+              {saving ? "Enregistrement…" : "Enregistrer l'intervention"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

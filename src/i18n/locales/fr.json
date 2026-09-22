@@ -38,7 +38,9 @@
     "backHome": "Retour à l'accueil"
   },
   "roles": {
-    "agriculteur": "Expert Agronome",
+    "agriculteur": "Agriculteur",
+    "agent_technique": "Expert Agronome",
+    "expert": "Expert Agronome",
     "eleveur": "Éleveur",
     "partenaire": "Partenaire",
     "admin": "Administrateur",
@@ -90,6 +92,11 @@
     "education": "Formations",
     "providerSubscription": "Abonnement Entreprise",
     "myOffers": "Mes offres & Ventes",
-    "equipmentFleet": "Parc matériel & Location"
+    "equipmentFleet": "Parc matériel & Location",
+    "missions": "Missions & Travaux",
+    "interventions": "Interventions terrain",
+    "quoteRequests": "Demandes de devis",
+    "revenue": "Chiffre d'affaires & Recettes",
+    "providerClients": "Portefeuille Clients"
   }
 }

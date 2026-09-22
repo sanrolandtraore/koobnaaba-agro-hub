@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import logo from "@/assets/logo.png";
 import VoiceAssistant from "@/components/VoiceAssistant";
-import BackendStatusButton from "@/components/BackendStatusButton";
+import LanguageSelector from "@/components/LanguageSelector";
 import { useSubscription } from "@/hooks/useSubscription";
 
 const DashboardLayout = () => {
@@ -37,7 +37,7 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <BackendStatusButton />
+            <LanguageSelector className="text-xs" />
           </div>
         </header>
 

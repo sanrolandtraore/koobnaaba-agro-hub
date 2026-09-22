@@ -1,9 +1,7 @@
 import { Outlet } from "react-router-dom";
 
 /**
- * Scoped wrapper applying the FarmUp-inspired sage & cream theme
- * (Outfit + Figtree typography, bento layout) to every livestock page.
- * Negative margins bleed the cream background out to the edge of the main panel.
+ * Enveloppe visuelle dédiée au module Élevage & Zootechnie KoobNaaba.
  */
 const LivestockLayout = () => {
   return (
