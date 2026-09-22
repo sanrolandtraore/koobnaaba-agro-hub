@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -20,105 +19,74 @@ import {
   ClipboardList, MapPin, GraduationCap, Trash2, Clock, CheckCircle, XCircle, Loader2,
   Wheat, Leaf, TreePine, Shield, Beef, Utensils, Heart, Baby, Waves, Mountain, Sun, Home,
   FileSearch, FileText, Award, Warehouse, Factory, ShoppingBag, QrCode, Users, Salad, Sparkles, Eye, Calculator,
-  Store, Send, Search, ExternalLink, ShieldCheck, ShoppingCart, RefreshCw
+  Store, Send, Search, ExternalLink, ShieldCheck, ShoppingCart, RefreshCw, Phone, Filter
 } from "lucide-react";
 
 const SERVICE_CATEGORIES = [
   {
-    category: "✨ Aide à la décision & Diagnostic IA",
+    category: "✨ Diagnostic IA & Conseil Scientifique",
     services: [
       { value: "diagnostic_ia", label: "Diagnostic IA (Maladie & Ravageur)", icon: Microscope, desc: "Photo de feuille ou tige analysée par vision IA avec détection de carences et recommandations." },
-      { value: "ordonnance_agronomique", label: "Ordonnance phytosanitaire signée", icon: FileText, desc: "Prescription agronomique officielle au format PDF délivrée par un conseiller certifié." },
+      { value: "ordonnance_agronomique", label: "Ordonnance phytosanitaire signée", icon: FileText, desc: "Prescription agronomique officielle délivrée par un conseiller certifié." },
       { value: "scouting_geolocalise", label: "Scouting terrain géolocalisé", icon: Eye, desc: "Audit et relevé d'observations terrain avec coordonnées GPS, intensité d'attaque et rapport." },
-      { value: "calcul_agronomique", label: "Calculatrice & Plan de doses", icon: Calculator, desc: "Calcul de densité de semis, fractionnement NPK et besoins en eau ETc selon la parcelle." },
+      { value: "calcul_agronomique", label: "Calculatrice & Plan de doses", icon: Calculator, desc: "Calcul de densité de semis, fractionnement NPK et besoins en eau selon la parcelle." },
     ],
   },
   {
-    category: "🌱 Productions végétales",
+    category: "🌱 Productions Végétales & Sols",
     services: [
-      { value: "diagnostic_sol", label: "Diagnostic sol et aménagement", icon: Microscope, desc: "Analyse de la qualité du sol, recommandations d'amendement et plan d'aménagement foncier." },
-      { value: "diagnostic_maladie", label: "Diagnostic maladie et traitement", icon: Bug, desc: "Identification des maladies et ravageurs, prescription de traitements phytosanitaires adaptés." },
+      { value: "diagnostic_sol", label: "Diagnostic sol et aménagement", icon: Microscope, desc: "Analyse de la qualité du sol, recommandations d'amendement et plan d'aménagement." },
+      { value: "diagnostic_maladie", label: "Diagnostic maladie et traitement", icon: Bug, desc: "Identification des maladies et ravageurs, prescription de traitements adaptés." },
       { value: "lutte_biologique", label: "Lutte biologique intégrée", icon: Bug, desc: "Utilisation d'auxiliaires naturels et méthodes biologiques pour la protection des cultures." },
-      { value: "semences", label: "Sélection et certification semences", icon: Wheat, desc: "Conseil sur le choix variétal, semences améliorées et certification des lots de semences." },
-      { value: "fertilisation", label: "Plan de fertilisation", icon: Wheat, desc: "Élaboration de plans de fertilisation organique et minérale adaptés à vos sols et cultures." },
-      { value: "compostage", label: "Compostage et fumure organique", icon: Leaf, desc: "Techniques de compostage, lombricompostage et valorisation des résidus agricoles." },
-      { value: "maraichage", label: "Maraîchage et cultures horticoles", icon: Salad, desc: "Accompagnement technique en cultures maraîchères : planification, rotations et itinéraires techniques." },
-      { value: "culture_bio", label: "Agriculture biologique", icon: Leaf, desc: "Conversion et conduite de l'agriculture biologique, cahier des charges et bonnes pratiques." },
-      { value: "pepiniere", label: "Pépinière et production de plants", icon: TreePine, desc: "Création de pépinières, multiplication végétative, greffage et production de plants certifiés." },
-      { value: "agroforesterie", label: "Agroforesterie", icon: TreePine, desc: "Association arbres-cultures, haies vives, brise-vents et régénération naturelle assistée." },
-      { value: "protection_cultures", label: "Protection phytosanitaire", icon: Shield, desc: "Programmes de traitement préventif et curatif, gestion intégrée des nuisibles et résistances." },
+      { value: "semences", label: "Sélection et certification semences", icon: Wheat, desc: "Conseil sur le choix variétal, semences améliorées et certification." },
+      { value: "fertilisation", label: "Plan de fertilisation NPK/Urée", icon: Wheat, desc: "Plans de fertilisation organique et minérale adaptés à vos sols et cultures." },
+      { value: "compostage", label: "Compostage et fumure organique", icon: Leaf, desc: "Techniques de compostage enrichi et valorisation des résidus agricoles." },
+      { value: "maraichage", label: "Maraîchage et cultures horticoles", icon: Salad, desc: "Planification, rotations et itinéraires techniques en maraîchage intensif." },
+      { value: "culture_bio", label: "Agriculture biologique & Agroécologie", icon: Leaf, desc: "Conversion et conduite biologique, cahier des charges et bonnes pratiques." },
+      { value: "protection_cultures", label: "Protection phytosanitaire", icon: Shield, desc: "Traitements préventifs et curatifs, gestion intégrée des ravageurs." },
     ],
   },
   {
-    category: "🐄 Productions animales",
+    category: "🐄 Productions Animales & Santé",
     services: [
-      { value: "ferme_volaille", label: "Aviculture et ferme volaille", icon: Egg, desc: "Conception du poulailler, choix des races, plan sanitaire et alimentation." },
-      { value: "elevage_bovin", label: "Élevage bovin", icon: Beef, desc: "Conseil en conduite d'élevage bovin : alimentation, reproduction, santé et amélioration génétique." },
-      { value: "elevage_caprin", label: "Élevage caprin et ovin", icon: Beef, desc: "Accompagnement technique pour l'élevage de petits ruminants : embouche, lait et viande." },
-      { value: "nutrition_animale", label: "Nutrition et alimentation animale", icon: Utensils, desc: "Formulation de rations alimentaires équilibrées et gestion des stocks fourragers." },
-      { value: "sante_animale", label: "Santé animale et prophylaxie", icon: Heart, desc: "Plans de vaccination, déparasitage, surveillance épidémiologique et biosécurité." },
-      { value: "insemination", label: "Insémination artificielle", icon: Baby, desc: "Service d'insémination artificielle pour l'amélioration génétique du cheptel." },
-      { value: "etang_piscicole", label: "Pisciculture et aquaculture", icon: Fish, desc: "Conception d'étangs, aménagement hydraulique, choix des espèces et techniques d'élevage." },
-      { value: "apiculture", label: "Apiculture", icon: Bug, desc: "Installation de ruchers, techniques apicoles modernes, récolte et transformation du miel." },
+      { value: "ferme_volaille", label: "Aviculture et fermes volailles", icon: Egg, desc: "Bâtiment d'élevage, souches adaptées, plan prophylactique et alimentation." },
+      { value: "elevage_bovin", label: "Élevage bovin & embouche", icon: Beef, desc: "Conduite d'élevage bovin : alimentation, santé et amélioration génétique." },
+      { value: "elevage_caprin", label: "Élevage caprin et ovin", icon: Beef, desc: "Accompagnement pour l'élevage de petits ruminants (lait et viande)." },
+      { value: "nutrition_animale", label: "Nutrition & Provendes", icon: Utensils, desc: "Formulation de rations équilibrées et gestion des stocks fourragers." },
+      { value: "sante_animale", label: "Santé animale & Vaccins", icon: Heart, desc: "Plans de vaccination, déparasitage et biosécurité du cheptel." },
+      { value: "insemination", label: "Insémination artificielle", icon: Baby, desc: "Amélioration génétique et insémination par inséminateur agréé." },
+      { value: "etang_piscicole", label: "Pisciculture & Aquaculture", icon: Fish, desc: "Aménagement d'étangs, alevinage et alimentation des poissons." },
+      { value: "apiculture", label: "Apiculture moderne", icon: Bug, desc: "Installation de ruchers kényans, récolte et conditionnement du miel." },
     ],
   },
   {
-    category: "🚜 Aménagement et infrastructure",
+    category: "🚜 Machinisme & Travaux Mécanisés",
     services: [
-      { value: "ferme_agricole", label: "Mise en place ferme agricole", icon: Tractor, desc: "Accompagnement complet : choix du site, préparation terrain, plan cultural et calendrier." },
-      { value: "irrigation", label: "Système d'irrigation", icon: Droplets, desc: "Conception et mise en place de systèmes d'irrigation (goutte-à-goutte, aspersion, gravitaire)." },
-      { value: "forage", label: "Forage et adduction d'eau", icon: Droplets, desc: "Étude hydrogéologique, forage de puits, adduction et stockage d'eau pour l'exploitation." },
-      { value: "amenagement_bas_fonds", label: "Aménagement de bas-fonds", icon: Waves, desc: "Études topographiques et aménagement de bas-fonds pour la riziculture et le maraîchage." },
-      { value: "conservation_sol", label: "Conservation des sols et eaux", icon: Mountain, desc: "Techniques anti-érosives : zaï, demi-lunes, cordons pierreux, terrasses et diguettes." },
-      { value: "mecanisation", label: "Mécanisation agricole", icon: Tractor, desc: "Conseil en équipements agricoles, motorisation, entretien et réparation du matériel." },
-      { value: "energie_solaire", label: "Énergie solaire agricole", icon: Sun, desc: "Pompage solaire, électrification de fermes et séchage solaire des récoltes." },
-      { value: "serre", label: "Serres et tunnels agricoles", icon: Home, desc: "Conception et installation de serres pour les cultures sous abri et hors-sol." },
-    ],
-  },
-  {
-    category: "📊 Gestion et accompagnement",
-    services: [
-      { value: "suivi_exploitation", label: "Planification et suivi d'exploitation", icon: ClipboardList, desc: "Suivi régulier de vos cultures/élevages avec rapports et recommandations." },
-      { value: "cartographie_gps", label: "Mesure et cartographie GPS", icon: MapPin, desc: "Relevés GPS précis de vos parcelles, calcul de superficie et cartographie SIG." },
-      { value: "audit_exploitation", label: "Audit d'exploitation agricole", icon: FileSearch, desc: "Diagnostic complet de votre exploitation : forces, faiblesses et plan d'amélioration." },
-      { value: "plan_affaires", label: "Business plan agricole", icon: FileText, desc: "Élaboration de plans d'affaires et dossiers de financement pour projets agricoles." },
-      { value: "certification", label: "Certification et labels", icon: Award, desc: "Accompagnement pour l'obtention de certifications bio, commerce équitable et labels qualité." },
-      { value: "analyse_eau", label: "Analyse de la qualité de l'eau", icon: Droplets, desc: "Prélèvement et analyse physico-chimique et bactériologique de l'eau d'irrigation." },
-    ],
-  },
-  {
-    category: "📦 Post-récolte et commercialisation",
-    services: [
-      { value: "stockage", label: "Stockage et conservation", icon: Warehouse, desc: "Techniques de stockage : magasins, silos, sacs hermétiques et lutte contre les ravageurs de stocks." },
-      { value: "transformation", label: "Transformation agroalimentaire", icon: Factory, desc: "Techniques de transformation des produits : séchage, décorticage, mouture, conditionnement." },
-      { value: "commercialisation", label: "Commercialisation et marchés", icon: ShoppingBag, desc: "Stratégies de vente, accès aux marchés, négociation des prix et mise en réseau." },
-      { value: "tracabilite", label: "Traçabilité des produits", icon: QrCode, desc: "Mise en place de systèmes de traçabilité du champ à l'assiette : lots, codes et registres." },
-    ],
-  },
-  {
-    category: "🎓 Formation et renforcement",
-    services: [
-      { value: "formation", label: "Formations techniques", icon: GraduationCap, desc: "Sessions de formation sur les bonnes pratiques agricoles et techniques modernes." },
-      { value: "formation_gestion", label: "Formation en gestion", icon: GraduationCap, desc: "Comptabilité simplifiée, gestion financière de l'exploitation et tenue de cahiers." },
-      { value: "champ_ecole", label: "Champ école paysan (CEP)", icon: GraduationCap, desc: "Animation de champs écoles pour l'apprentissage pratique en groupe des innovations agricoles." },
+      { value: "ferme_agricole", label: "Mise en valeur d'exploitation", icon: Tractor, desc: "Choix du site, préparation mécanique du sol, plan cultural et calendrier." },
+      { value: "irrigation", label: "Systèmes d'irrigation", icon: Droplets, desc: "Goutte-à-goutte, aspersion, pompage solaire et réseau d'adduction." },
+      { value: "forage", label: "Forage et adduction d'eau", icon: Droplets, desc: "Forage de puits pastoraux et stockage d'eau pour l'exploitation." },
+      { value: "amenagement_bas_fonds", label: "Aménagement de bas-fonds", icon: Waves, desc: "Travaux topographiques et diguettes pour la riziculture." },
+      { value: "mecanisation", label: "Labour mécanisé & Moisson", icon: Tractor, desc: "Prestation de tracteur avec chauffeur, labours profonds et battage." },
+      { value: "energie_solaire", label: "Énergie solaire agricole", icon: Sun, desc: "Pompage solaire immergé et séchage des récoltes." },
     ],
   },
 ];
 
-const SERVICE_TYPES = SERVICE_CATEGORIES.flatMap(cat => cat.services);
+const SERVICE_TYPES = SERVICE_CATEGORIES.flatMap((c) => c.services);
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
+const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any }> = {
   en_attente: { label: "En attente", variant: "secondary", icon: Clock },
-  en_cours: { label: "En cours", variant: "default", icon: Loader2 },
-  terminee: { label: "Terminée", variant: "outline", icon: CheckCircle },
-  annulee: { label: "Annulée", variant: "destructive", icon: XCircle },
+  acceptee: { label: "Validé par l'expert", variant: "default", icon: CheckCircle },
+  en_cours: { label: "En intervention", variant: "default", icon: Loader2 },
+  terminee: { label: "Terminé", variant: "outline", icon: CheckCircle },
+  annulee: { label: "Annulé", variant: "destructive", icon: XCircle },
 };
 
-const quoteStatusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
-  en_attente: { label: "Transmis — En attente du partenaire", variant: "secondary", icon: Clock },
-  acceptee: { label: "Confirmé par le partenaire", variant: "default", icon: CheckCircle },
-  refusee: { label: "Annulé / Non disponible", variant: "destructive", icon: XCircle },
-  cloturee: { label: "Terminé", variant: "outline", icon: CheckCircle },
+const quoteStatusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any }> = {
+  en_attente: { label: "Demande transmise", variant: "secondary", icon: Clock },
+  acceptee: { label: "Offre acceptée", variant: "default", icon: CheckCircle },
+  refusee: { label: "Annulé / Indisponible", variant: "destructive", icon: XCircle },
+  cloturee: { label: "Commande clôturée", variant: "outline", icon: CheckCircle },
 };
 
 type ServiceRequest = {
@@ -135,23 +103,24 @@ type ServiceRequest = {
   created_at: string;
 };
 
-const PARTNER_CATEGORY_FILTERS = [
+const FILTER_PILLS = [
   { value: "all", label: "Toutes les offres" },
-  { value: "materiel", label: "🚜 Matériel & Tracteurs" },
-  { value: "intrants", label: "🧪 Intrants & Fertilisants" },
+  { value: "intrants", label: "🧪 Intrants & Engrais" },
   { value: "semences", label: "🌱 Semences Certifiées" },
+  { value: "materiel", label: "🚜 Matériel & Tracteurs" },
   { value: "elevage", label: "🐄 Élevage & Nutrition" },
-  { value: "service", label: "🛠️ Services & Travaux" },
+  { value: "service", label: "🛠️ Prestations & Travaux" },
+  { value: "conseil_technique", label: "🔬 Ingénierie & Conseil" },
+  { value: "mes_demandes", label: "📋 Mes Demandes en Cours" },
 ];
 
-const ServicesPage = () => {
+export default function ServicesPage() {
   const { user, profile } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [partnerQuotes, setPartnerQuotes] = useState<QuoteRequest[]>([]);
   const [farms, setFarms] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [myRequestsTab, setMyRequestsTab] = useState<"quotes" | "technical">("quotes");
 
   const [form, setForm] = useState({
     service_type: "",
@@ -166,7 +135,7 @@ const ServicesPage = () => {
   const [partnerOffers, setPartnerOffers] = useState<PartnerOffer[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
   const [offerSearch, setOfferSearch] = useState("");
-  const [offerCategory, setOfferCategory] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("all");
 
   // Quote Request State
   const [quoteOffer, setQuoteOffer] = useState<PartnerOffer | null>(null);
@@ -185,7 +154,6 @@ const ServicesPage = () => {
 
   const fetchAll = async () => {
     try {
-      // 1. Load local service requests backup
       const rawLocal = localStorage.getItem(localRequestsKey);
       const localReqs: ServiceRequest[] = rawLocal ? JSON.parse(rawLocal) : [];
 
@@ -201,14 +169,13 @@ const ServicesPage = () => {
           remoteReqs = (rRes.data as ServiceRequest[]) || [];
           remoteFarms = fRes.data || [];
         } catch (sbErr) {
-          console.warn("Service requests remote fetch fallback:", sbErr);
+          console.warn("Service requests fallback:", sbErr);
         }
       }
 
-      // Merge remote and local requests
       const mergedMap = new Map<string, ServiceRequest>();
-      remoteReqs.forEach(r => mergedMap.set(r.id, r));
-      localReqs.forEach(r => {
+      remoteReqs.forEach((r) => mergedMap.set(r.id, r));
+      localReqs.forEach((r) => {
         if (!mergedMap.has(r.id)) mergedMap.set(r.id, r);
       });
       const finalRequests = Array.from(mergedMap.values()).sort(
@@ -217,24 +184,14 @@ const ServicesPage = () => {
       setRequests(finalRequests);
       setFarms(remoteFarms);
 
-      // 2. Load partner offers and quotes
-      const [pOffers, pQuotes] = await Promise.all([
+      const [loadedOffers, quotes] = await Promise.all([
         partnerStorage.getOffers(),
-        partnerStorage.getQuotes(),
+        partnerStorage.getQuotes(user?.id),
       ]);
-
-      setPartnerOffers(pOffers || []);
-
-      // Filter farmer quotes
-      const myQuotes = (pQuotes || []).filter(
-        q =>
-          q.requester_id === user?.id ||
-          q.requester_id === "demo-farmer" ||
-          (profile?.phone && q.contact_phone === profile.phone)
-      );
-      setPartnerQuotes(myQuotes);
+      setPartnerOffers(loadedOffers);
+      setPartnerQuotes(quotes);
     } catch (e) {
-      console.error("Error in fetchAll:", e);
+      console.error(e);
     } finally {
       setLoading(false);
       setLoadingOffers(false);
@@ -243,23 +200,20 @@ const ServicesPage = () => {
 
   useEffect(() => {
     fetchAll();
-    const handlePartnerUpdate = () => {
-      fetchAll();
-    };
-    window.addEventListener("koobnaaba-partner-data-updated", handlePartnerUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handlePartnerUpdate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, profile]);
+    const handleUpdate = () => fetchAll();
+    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.service_type) {
-      toast.error("Sélectionnez un type de service");
+      toast.error("Veuillez sélectionner un type de service");
       return;
     }
 
     const newReq: ServiceRequest = {
-      id: "sr-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
+      id: `local-req-${Date.now()}`,
       service_type: form.service_type,
       description: form.description || null,
       location: form.location || null,
@@ -272,10 +226,9 @@ const ServicesPage = () => {
       created_at: new Date().toISOString(),
     };
 
-    // Attempt Supabase insert
     if (user) {
       try {
-        const { data, error } = await supabase.from("service_requests").insert({
+        const { data, error } = await supabase.from("service_requests").insert([{
           user_id: user.id,
           service_type: form.service_type,
           description: form.description || null,
@@ -283,27 +236,26 @@ const ServicesPage = () => {
           farm_id: form.farm_id || null,
           preferred_date: form.preferred_date || null,
           phone: form.phone || null,
-        }).select().single();
-
-        if (!error && data) {
-          newReq.id = data.id;
+          status: "en_attente",
+        }]).select();
+        if (data && data[0]) {
+          newReq.id = data[0].id;
         }
       } catch (err) {
-        console.warn("Supabase insert warning:", err);
+        console.warn("Insert fallback local:", err);
       }
     }
 
-    // Persist to local storage
     const rawLocal = localStorage.getItem(localRequestsKey);
     const existing: ServiceRequest[] = rawLocal ? JSON.parse(rawLocal) : [];
     existing.unshift(newReq);
     localStorage.setItem(localRequestsKey, JSON.stringify(existing));
 
-    setRequests(prev => [newReq, ...prev.filter(r => r.id !== newReq.id)]);
-    toast.success("Demande d'intervention envoyée avec succès !");
+    setRequests((prev) => [newReq, ...prev.filter((r) => r.id !== newReq.id)]);
+    toast.success("Demande d'intervention transmise avec succès !");
     setForm({ service_type: "", description: "", location: "", farm_id: "", preferred_date: "", phone: "" });
     setOpen(false);
-    setMyRequestsTab("technical");
+    setActiveFilter("mes_demandes");
   };
 
   const handleCancel = async (id: string) => {
@@ -314,10 +266,10 @@ const ServicesPage = () => {
     const rawLocal = localStorage.getItem(localRequestsKey);
     if (rawLocal) {
       const existing: ServiceRequest[] = JSON.parse(rawLocal);
-      const updated = existing.map(r => r.id === id ? { ...r, status: "annulee" } : r);
+      const updated = existing.map((r) => (r.id === id ? { ...r, status: "annulee" } : r));
       localStorage.setItem(localRequestsKey, JSON.stringify(updated));
     }
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "annulee" } : r));
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: "annulee" } : r)));
     toast.success("Demande annulée");
   };
 
@@ -329,10 +281,10 @@ const ServicesPage = () => {
     const rawLocal = localStorage.getItem(localRequestsKey);
     if (rawLocal) {
       const existing: ServiceRequest[] = JSON.parse(rawLocal);
-      const updated = existing.filter(r => r.id !== id);
+      const updated = existing.filter((r) => r.id !== id);
       localStorage.setItem(localRequestsKey, JSON.stringify(updated));
     }
-    setRequests(prev => prev.filter(r => r.id !== id));
+    setRequests((prev) => prev.filter((r) => r.id !== id));
     toast.success("Demande supprimée");
   };
 
@@ -378,10 +330,11 @@ const ServicesPage = () => {
         status: "en_attente",
       });
 
-      toast.success(`Votre demande a été transmise à ${quoteOffer.partner_name} ! Retrouvez-la dans « Mes Demandes »`);
+      toast.success(`Votre commande a été envoyée à ${quoteOffer.partner_name} !`);
       setQuoteOpen(false);
       window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
       fetchAll();
+      setActiveFilter("mes_demandes");
     } catch (err) {
       console.error(err);
       toast.error("Une erreur est survenue lors de l'envoi de la commande.");
@@ -406,13 +359,17 @@ const ServicesPage = () => {
     fetchAll();
   };
 
-  const getServiceLabel = (type: string) => SERVICE_TYPES.find(s => s.value === type)?.label || type;
-  const getServiceIcon = (type: string) => SERVICE_TYPES.find(s => s.value === type)?.icon || ClipboardList;
+  const getServiceLabel = (type: string) => SERVICE_TYPES.find((s) => s.value === type)?.label || type;
 
-  // Offres filtrées
+  // Filtrage direct des offres
   const filteredOffers = useMemo(() => {
     return partnerOffers.filter((o) => {
-      const matchCat = offerCategory === "all" || o.category === offerCategory;
+      const matchCat =
+        activeFilter === "all" ||
+        activeFilter === "mes_demandes" ||
+        activeFilter === "conseil_technique" ||
+        o.category === activeFilter;
+
       const q = offerSearch.toLowerCase().trim();
       const matchQuery =
         !q ||
@@ -422,180 +379,392 @@ const ServicesPage = () => {
         o.partner_name.toLowerCase().includes(q);
       return matchCat && matchQuery && o.is_active;
     });
-  }, [partnerOffers, offerCategory, offerSearch]);
+  }, [partnerOffers, activeFilter, offerSearch]);
 
   const totalMyRequests = partnerQuotes.length + requests.length;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-2">
-            <Store className="h-3.5 w-3.5" />
-            Services & Offres Partenaires Agréés
+    <div className="space-y-8 animate-fade-in max-w-6xl mx-auto pb-12">
+      {/* Top Banner Premium & Lisible */}
+      <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/25 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 text-primary text-xs font-bold uppercase tracking-wider">
+            <Store className="h-4 w-4" />
+            Boutique & Services Partenaires Agréés
           </div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold">Services & Approvisionnement</h1>
-          <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-            Commandez vos intrants, semences certifiées et prestations de matériel (tracteurs, batteuses), ou demandez un accompagnement technique officiel.
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-extrabold text-foreground tracking-tight">
+            Services & Approvisionnement Agricole
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-3xl leading-relaxed">
+            Commandez vos semences certifiées, engrais NPK/Urée, locations d'engins mécanisés (tracteurs, batteuses) et sollicitez un accompagnement agronomique officiel.
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground font-semibold shadow-xs shrink-0">
-              <Plus className="h-4 w-4 mr-2" /> Demander un service
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="font-heading">Demander un service technique</DialogTitle>
-              <DialogDescription className="text-xs">
-                Sélectionnez la prestation requise pour votre exploitation agricole ou pastorale.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-3">
-                <Label className="font-semibold">Type de service *</Label>
-                {SERVICE_CATEGORIES.map(({ category, services }) => (
-                  <div key={category}>
-                    <p className="text-xs font-semibold text-muted-foreground mb-1.5">{category}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                      {services.map(({ value, label, icon: Icon, desc }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setForm(f => ({ ...f, service_type: value }))}
-                          className={`flex items-start gap-3 rounded-xl border-2 p-2.5 text-left transition-all ${
-                            form.service_type === value
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/40 hover:bg-muted/50"
-                          }`}
-                        >
-                          <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${form.service_type === value ? "text-primary" : "text-muted-foreground"}`} />
-                          <div>
-                            <span className="text-xs font-semibold leading-tight block">{label}</span>
-                            <span className="text-[10px] text-muted-foreground leading-tight">{desc}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <Button
+            onClick={() => setActiveFilter("mes_demandes")}
+            variant={activeFilter === "mes_demandes" ? "default" : "outline"}
+            className="h-12 px-5 text-sm font-bold rounded-2xl gap-2 shadow-xs"
+          >
+            <ClipboardList className="h-4 w-4" />
+            Mes Demandes
+            {totalMyRequests > 0 && (
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-primary text-primary-foreground font-bold">
+                {totalMyRequests}
+              </span>
+            )}
+          </Button>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="h-12 px-6 gradient-primary text-primary-foreground text-sm font-bold rounded-2xl shadow-primary gap-2">
+                <Plus className="h-5 w-5" /> Demander un service
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
+              <DialogHeader>
+                <DialogTitle className="font-heading text-xl font-bold">Demander une prestation technique</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
+                  Sélectionnez la prestation requise pour votre parcelle ou élevage.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+                <div className="space-y-4">
+                  <Label className="font-bold text-sm text-foreground">Type de service requis *</Label>
+                  <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
+                    {SERVICE_CATEGORIES.map(({ category, services }) => (
+                      <div key={category} className="space-y-2">
+                        <p className="text-xs font-bold text-primary uppercase tracking-wider">{category}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {services.map(({ value, label, icon: Icon, desc }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setForm((f) => ({ ...f, service_type: value }))}
+                              className={`flex items-start gap-3 rounded-2xl border-2 p-3 text-left transition-all ${
+                                form.service_type === value
+                                  ? "border-primary bg-primary/10 shadow-xs"
+                                  : "border-border hover:border-primary/40 hover:bg-muted/40"
+                              }`}
+                            >
+                              <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${form.service_type === value ? "text-primary" : "text-muted-foreground"}`} />
+                              <div>
+                                <span className="text-sm font-bold text-foreground block leading-snug">{label}</span>
+                                <span className="text-xs text-muted-foreground leading-relaxed block mt-0.5">{desc}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {farms.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Exploitation concernée</Label>
-                    <Select value={form.farm_id} onValueChange={v => setForm(f => ({ ...f, farm_id: v }))}>
-                      <SelectTrigger><SelectValue placeholder="Sélectionner (optionnel)" /></SelectTrigger>
-                      <SelectContent>
-                        {farms.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-semibold">Téléphone de contact *</Label>
+                    <Input
+                      required
+                      placeholder="+226 70 00 00 00"
+                      value={form.phone}
+                      onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="h-11 rounded-xl text-sm"
+                    />
                   </div>
-                )}
-                <div className="space-y-2">
-                  <Label>Localisation</Label>
-                  <Input placeholder="Village, commune…" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-semibold">Localisation ou Village</Label>
+                    <Input
+                      placeholder="Ex: Commune de Koudougou"
+                      value={form.location}
+                      onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                      className="h-11 rounded-xl text-sm"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Date souhaitée</Label>
-                  <Input type="date" value={form.preferred_date} onChange={e => setForm(f => ({ ...f, preferred_date: e.target.value }))} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Téléphone de contact *</Label>
-                  <Input required placeholder="+226 70 00 00 00" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Description détaillée</Label>
-                <Textarea placeholder="Décrivez votre besoin, la situation actuelle, etc." rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-              </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Description détaillée de votre besoin</Label>
+                  <Textarea
+                    rows={3}
+                    placeholder="Précisez la superficie, le type de culture ou la situation observée…"
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    className="rounded-xl text-sm leading-relaxed"
+                  />
+                </div>
 
-              <Button type="submit" className="w-full gradient-primary text-primary-foreground">Envoyer la demande</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter className="pt-2">
+                  <Button type="submit" className="w-full h-12 gradient-primary text-primary-foreground font-bold text-base rounded-2xl shadow-primary">
+                    Envoyer ma demande d'intervention
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Main Tabs */}
-      <Tabs defaultValue="offres-partenaires" className="space-y-6">
-        <TabsList className="grid grid-cols-1 sm:grid-cols-3 w-full max-w-2xl h-auto p-1 gap-1">
-          <TabsTrigger value="offres-partenaires" className="gap-2 py-2.5">
-            <Store className="h-4 w-4" /> Offres des Partenaires ({partnerOffers.filter(o => o.is_active).length})
-          </TabsTrigger>
-          <TabsTrigger value="mes-demandes" className="gap-2 py-2.5">
-            <ClipboardList className="h-4 w-4" /> Mes Demandes ({totalMyRequests})
-          </TabsTrigger>
-          <TabsTrigger value="catalogue-technique" className="gap-2 py-2.5">
-            <Microscope className="h-4 w-4" /> Prestations Agronomiques
-          </TabsTrigger>
-        </TabsList>
+      {/* Barre de Recherche et Filtres Directs (Sans barres de navigation secondaires cachées) */}
+      <div className="bg-card border border-border/80 rounded-3xl p-5 shadow-sm space-y-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher par nom d'intrant, semence, tracteur, partenaire ou ville…"
+            value={offerSearch}
+            onChange={(e) => setOfferSearch(e.target.value)}
+            className="pl-12 h-13 text-base rounded-2xl border-border/80 bg-background/50 focus:bg-background"
+          />
+        </div>
 
-        {/* TAB 1: OFFRES DES PARTENAIRES AGRÉÉS */}
-        <TabsContent value="offres-partenaires" className="space-y-6">
-          {/* Search & Categories Bar */}
-          <div className="bg-card border rounded-2xl p-4 shadow-xs space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher tracteur, semences maïs, NPK, vaccin, broyeur, ville..."
-                value={offerSearch}
-                onChange={(e) => setOfferSearch(e.target.value)}
-                className="pl-10 h-11"
-              />
-            </div>
+        {/* Pilules de Filtrage Direct */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {FILTER_PILLS.map((pill) => {
+            const isSelected = activeFilter === pill.value;
+            return (
+              <button
+                key={pill.value}
+                type="button"
+                onClick={() => setActiveFilter(pill.value)}
+                className={`px-4 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-sm scale-102"
+                    : "bg-muted/70 text-foreground/80 hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {pill.label}
+                {pill.value === "mes_demandes" && totalMyRequests > 0 && (
+                  <span className={`px-1.5 py-0.2 rounded-full text-xs font-extrabold ${isSelected ? "bg-white text-primary" : "bg-primary text-white"}`}>
+                    {totalMyRequests}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-            <div className="flex flex-wrap gap-2 pt-1">
-              {PARTNER_CATEGORY_FILTERS.map((cat) => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => setOfferCategory(cat.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    offerCategory === cat.value
-                      ? "bg-primary text-primary-foreground shadow-xs"
-                      : "bg-muted/70 text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+      {/* VUE 1 : MES DEMANDES EN COURS (Si sélectionné dans les filtres directs) */}
+      {activeFilter === "mes_demandes" ? (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b pb-3">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
+                Suivi de vos demandes et commandes
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Consultez le statut en temps réel de vos commandes auprès des partenaires agréés.
+              </p>
             </div>
+            <Button size="sm" variant="outline" onClick={fetchAll} className="h-10 text-xs font-semibold rounded-xl gap-2">
+              <RefreshCw className="h-4 w-4" /> Actualiser
+            </Button>
           </div>
 
+          {/* Commandes auprès des partenaires */}
+          <div className="space-y-3">
+            <h3 className="text-base font-heading font-bold text-foreground flex items-center gap-2">
+              <ShoppingCart className="h-4 w-4 text-primary" /> Commandes Partenaires ({partnerQuotes.length})
+            </h3>
+            {partnerQuotes.length === 0 ? (
+              <Card className="rounded-2xl border-dashed text-center py-8">
+                <CardContent className="space-y-2">
+                  <Store className="h-10 w-10 text-muted-foreground mx-auto" />
+                  <p className="text-base font-semibold">Aucune commande partenaire pour le moment</p>
+                  <p className="text-sm text-muted-foreground">
+                    Sélectionnez un intrant ou un engin dans le catalogue pour transmettre une commande.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              partnerQuotes.map((quote) => {
+                const st = quoteStatusConfig[quote.status] || quoteStatusConfig.en_attente;
+                const StIcon = st.icon;
+                return (
+                  <Card key={quote.id} className="rounded-2xl border hover:border-primary/40 transition-colors shadow-xs">
+                    <CardContent className="p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                          <Store className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-base font-bold text-foreground leading-snug">
+                              {quote.offer_title || "Prestation partenaire"}
+                            </h4>
+                            <Badge variant={st.variant} className="flex items-center gap-1.5 text-xs font-semibold py-0.5 px-2.5 rounded-full">
+                              <StIcon className="h-3.5 w-3.5" />
+                              {st.label}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
+                            <span>Partenaire : <strong className="text-foreground font-semibold">{quote.partner_name}</strong></span>
+                            {quote.quantity && <span>Quantité : <strong className="text-foreground">{quote.quantity}</strong></span>}
+                            {quote.needed_by && <span>Date souhaitée : <strong>{new Date(quote.needed_by).toLocaleDateString("fr-FR")}</strong></span>}
+                          </div>
+                          {quote.message && (
+                            <p className="text-xs text-muted-foreground bg-muted/40 p-2.5 rounded-xl border border-border/60">
+                              {quote.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex sm:flex-col gap-2 shrink-0">
+                        {quote.status === "en_attente" && (
+                          <Button size="sm" variant="outline" className="text-destructive text-xs h-9 rounded-xl" onClick={() => handleCancelQuote(quote.id)}>
+                            <XCircle className="h-4 w-4 mr-1.5" /> Annuler
+                          </Button>
+                        )}
+                        {(quote.status === "refusee" || quote.status === "cloturee") && (
+                          <Button size="sm" variant="ghost" className="text-destructive text-xs h-9 rounded-xl" onClick={() => handleDeleteQuote(quote.id)}>
+                            <Trash2 className="h-4 w-4 mr-1.5" /> Supprimer
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+
+          {/* Demandes d'interventions techniques */}
+          <div className="space-y-3 pt-4">
+            <h3 className="text-base font-heading font-bold text-foreground flex items-center gap-2">
+              <Microscope className="h-4 w-4 text-emerald-600" /> Demandes d'Interventions Techniques ({requests.length})
+            </h3>
+            {requests.length === 0 ? (
+              <Card className="rounded-2xl border-dashed text-center py-8">
+                <CardContent className="space-y-2">
+                  <ClipboardList className="h-10 w-10 text-muted-foreground mx-auto" />
+                  <p className="text-base font-semibold">Aucune demande d'intervention</p>
+                  <p className="text-sm text-muted-foreground">
+                    Cliquez sur « Demander un service » pour planifier un diagnostic ou un chantier.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              requests.map((req) => {
+                const st = statusConfig[req.status] || statusConfig.en_attente;
+                const StIcon = st.icon;
+                return (
+                  <Card key={req.id} className="rounded-2xl border hover:border-primary/40 transition-colors shadow-xs">
+                    <CardContent className="p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="space-y-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-base font-bold text-foreground">{getServiceLabel(req.service_type)}</h4>
+                          <Badge variant={st.variant} className="flex items-center gap-1.5 text-xs font-semibold py-0.5 px-2.5 rounded-full">
+                            <StIcon className="h-3.5 w-3.5" /> {st.label}
+                          </Badge>
+                        </div>
+                        {req.description && <p className="text-xs text-muted-foreground line-clamp-2">{req.description}</p>}
+                        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                          {req.location && <span>📍 {req.location}</span>}
+                          {req.preferred_date && <span>📅 {new Date(req.preferred_date).toLocaleDateString("fr-FR")}</span>}
+                          {req.phone && <span>📞 {req.phone}</span>}
+                        </div>
+                      </div>
+
+                      <div className="flex sm:flex-col gap-2 shrink-0">
+                        {req.status === "en_attente" && (
+                          <Button size="sm" variant="outline" className="text-destructive text-xs h-9 rounded-xl" onClick={() => handleCancel(req.id)}>
+                            <XCircle className="h-4 w-4 mr-1.5" /> Annuler
+                          </Button>
+                        )}
+                        {(req.status === "annulee" || req.status === "terminee") && (
+                          <Button size="sm" variant="ghost" className="text-destructive text-xs h-9 rounded-xl" onClick={() => handleDelete(req.id)}>
+                            <Trash2 className="h-4 w-4 mr-1.5" /> Supprimer
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </div>
+      ) : activeFilter === "conseil_technique" ? (
+        /* VUE 2 : CATALOGUE TECHNIQUE ET FORMATIONS */
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
+              Prestations agronomiques et d'ingénierie
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez une prestation pour réserver une intervention d'expert sur vos parcelles.
+            </p>
+          </div>
+
+          <div className="space-y-8">
+            {SERVICE_CATEGORIES.map(({ category, services }) => (
+              <div key={category} className="space-y-3">
+                <h3 className="text-base font-heading font-bold text-foreground flex items-center gap-2">
+                  {category}
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {services.map(({ value, label, icon: Icon, desc }) => (
+                    <Card
+                      key={value}
+                      className="card-premium cursor-pointer border-border hover:border-primary/60 transition-all p-5 rounded-2xl"
+                      onClick={() => {
+                        setForm((f) => ({ ...f, service_type: value }));
+                        setOpen(true);
+                      }}
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-base font-bold text-foreground leading-snug">{label}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* VUE 3 : CATALOGUE DES OFFRES PARTENAIRES (AFFICHAGE DIRECT) */
+        <div className="space-y-6">
           {loadingOffers ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-80 rounded-2xl" />
+                <Skeleton key={i} className="h-96 rounded-3xl" />
               ))}
             </div>
           ) : filteredOffers.length === 0 ? (
-            <Card className="shadow-xs border-dashed text-center py-12">
+            <Card className="rounded-3xl border-dashed text-center py-16 shadow-xs">
               <CardContent className="space-y-3">
-                <Store className="h-10 w-10 text-muted-foreground mx-auto" />
-                <p className="text-base font-semibold">Aucune offre trouvée</p>
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  Aucune offre ne correspond à vos filtres actuels. Modifiez votre recherche ou explorez une autre catégorie.
+                <Store className="h-12 w-12 text-muted-foreground mx-auto" />
+                <h3 className="text-xl font-bold font-heading">Aucune offre trouvée</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Aucun produit ou prestation ne correspond à vos filtres actuels. Modifiez votre recherche ou découvrez d'autres catégories.
                 </p>
-                <Button size="sm" variant="outline" onClick={() => { setOfferSearch(""); setOfferCategory("all"); }}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl mt-2 font-bold"
+                  onClick={() => { setOfferSearch(""); setActiveFilter("all"); }}
+                >
                   Réinitialiser les filtres
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredOffers.map((offer) => (
                 <Card
                   key={offer.id}
-                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border hover:shadow-warm transition-all"
+                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-border/80 bg-card hover:shadow-premium hover:-translate-y-1 transition-all duration-300"
                 >
                   <div>
                     {/* Media Header */}
-                    <div className="relative h-44 bg-muted overflow-hidden">
+                    <div className="relative h-48 bg-muted overflow-hidden">
                       {offer.media && offer.media.length > 0 ? (
                         <div className="h-full w-full">
                           <ProductMediaViewer media={offer.media} title={offer.title} />
@@ -604,435 +773,198 @@ const ServicesPage = () => {
                         <img
                           src={offer.image_url}
                           alt={offer.title}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-primary/5 text-primary">
-                          <Store className="h-10 w-10" />
+                        <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary">
+                          <Store className="h-12 w-12" />
                         </div>
                       )}
-                      <Badge className="absolute top-2.5 left-2.5 bg-background/90 text-foreground border backdrop-blur-xs text-[10px] font-semibold">
+                      <Badge className="absolute top-3 left-3 bg-background/95 text-foreground border border-border/60 backdrop-blur-md text-xs font-bold py-1 px-3 rounded-full shadow-xs">
                         {offer.category.toUpperCase()}
                       </Badge>
                     </div>
 
-                    <CardContent className="p-4 space-y-2">
-                      <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
+                    <CardContent className="p-5 space-y-3">
+                      {/* Partenaire Info */}
+                      <div className="flex items-center justify-between gap-2 text-xs font-semibold text-muted-foreground">
                         <Link
                           to={`/partenaire/${offer.owner_id}`}
-                          className="font-medium hover:text-primary transition-colors flex items-center gap-1 truncate max-w-[200px]"
-                          title="Voir la vitrine complète du partenaire"
+                          className="hover:text-primary transition-colors flex items-center gap-1.5 truncate max-w-[210px]"
+                          title="Voir la vitrine officielle de ce partenaire"
                         >
-                          <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
                           <span className="truncate">{offer.partner_name}</span>
-                          <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-60" />
+                          <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
                         </Link>
                         {offer.location_name && (
-                          <span className="flex items-center gap-1 shrink-0">
-                            <MapPin className="h-3 w-3" /> {offer.location_name}
+                          <span className="flex items-center gap-1 shrink-0 font-medium">
+                            <MapPin className="h-3.5 w-3.5 text-muted-foreground" /> {offer.location_name}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="font-heading font-bold text-base leading-snug line-clamp-2 text-foreground">
+                      {/* Titre de l'offre */}
+                      <h3 className="font-heading font-extrabold text-lg text-foreground leading-snug line-clamp-2">
                         {offer.title}
                       </h3>
 
+                      {/* Description */}
                       {offer.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed">
                           {offer.description}
                         </p>
                       )}
 
+                      {/* Prix */}
                       {offer.price_indication && (
-                        <div className="pt-2">
-                          <span className="text-xs text-muted-foreground">Tarif indicatif : </span>
-                          <span className="text-sm font-bold text-primary">
-                            {offer.price_indication} {offer.unit ? `/ ${offer.unit}` : ""}
+                        <div className="pt-2 border-t border-border/50">
+                          <span className="text-xs text-muted-foreground block font-medium">Tarif indicatif :</span>
+                          <span className="text-xl font-heading font-extrabold text-primary">
+                            {Number(offer.price_indication).toLocaleString("fr-FR")} F CFA
+                            {offer.unit && <span className="text-xs text-muted-foreground font-normal ml-1">/ {offer.unit}</span>}
                           </span>
                         </div>
                       )}
                     </CardContent>
                   </div>
 
-                  <div className="p-4 pt-0 border-t mt-2 flex items-center gap-2">
+                  {/* Actions directes */}
+                  <div className="p-5 pt-0 grid grid-cols-2 gap-2">
                     <Button
-                      asChild
                       variant="outline"
                       size="sm"
-                      className="flex-1 text-xs"
+                      asChild
+                      className="h-11 rounded-xl text-xs font-bold border-border hover:bg-muted"
                     >
-                      <Link to={`/partenaire/${offer.owner_id}`}>
-                        Voir vitrine
+                      <Link to={`/partenaire/${offer.owner_id}`} target="_blank">
+                        <Store className="h-3.5 w-3.5 mr-1 text-primary" /> Vitrine
                       </Link>
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => handleOpenQuote(offer)}
-                      className="gradient-primary text-primary-foreground font-semibold text-xs flex-1"
+                      className="h-11 rounded-xl text-xs font-bold gradient-primary text-primary-foreground shadow-xs gap-1"
                     >
-                      <Send className="h-3.5 w-3.5 mr-1" />
-                      Commander
+                      <ShoppingCart className="h-3.5 w-3.5 mr-1" /> Commander
                     </Button>
                   </div>
                 </Card>
               ))}
             </div>
           )}
-        </TabsContent>
+        </div>
+      )}
 
-        {/* TAB 2 : MES DEMANDES & COMMANDES */}
-        <TabsContent value="mes-demandes" className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-heading font-semibold">Suivi de vos demandes et commandes</h2>
-              <p className="text-xs text-muted-foreground">
-                Consultez en temps réel vos commandes de matériel/intrants et vos demandes d'intervention technique.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={fetchAll} title="Actualiser les demandes">
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                Actualiser
-              </Button>
-              <Button size="sm" onClick={() => setOpen(true)} className="gradient-primary text-primary-foreground text-xs font-semibold">
-                <Plus className="h-3.5 w-3.5 mr-1" /> Nouvelle demande
-              </Button>
-            </div>
-          </div>
-
-          {/* Sub-tabs for Quotes vs Technical Requests */}
-          <div className="flex border-b border-border">
-            <button
-              onClick={() => setMyRequestsTab("quotes")}
-              className={`pb-2.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${
-                myRequestsTab === "quotes"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Commandes & Devis Partenaires ({partnerQuotes.length})
-            </button>
-            <button
-              onClick={() => setMyRequestsTab("technical")}
-              className={`pb-2.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${
-                myRequestsTab === "technical"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Microscope className="h-4 w-4" />
-              Interventions Techniques ({requests.length})
-            </button>
-          </div>
-
-          {/* SOUS-ONGLET COMMANDES & DEVIS PARTENAIRES */}
-          {myRequestsTab === "quotes" && (
-            <div className="space-y-3">
-              {partnerQuotes.length === 0 ? (
-                <Card className="shadow-xs border-dashed text-center py-10">
-                  <CardContent className="space-y-3">
-                    <Store className="h-10 w-10 text-muted-foreground mx-auto" />
-                    <p className="text-sm font-semibold">Aucune commande ou demande de devis partenaire</p>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                      Parcourez le catalogue des partenaires pour commander du matériel, des semences, des engrais ou des prestations.
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                partnerQuotes.map((quote) => {
-                  const st = quoteStatusConfig[quote.status] || quoteStatusConfig.en_attente;
-                  const StIcon = st.icon;
-                  return (
-                    <Card key={quote.id} className="shadow-xs hover:border-primary/40 transition-colors">
-                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                        <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <Store className="h-5 w-5" />
-                          </div>
-                          <div className="space-y-1.5 flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="text-sm font-bold text-foreground">
-                                {quote.offer_title || "Prestation / Produit partenaire"}
-                              </h3>
-                              <Badge variant={st.variant} className="flex items-center gap-1 text-xs">
-                                <StIcon className="h-3 w-3" />
-                                {st.label}
-                              </Badge>
-                            </div>
-
-                            <p className="text-xs text-muted-foreground">
-                              Partenaire : <strong className="text-foreground">{quote.partner_name || "Partenaire agréé"}</strong>
-                            </p>
-
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pt-0.5">
-                              {quote.quantity && <span>📦 Quantité : <strong className="text-foreground">{quote.quantity}</strong></span>}
-                              {quote.needed_by && <span>📅 Échéance : <strong className="text-foreground">{quote.needed_by}</strong></span>}
-                              {quote.contact_phone && <span>📞 Contact : <strong className="text-foreground">{quote.contact_phone}</strong></span>}
-                              <span>Créée le {new Date(quote.created_at).toLocaleDateString("fr-FR")}</span>
-                            </div>
-
-                            {quote.message && (
-                              <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded-md mt-1 leading-relaxed">
-                                {quote.message}
-                              </p>
-                            )}
-
-                            {quote.response && (
-                              <div className="mt-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
-                                <p className="text-xs font-semibold text-primary">Réponse du partenaire :</p>
-                                <p className="text-xs text-foreground mt-0.5">{quote.response}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center sm:flex-col gap-1 shrink-0 self-end sm:self-auto">
-                          {quote.status === "en_attente" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleCancelQuote(quote.id)}
-                              className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                            >
-                              <XCircle className="h-3.5 w-3.5 mr-1" />
-                              Annuler
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteQuote(quote.id)}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            title="Supprimer la demande"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-          )}
-
-          {/* SOUS-ONGLET INTERVENTIONS TECHNIQUES */}
-          {myRequestsTab === "technical" && (
-            <div className="space-y-3">
-              {loading ? (
-                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}</div>
-              ) : requests.length === 0 ? (
-                <Card className="shadow-xs border-dashed text-center py-10">
-                  <CardContent className="space-y-3">
-                    <ClipboardList className="h-10 w-10 text-muted-foreground mx-auto" />
-                    <p className="text-sm font-semibold">Aucune demande d'intervention enregistrée</p>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                      Besoin d'un diagnostic sol, d'un traitement phytosanitaire ou d'un aménagement ? Soumettez votre demande en un clic.
-                    </p>
-                    <Button size="sm" onClick={() => setOpen(true)} className="gradient-primary text-primary-foreground">
-                      Créer ma première demande
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                requests.map(req => {
-                  const ServiceIcon = getServiceIcon(req.service_type);
-                  const st = statusConfig[req.status] || statusConfig.en_attente;
-                  const StIcon = st.icon;
-                  return (
-                    <Card key={req.id} className="shadow-xs hover:border-primary/40 transition-colors">
-                      <CardContent className="flex items-start gap-4 pt-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                          <ServiceIcon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold">{getServiceLabel(req.service_type)}</p>
-                            <Badge variant={st.variant} className="flex items-center gap-1 text-xs">
-                              <StIcon className="h-3 w-3" />{st.label}
-                            </Badge>
-                          </div>
-                          {req.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{req.description}</p>}
-                          <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                            {req.location && <span>📍 {req.location}</span>}
-                            {req.preferred_date && <span>📅 {new Date(req.preferred_date).toLocaleDateString("fr-FR")}</span>}
-                            {req.phone && <span>📞 {req.phone}</span>}
-                            <span>Créée le {new Date(req.created_at).toLocaleDateString("fr-FR")}</span>
-                          </div>
-                          {req.expert_notes && (
-                            <div className="mt-2 p-2 rounded-lg bg-muted/50 border border-border">
-                              <p className="text-xs font-semibold text-foreground">Réponse de l'expert :</p>
-                              <p className="text-xs text-muted-foreground">{req.expert_notes}</p>
-                              {(req.estimated_cost ?? 0) > 0 && (
-                                <p className="text-xs font-semibold text-primary mt-1">Coût estimé : {Number(req.estimated_cost).toLocaleString()} FCFA</p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex gap-1 shrink-0">
-                          {req.status === "en_attente" && (
-                            <Button variant="ghost" size="icon" onClick={() => handleCancel(req.id)} title="Annuler">
-                              <XCircle className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
-                          {(req.status === "annulee" || req.status === "terminee") && (
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(req.id)} title="Supprimer">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* TAB 3: CATALOGUE TECHNIQUE OFFICIEL */}
-        <TabsContent value="catalogue-technique" className="space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-lg font-heading font-semibold">Prestations agronomiques et d'ingénierie</h2>
-            <p className="text-xs text-muted-foreground">
-              Cliquez sur un service pour planifier directement une intervention sur vos parcelles.
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            {SERVICE_CATEGORIES.map(({ category, services }) => (
-              <div key={category}>
-                <h3 className="text-sm font-heading font-semibold mb-2.5 text-foreground">{category}</h3>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {services.map(({ value, label, icon: Icon, desc }) => (
-                    <Card
-                      key={value}
-                      className="shadow-xs hover:shadow-warm transition-all cursor-pointer border-border hover:border-primary/50"
-                      onClick={() => { setForm(f => ({ ...f, service_type: value })); setOpen(true); }}
-                    >
-                      <CardContent className="flex items-start gap-3 pt-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                          <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold">{label}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Quote Request Modal */}
+      {/* Modal Commande & Devis Partenaire */}
       <Dialog open={quoteOpen} onOpenChange={setQuoteOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="font-heading flex items-center gap-2">
+            <DialogTitle className="font-heading text-xl font-bold flex items-center gap-2">
               <Send className="h-5 w-5 text-primary" />
-              Demande de Devis & Commande
+              Commander / Demande de devis
             </DialogTitle>
-            <DialogDescription className="text-xs">
-              Votre demande sera transmise immédiatement au partenaire agréé via son espace professionnel KoobNaaba.
+            <DialogDescription className="text-xs text-muted-foreground">
+              Votre demande sera transmise en direct au partenaire agréé avec notification.
             </DialogDescription>
           </DialogHeader>
 
           {quoteOffer && (
-            <div className="bg-muted/60 p-3 rounded-xl border border-border flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-background overflow-hidden shrink-0 border">
+            <div className="bg-muted/50 p-4 rounded-2xl border border-border/70 flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-xl bg-background overflow-hidden shrink-0 border border-border">
                 {quoteOffer.media && quoteOffer.media.length > 0 ? (
                   <img src={quoteOffer.media[0].url} alt="" className="w-full h-full object-cover" />
                 ) : quoteOffer.image_url ? (
                   <img src={quoteOffer.image_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-primary"><Store className="h-5 w-5" /></div>
+                  <div className="w-full h-full flex items-center justify-center text-primary"><Store className="h-6 w-6" /></div>
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-foreground truncate">{quoteOffer.title}</p>
-                <p className="text-[11px] text-muted-foreground truncate">Partenaire : {quoteOffer.partner_name}</p>
+                <p className="text-sm font-bold text-foreground truncate">{quoteOffer.title}</p>
+                <p className="text-xs text-muted-foreground truncate">Partenaire : {quoteOffer.partner_name}</p>
                 {quoteOffer.price_indication && (
-                  <p className="text-xs font-bold text-primary mt-0.5">
-                    {quoteOffer.price_indication} {quoteOffer.unit && `/ ${quoteOffer.unit}`}
+                  <p className="text-sm font-extrabold text-primary mt-0.5">
+                    {Number(quoteOffer.price_indication).toLocaleString("fr-FR")} F CFA {quoteOffer.unit && `/ ${quoteOffer.unit}`}
                   </p>
                 )}
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSendQuote} className="space-y-3.5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <form onSubmit={handleSendQuote} className="space-y-4 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Votre Nom / Exploitation *</Label>
+                <Label className="text-xs font-bold">Votre Nom ou Exploitation *</Label>
                 <Input
                   required
                   placeholder="Ex: Coopérative Wend-Panga"
                   value={quoteForm.requester_name}
                   onChange={(e) => setQuoteForm((f) => ({ ...f, requester_name: e.target.value }))}
+                  className="h-11 rounded-xl text-sm"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Téléphone WhatsApp / Appel *</Label>
+                <Label className="text-xs font-bold">Téléphone WhatsApp / Appel *</Label>
                 <Input
                   required
-                  placeholder="Ex: +226 70 00 00 00"
+                  placeholder="+226 70 00 00 00"
                   value={quoteForm.contact_phone}
                   onChange={(e) => setQuoteForm((f) => ({ ...f, contact_phone: e.target.value }))}
+                  className="h-11 rounded-xl text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Quantité / Hectares souhaités</Label>
+                <Label className="text-xs font-bold">Quantité ou Superficie (ha)</Label>
                 <Input
-                  placeholder="Ex: 5 sacs, 3 hectares, 2 jours…"
+                  placeholder="Ex: 5 sacs, 2 ha, 3 jours…"
                   value={quoteForm.quantity}
                   onChange={(e) => setQuoteForm((f) => ({ ...f, quantity: e.target.value }))}
+                  className="h-11 rounded-xl text-sm"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Date ou échéance souhaitée</Label>
+                <Label className="text-xs font-bold">Date souhaitée</Label>
                 <Input
                   type="date"
                   value={quoteForm.needed_by}
                   onChange={(e) => setQuoteForm((f) => ({ ...f, needed_by: e.target.value }))}
+                  className="h-11 rounded-xl text-sm"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Lieu de livraison ou d'intervention</Label>
+              <Label className="text-xs font-bold">Lieu d'intervention ou de livraison</Label>
               <Input
                 placeholder="Ex: Commune de Koudougou, Village de Villy"
                 value={quoteForm.location}
                 onChange={(e) => setQuoteForm((f) => ({ ...f, location: e.target.value }))}
+                className="h-11 rounded-xl text-sm"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Précisions & Questions</Label>
+              <Label className="text-xs font-bold">Précisions pour le partenaire</Label>
               <Textarea
                 rows={3}
-                placeholder="Décrivez vos besoins spécifiques, accès terrain, etc."
+                placeholder="Indiquez vos besoins particuliers, heure de livraison…"
                 value={quoteForm.message}
                 onChange={(e) => setQuoteForm((f) => ({ ...f, message: e.target.value }))}
+                className="rounded-xl text-sm leading-relaxed"
               />
             </div>
 
             <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setQuoteOpen(false)}>
+              <Button type="button" variant="outline" className="h-12 rounded-xl text-sm font-semibold" onClick={() => setQuoteOpen(false)}>
                 Annuler
               </Button>
-              <Button type="submit" disabled={quoteSending} className="gradient-primary text-primary-foreground font-semibold">
+              <Button type="submit" disabled={quoteSending} className="h-12 gradient-primary text-primary-foreground font-bold text-sm rounded-xl shadow-primary">
                 {quoteSending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                Envoyer ma demande au partenaire
+                Envoyer ma commande
               </Button>
             </DialogFooter>
           </form>
@@ -1040,6 +972,4 @@ const ServicesPage = () => {
       </Dialog>
     </div>
   );
-};
-
-export default ServicesPage;
+}

@@ -7,7 +7,7 @@ import {
   roleLabelKeys,
   roleIcons,
 } from "@/components/RoleSidebar";
-import { Handshake, Wheat, Beef } from "lucide-react";
+import { Calculator, Store, Beef } from "lucide-react";
 
 describe("Architecture & Module Consolidation: Agriculteur vs Partenaire Hub", () => {
   it("agriculteurNav contains ONLY planning and expert services, all other features stripped", () => {
@@ -94,8 +94,8 @@ describe("Architecture & Module Consolidation: Agriculteur vs Partenaire Hub", (
     expect(roleLabelKeys.agent_technique).toBe("roles.partenaire");
     expect(roleLabelKeys.formation).toBe("roles.partenaire");
 
-    expect(roleIcons.agriculteur).toBe(Wheat);
-    expect(roleIcons.partenaire).toBe(Handshake);
+    expect(roleIcons.agriculteur).toBe(Calculator);
+    expect(roleIcons.partenaire).toBe(Store);
     expect(roleIcons.eleveur).toBe(Beef);
   });
 });

@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Briefcase, Plus, Trash2, ClipboardList, Pencil, CheckCircle2, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { partnerStorage, PartnerMission, ProviderClient } from "@/lib/partnerStorage";
@@ -49,6 +48,7 @@ export default function MissionsPage() {
   const [price, setPrice] = useState("");
   const [paid, setPaid] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<"actives" | "terminees" | "toutes">("actives");
 
   const loadData = async () => {
     setLoading(true);
@@ -237,41 +237,89 @@ export default function MissionsPage() {
     );
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-            <Briefcase className="h-6 w-6" />
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 rounded-2xl bg-primary/10 text-primary">
+            <Briefcase className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-2xl font-heading font-bold">Missions & Prestations</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Suivi des chantiers agricoles, labours mécanisés, récoltes et traitements.
+            <h1 className="text-3xl md:text-4xl font-heading font-extrabold text-foreground tracking-tight">
+              Missions & Chantiers de Prestation
+            </h1>
+            <p className="text-base text-muted-foreground mt-1 font-medium">
+              Suivi en temps réel des chantiers agricoles, labours mécanisés, récoltes et traitements.
             </p>
           </div>
         </div>
-        <Button onClick={() => { reset(); setOpen(true); }} className="gradient-primary text-primary-foreground font-semibold shadow-xs">
-          <Plus className="h-4 w-4 mr-1.5" /> Nouvelle mission
+        <Button onClick={() => { reset(); setOpen(true); }} className="h-12 px-6 text-sm font-bold rounded-xl gradient-primary text-primary-foreground shadow-premium shrink-0">
+          <Plus className="h-4 w-4 mr-2" /> Nouvelle mission
         </Button>
       </div>
 
       {loading ? (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {[1, 2].map((i) => (
-            <Card key={i} className="h-36 animate-pulse bg-muted/40" />
+            <Card key={i} className="h-36 animate-pulse bg-muted/40 rounded-2xl" />
           ))}
         </div>
       ) : (
-        <Tabs defaultValue="actives">
-          <TabsList className="grid grid-cols-3 w-full bg-muted/60 p-1">
-            <TabsTrigger value="actives">En cours ({grouped.actives.length})</TabsTrigger>
-            <TabsTrigger value="terminees">Terminées ({grouped.terminees.length})</TabsTrigger>
-            <TabsTrigger value="toutes">Toutes ({grouped.toutes.length})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="actives" className="mt-4"><MissionList items={grouped.actives} /></TabsContent>
-          <TabsContent value="terminees" className="mt-4"><MissionList items={grouped.terminees} /></TabsContent>
-          <TabsContent value="toutes" className="mt-4"><MissionList items={grouped.toutes} /></TabsContent>
-        </Tabs>
+        <div className="space-y-6">
+          {/* Sélecteur direct sans nav secondaire */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveFilter("actives")}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-base font-bold transition-all ${
+                activeFilter === "actives"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <Clock className="h-5 w-5" />
+              <span>En cours</span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-background/50">
+                {grouped.actives.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("terminees")}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-base font-bold transition-all ${
+                activeFilter === "terminees"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <CheckCircle2 className="h-5 w-5" />
+              <span>Terminées</span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-background/50">
+                {grouped.terminees.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("toutes")}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-base font-bold transition-all ${
+                activeFilter === "toutes"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <ClipboardList className="h-5 w-5" />
+              <span>Toutes les missions</span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-background/50">
+                {grouped.toutes.length}
+              </span>
+            </button>
+          </div>
+
+          <div>
+            {activeFilter === "actives" && <MissionList items={grouped.actives} />}
+            {activeFilter === "terminees" && <MissionList items={grouped.terminees} />}
+            {activeFilter === "toutes" && <MissionList items={grouped.toutes} />}
+          </div>
+        </div>
       )}
 
       {/* Modal Dialog */}

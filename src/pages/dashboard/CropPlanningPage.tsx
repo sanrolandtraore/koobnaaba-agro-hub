@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Calculator,
@@ -676,77 +675,104 @@ const CropPlanningPage = () => {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
-      <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-6">
-        {/* Header & Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-heading font-bold flex items-center gap-2.5">
-              <Calculator className="h-7 w-7 text-primary" />
-              Planification & Calcul Agronomique
-            </h1>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Simulateur de rentabilité, rendements climatiques, besoins en intrants et suivi de vos campagnes.
-            </p>
+    <div className="space-y-8 animate-fade-in max-w-6xl mx-auto pb-12">
+      {/* En-tête de page & sélecteur de mode direct (sans tabs imbriqués) */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-border/80 pb-6">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+            <Sprout className="h-4 w-4" /> Espace Producteur Agricole
           </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <TabsList className="bg-muted p-1">
-              <TabsTrigger value="simulateur" className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />
-                Simulateur & Calcul
-              </TabsTrigger>
-              <TabsTrigger value="mes-campagnes" className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Mes Campagnes
-                {savedPlans.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 text-[11px] px-1.5 py-0">
-                    {savedPlans.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-
-            <Button asChild variant="secondary" className="border shadow-xs">
-              <Link to="/dashboard/services">
-                <ClipboardList className="h-4 w-4 mr-2 text-primary" />
-                Services Experts
-              </Link>
-            </Button>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-heading font-extrabold flex items-center gap-3 text-foreground tracking-tight">
+            <Calculator className="h-9 w-9 text-primary" />
+            Planification & Calcul Agronomique
+          </h1>
+          <p className="text-base text-muted-foreground max-w-2xl font-medium">
+            Simulateur de rentabilité, rendements climatiques burkinabè, itinéraire cultural et suivi de vos campagnes.
+          </p>
         </div>
 
-        {/* ONGLET 1 : SIMULATEUR & CALCUL AGRONOMIQUE */}
-        <TabsContent value="simulateur" className="space-y-6">
-          <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Sélecteur direct sans nav secondaire */}
+          <div className="inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border shadow-xs">
+            <button
+              type="button"
+              onClick={() => setActiveTab("simulateur")}
+              className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+                activeTab === "simulateur"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              }`}
+            >
+              <Calculator className="h-5 w-5" />
+              Simulateur & Calcul
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("mes-campagnes")}
+              className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+                activeTab === "mes-campagnes"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              }`}
+            >
+              <CalendarDays className="h-5 w-5" />
+              Mes Campagnes
+              {savedPlans.length > 0 && (
+                <span className="ml-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-primary/20 text-primary">
+                  {savedPlans.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <Button asChild variant="secondary" className="h-12 px-5 text-base font-bold rounded-xl border border-border/80 shadow-xs hover:border-primary/40">
+            <Link to="/dashboard/services">
+              <ClipboardList className="h-5 w-5 mr-2 text-primary" />
+              Services Experts
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* MODE 1 : SIMULATEUR & CALCUL AGRONOMIQUE */}
+      {activeTab === "simulateur" && (
+        <div className="space-y-8 animate-fade-in">
+          <div className="flex justify-end gap-3">
             {hasResult && (
               <>
-                <Button onClick={savePlanToDatabase} disabled={saving} className="gradient-primary text-primary-foreground font-semibold">
-                  <Save className="h-4 w-4 mr-2" />
+                <Button onClick={savePlanToDatabase} disabled={saving} className="h-12 px-6 text-base font-bold rounded-xl gradient-primary text-primary-foreground shadow-premium">
+                  <Save className="h-5 w-5 mr-2" />
                   {saving ? "Enregistrement..." : "Enregistrer la campagne"}
                 </Button>
-                <Button onClick={exportCurrentPDF} variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
+                <Button onClick={exportCurrentPDF} variant="outline" className="h-12 px-6 text-base font-bold rounded-xl border-border hover:border-primary/50">
+                  <FileText className="h-5 w-5 mr-2 text-primary" />
                   Exporter PDF
                 </Button>
               </>
             )}
           </div>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Paramètres de la parcelle & Agro-climatologie</CardTitle>
-              <CardDescription>Configurez la parcelle, la culture et la zone agro-climatique du Burkina Faso</CardDescription>
+          <Card className="card-premium border-border/80">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-heading font-bold flex items-center gap-2">
+                <Sprout className="h-5 w-5 text-primary" />
+                Paramètres de la parcelle & Agro-climatologie
+              </CardTitle>
+              <CardDescription className="text-sm font-medium">
+                Configurez la parcelle, la culture et la zone agro-climatique du Burkina Faso
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label>Parcelle {parcels.length === 0 && <span className="text-xs text-muted-foreground font-normal">(Optionnel)</span>}</Label>
+                  <Label className="text-sm font-bold text-foreground">
+                    Parcelle {parcels.length === 0 && <span className="text-xs text-muted-foreground font-normal">(Optionnel)</span>}
+                  </Label>
                   <Select
                     value={selectedParcel || "manuel"}
                     onValueChange={(val) => setSelectedParcel(val === "manuel" ? "" : val)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 text-base rounded-xl">
                       <SelectValue placeholder="Mode direct (superficie libre)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -762,9 +788,11 @@ const CropPlanningPage = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Culture</Label>
+                  <Label className="text-sm font-bold text-foreground">Culture</Label>
                   <Select value={selectedCrop} onValueChange={setSelectedCrop}>
-                    <SelectTrigger><SelectValue placeholder="Choisir la culture" /></SelectTrigger>
+                    <SelectTrigger className="h-12 text-base rounded-xl">
+                      <SelectValue placeholder="Choisir la culture" />
+                    </SelectTrigger>
                     <SelectContent>
                       {crops.map(c => (
                         <SelectItem key={c.id} value={c.id}>
@@ -775,23 +803,26 @@ const CropPlanningPage = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Superficie (ha) {parcel?.calculated_area_ha && <Badge variant="outline" className="ml-1 text-xs">GPS</Badge>}</Label>
+                  <Label className="text-sm font-bold text-foreground">
+                    Superficie (ha) {parcel?.calculated_area_ha && <Badge variant="outline" className="ml-1 text-xs">GPS</Badge>}
+                  </Label>
                   <Input
                     type="number"
                     step="any"
                     min="0.1"
+                    className="h-12 text-base rounded-xl font-medium"
                     value={manualArea || (parcel?.calculated_area_ha || parcel?.area_ha || "1")}
                     onChange={e => setManualArea(e.target.value)}
                     placeholder="Superficie en ha"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1.5">
+                  <Label className="text-sm font-bold text-foreground flex items-center gap-1.5">
                     <CloudSun className="h-4 w-4 text-amber-500" />
                     Zone agro-climatique
                   </Label>
                   <Select value={selectedClimateZoneId} onValueChange={setSelectedClimateZoneId}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 text-base rounded-xl">
                       <SelectValue placeholder="Zone climatique" />
                     </SelectTrigger>
                     <SelectContent>
@@ -806,38 +837,40 @@ const CropPlanningPage = () => {
               </div>
 
               {/* Badge informatif climat */}
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 p-2.5 rounded-md">
-                <Badge variant="secondary" className="font-mono">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground bg-muted/50 p-3.5 rounded-xl border border-border/60">
+                <Badge variant="secondary" className="text-xs font-bold px-2.5 py-1">
                   Coeff climat : {climateCoeff}×
                 </Badge>
-                <span>
+                <span className="font-medium">
                   {activeClimateZone?.description || "Pluviométrie et climat appliqués au rendement."}
                 </span>
               </div>
 
               {hasResult && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-border">
                   <div className="space-y-2">
-                    <Label className="text-xs">Rendement attendu (kg/ha) [Ajusté climat: {climateCoeff}×]</Label>
+                    <Label className="text-sm font-bold text-foreground">Rendement attendu (kg/ha) [Ajusté climat: {climateCoeff}×]</Label>
                     <Input
                       type="number" step="any"
+                      className="h-12 text-base rounded-xl font-medium"
                       value={yieldOverride}
                       onChange={e => setYieldOverride(e.target.value)}
                       placeholder={`Calculé: ${effYieldPerHa} kg/ha`}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs">Prix de vente unitaire (FCFA/kg)</Label>
+                    <Label className="text-sm font-bold text-foreground">Prix de vente unitaire (FCFA/kg)</Label>
                     <Input
                       type="number" step="any"
+                      className="h-12 text-base rounded-xl font-medium"
                       value={priceOverride}
                       onChange={e => setPriceOverride(e.target.value)}
                       placeholder={`Suggéré: ${crop?.avg_price_per_kg || 200}`}
                     />
                   </div>
                   <div className="space-y-2 flex items-end">
-                    <Button variant="outline" size="sm" onClick={resetToSuggestions} className="w-full">
-                      <RotateCcw className="h-4 w-4 mr-1" /> Restaurer les suggestions
+                    <Button variant="outline" size="sm" onClick={resetToSuggestions} className="w-full h-12 text-sm font-bold rounded-xl border-border">
+                      <RotateCcw className="h-4 w-4 mr-2" /> Restaurer les suggestions
                     </Button>
                   </div>
                 </div>
@@ -948,119 +981,137 @@ const CropPlanningPage = () => {
 
           {/* Cartes KPI de synthèse */}
           {hasResult && (
-            <>
+            <>              {/* Cartes KPI de synthèse */}
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-                <Card className="border-primary/20">
+                <Card className="card-premium border-primary/30">
                   <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs font-medium text-muted-foreground">Superficie</CardTitle>
-                    <Sprout className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm font-bold text-muted-foreground">Superficie</CardTitle>
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                      <Sprout className="h-5 w-5" />
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xl font-heading font-bold">{area} <span className="text-sm font-normal">ha</span></p>
-                    {parcel?.calculated_area_ha && <p className="text-[10px] text-primary font-medium">📍 Polygone GPS</p>}
+                    <p className="text-3xl font-heading font-extrabold tracking-tight">{area} <span className="text-base font-semibold text-muted-foreground">ha</span></p>
+                    {parcel?.calculated_area_ha && <p className="text-xs text-primary font-bold mt-1">📍 Polygone GPS vérifié</p>}
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="card-premium border-border/80">
                   <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs font-medium text-muted-foreground">Rendement estimé</CardTitle>
-                    <Wheat className="h-4 w-4 text-secondary" />
+                    <CardTitle className="text-sm font-bold text-muted-foreground">Rendement estimé</CardTitle>
+                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
+                      <Wheat className="h-5 w-5" />
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xl font-heading font-bold">{fmt(expectedYield)} <span className="text-sm font-normal">kg</span></p>
-                    <p className="text-[10px] text-muted-foreground">({fmt(effYieldPerHa)} kg/ha)</p>
+                    <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{fmt(expectedYield)} <span className="text-base font-semibold text-muted-foreground">kg</span></p>
+                    <p className="text-xs font-medium text-muted-foreground mt-1">({fmt(effYieldPerHa)} kg/ha)</p>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="card-premium border-border/80">
                   <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs font-medium text-muted-foreground">Budget nécessaire</CardTitle>
-                    <DollarSign className="h-4 w-4 text-destructive" />
-                  </CardHeader>
-                  <CardContent><p className="text-xl font-heading font-bold">{fmt(totalBudget)} <span className="text-sm font-normal">FCFA</span></p></CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs font-medium text-muted-foreground">Revenu estimé</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                  </CardHeader>
-                  <CardContent><p className="text-xl font-heading font-bold">{fmt(expectedRevenue)} <span className="text-sm font-normal">FCFA</span></p></CardContent>
-                </Card>
-
-                <Card className={profit >= 0 ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/5"}>
-                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs font-medium text-muted-foreground">Profit potentiel & ROI</CardTitle>
-                    <TrendingUp className={`h-4 w-4 ${profit >= 0 ? "text-primary" : "text-destructive"}`} />
+                    <CardTitle className="text-sm font-bold text-muted-foreground">Budget nécessaire</CardTitle>
+                    <div className="p-2 rounded-xl bg-destructive/10 text-destructive">
+                      <DollarSign className="h-5 w-5" />
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className={`text-xl font-heading font-bold ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
-                      {profit >= 0 ? "+" : ""}{fmt(profit)} <span className="text-sm font-normal">FCFA</span>
+                    <p className="text-3xl font-heading font-extrabold tracking-tight text-destructive">{fmt(totalBudget)} <span className="text-base font-semibold text-muted-foreground">F</span></p>
+                    <p className="text-xs font-medium text-muted-foreground mt-1">Intrants + main-d'œuvre</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="card-premium border-border/80">
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-bold text-muted-foreground">Revenu estimé</CardTitle>
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-heading font-extrabold tracking-tight text-primary">{fmt(expectedRevenue)} <span className="text-base font-semibold text-muted-foreground">F</span></p>
+                    <p className="text-xs font-medium text-muted-foreground mt-1">Prix suggéré ou personnalisé</p>
+                  </CardContent>
+                </Card>
+
+                <Card className={`card-premium ${profit >= 0 ? "border-emerald-500/40 bg-emerald-500/5 shadow-glow" : "border-destructive/40 bg-destructive/5"}`}>
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-bold text-muted-foreground">Bénéfice & ROI</CardTitle>
+                    <div className={`p-2 rounded-xl ${profit >= 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive"}`}>
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className={`text-3xl font-heading font-extrabold tracking-tight ${profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+                      {profit >= 0 ? "+" : ""}{fmt(profit)} <span className="text-base font-semibold text-muted-foreground">F</span>
                     </p>
-                    <p className="text-[10px] text-muted-foreground">ROI: <strong>{roi}%</strong> · Seuil: {fmt(breakEvenKg)} kg</p>
+                    <p className="text-xs font-bold text-foreground/80 mt-1">
+                      ROI: <span className="text-primary">{roi}%</span> · Seuil: {fmt(breakEvenKg)} kg
+                    </p>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Tableaux Intrants & Main-d'œuvre */}
               <div className="grid gap-6 lg:grid-cols-2">
-                <Card>
+                <Card className="card-premium border-border/80">
                   <CardHeader className="flex flex-row items-center justify-between pb-3">
                     <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
+                      <CardTitle className="text-xl font-heading font-bold flex items-center gap-2">
                         <FlaskConical className="h-5 w-5 text-primary" />
                         Intrants & Semences
                       </CardTitle>
-                      <CardDescription>Ajustez les doses, engrais et prix selon vos achats</CardDescription>
+                      <CardDescription className="text-sm font-medium">Ajustez les doses, engrais et prix selon vos achats</CardDescription>
                     </div>
-                    <Button size="sm" variant="outline" onClick={addInput}>
-                      <Plus className="h-4 w-4 mr-1" /> Ajouter
+                    <Button size="sm" variant="outline" onClick={addInput} className="h-10 px-4 text-sm font-bold rounded-xl border-border hover:border-primary/50">
+                      <Plus className="h-4 w-4 mr-1.5" /> Ajouter
                     </Button>
                   </CardHeader>
                   <CardContent>
                     {inputRows.length === 0 ? (
-                      <p className="text-sm text-muted-foreground py-4 text-center">Aucun intrant — cliquez sur « Ajouter »</p>
+                      <p className="text-base text-muted-foreground py-6 text-center">Aucun intrant — cliquez sur « Ajouter »</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <Table>
                           <TableHeader>
-                            <TableRow>
-                              <TableHead>Intrant</TableHead>
-                              <TableHead className="text-right">Quantité</TableHead>
-                              <TableHead>Unité</TableHead>
-                              <TableHead className="text-right">Prix unit.</TableHead>
-                              <TableHead className="text-right">Coût</TableHead>
+                            <TableRow className="border-border">
+                              <TableHead className="text-sm font-bold">Intrant</TableHead>
+                              <TableHead className="text-right text-sm font-bold">Quantité</TableHead>
+                              <TableHead className="text-sm font-bold">Unité</TableHead>
+                              <TableHead className="text-right text-sm font-bold">Prix unit.</TableHead>
+                              <TableHead className="text-right text-sm font-bold">Coût</TableHead>
                               <TableHead></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {inputRows.map((i, idx) => (
-                              <TableRow key={idx}>
+                              <TableRow key={idx} className="border-border/60">
                                 <TableCell>
-                                  <Input value={i.name} onChange={e => updateInput(idx, { name: e.target.value })} className="h-8" />
+                                  <Input value={i.name} onChange={e => updateInput(idx, { name: e.target.value })} className="h-10 text-sm font-medium rounded-lg" />
                                 </TableCell>
                                 <TableCell>
                                   <Input type="number" step="any" value={i.totalQty}
-                                    onChange={e => updateInput(idx, { totalQty: numv(e.target.value) })} className="h-8 w-24 text-right" />
+                                    onChange={e => updateInput(idx, { totalQty: numv(e.target.value) })} className="h-10 w-24 text-right text-sm font-medium rounded-lg" />
                                 </TableCell>
                                 <TableCell>
-                                  <Input value={i.unit} onChange={e => updateInput(idx, { unit: e.target.value })} className="h-8 w-16" />
+                                  <Input value={i.unit} onChange={e => updateInput(idx, { unit: e.target.value })} className="h-10 w-20 text-sm font-medium rounded-lg" />
                                 </TableCell>
                                 <TableCell>
                                   <Input type="number" step="any" value={i.unitPrice}
-                                    onChange={e => updateInput(idx, { unitPrice: numv(e.target.value) })} className="h-8 w-24 text-right" />
+                                    onChange={e => updateInput(idx, { unitPrice: numv(e.target.value) })} className="h-10 w-24 text-right text-sm font-medium rounded-lg" />
                                 </TableCell>
-                                <TableCell className="text-right font-bold whitespace-nowrap">{fmt(i.totalQty * i.unitPrice)}</TableCell>
+                                <TableCell className="text-right font-bold text-sm whitespace-nowrap">{fmt(i.totalQty * i.unitPrice)}</TableCell>
                                 <TableCell>
-                                  <Button size="icon" variant="ghost" onClick={() => removeInput(idx)} className="h-7 w-7">
-                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  <Button size="icon" variant="ghost" onClick={() => removeInput(idx)} className="h-9 w-9 text-destructive hover:bg-destructive/10">
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TableCell>
                               </TableRow>
                             ))}
-                            <TableRow className="bg-muted/50 font-bold">
-                              <TableCell colSpan={4}>Total intrants</TableCell>
-                              <TableCell className="text-right">{fmt(totalInputCost)} FCFA</TableCell>
+                            <TableRow className="bg-muted/50 font-bold text-sm">
+                              <TableCell colSpan={4} className="font-bold">Total intrants</TableCell>
+                              <TableCell className="text-right font-extrabold text-primary">{fmt(totalInputCost)} FCFA</TableCell>
                               <TableCell></TableCell>
                             </TableRow>
                           </TableBody>
@@ -1070,63 +1121,63 @@ const CropPlanningPage = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="card-premium border-border/80">
                   <CardHeader className="flex flex-row items-center justify-between pb-3">
                     <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
+                      <CardTitle className="text-xl font-heading font-bold flex items-center gap-2">
                         <Users className="h-5 w-5 text-secondary" />
                         Main d'œuvre & Travaux
                       </CardTitle>
-                      <CardDescription>Planification des journées de travail et ouvriers par phase</CardDescription>
+                      <CardDescription className="text-sm font-medium">Planification des journées de travail et ouvriers par phase</CardDescription>
                     </div>
-                    <Button size="sm" variant="outline" onClick={addPhase}>
-                      <Plus className="h-4 w-4 mr-1" /> Ajouter
+                    <Button size="sm" variant="outline" onClick={addPhase} className="h-10 px-4 text-sm font-bold rounded-xl border-border hover:border-primary/50">
+                      <Plus className="h-4 w-4 mr-1.5" /> Ajouter
                     </Button>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow>
-                            <TableHead>Phase</TableHead>
-                            <TableHead className="text-right">Jours</TableHead>
-                            <TableHead className="text-right">Ouvriers</TableHead>
-                            <TableHead className="text-right">Taux/jour</TableHead>
-                            <TableHead className="text-right">Coût</TableHead>
+                          <TableRow className="border-border">
+                            <TableHead className="text-sm font-bold">Phase</TableHead>
+                            <TableHead className="text-right text-sm font-bold">Jours</TableHead>
+                            <TableHead className="text-right text-sm font-bold">Ouvriers</TableHead>
+                            <TableHead className="text-right text-sm font-bold">Taux/jour</TableHead>
+                            <TableHead className="text-right text-sm font-bold">Coût</TableHead>
                             <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {phaseRows.map((p, idx) => (
-                            <TableRow key={idx}>
+                            <TableRow key={idx} className="border-border/60">
                               <TableCell>
-                                <Input value={p.name} onChange={e => updatePhase(idx, { name: e.target.value })} className="h-8" />
+                                <Input value={p.name} onChange={e => updatePhase(idx, { name: e.target.value })} className="h-10 text-sm font-medium rounded-lg" />
                               </TableCell>
                               <TableCell>
                                 <Input type="number" step="any" value={p.totalDays}
-                                  onChange={e => updatePhase(idx, { totalDays: numv(e.target.value) })} className="h-8 w-20 text-right" />
+                                  onChange={e => updatePhase(idx, { totalDays: numv(e.target.value) })} className="h-10 w-20 text-right text-sm font-medium rounded-lg" />
                               </TableCell>
                               <TableCell>
                                 <Input type="number" step="1" min="1" value={p.workers}
-                                  onChange={e => updatePhase(idx, { workers: numv(e.target.value) })} className="h-8 w-20 text-right" />
+                                  onChange={e => updatePhase(idx, { workers: numv(e.target.value) })} className="h-10 w-20 text-right text-sm font-medium rounded-lg" />
                               </TableCell>
                               <TableCell>
                                 <Input type="number" step="any" value={p.dailyRate}
-                                  onChange={e => updatePhase(idx, { dailyRate: numv(e.target.value) })} className="h-8 w-24 text-right" />
+                                  onChange={e => updatePhase(idx, { dailyRate: numv(e.target.value) })} className="h-10 w-24 text-right text-sm font-medium rounded-lg" />
                               </TableCell>
-                              <TableCell className="text-right font-bold whitespace-nowrap">{fmt(p.totalDays * p.workers * p.dailyRate)}</TableCell>
+                              <TableCell className="text-right font-bold text-sm whitespace-nowrap">{fmt(p.totalDays * p.workers * p.dailyRate)}</TableCell>
                               <TableCell>
-                                <Button size="icon" variant="ghost" onClick={() => removePhase(idx)} className="h-7 w-7">
-                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                <Button size="icon" variant="ghost" onClick={() => removePhase(idx)} className="h-9 w-9 text-destructive hover:bg-destructive/10">
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </TableCell>
                             </TableRow>
                           ))}
-                          <TableRow className="bg-muted/50 font-bold">
-                            <TableCell colSpan={2}>Total main d'œuvre</TableCell>
-                            <TableCell className="text-right">{fmt(totalLabourDays)} j·h</TableCell>
+                          <TableRow className="bg-muted/50 font-bold text-sm">
+                            <TableCell colSpan={2} className="font-bold">Total main d'œuvre</TableCell>
+                            <TableCell className="text-right font-bold">{fmt(totalLabourDays)} j·h</TableCell>
                             <TableCell></TableCell>
-                            <TableCell className="text-right">{fmt(totalLabourCost)} FCFA</TableCell>
+                            <TableCell className="text-right font-extrabold text-primary">{fmt(totalLabourCost)} FCFA</TableCell>
                             <TableCell></TableCell>
                           </TableRow>
                         </TableBody>
@@ -1137,46 +1188,49 @@ const CropPlanningPage = () => {
               </div>
 
               {/* Récapitulatif Budgétaire */}
-              <Card className="border-primary/20">
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
-                  <CardTitle className="text-lg">Récapitulatif budgétaire & Actions</CardTitle>
-                  <div className="flex gap-2">
-                    <Button onClick={savePlanToDatabase} disabled={saving} className="gradient-primary text-primary-foreground" size="sm">
-                      <Save className="h-4 w-4 mr-1" />
+              <Card className="card-premium border-primary/30">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
+                  <div>
+                    <CardTitle className="text-xl font-heading font-bold">Récapitulatif budgétaire & Actions</CardTitle>
+                    <CardDescription className="text-sm font-medium">Bilan financier complet prévisionnel avant validation</CardDescription>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button onClick={savePlanToDatabase} disabled={saving} className="h-11 px-5 text-sm font-bold rounded-xl gradient-primary text-primary-foreground shadow-premium">
+                      <Save className="h-4 w-4 mr-2" />
                       {saving ? "Enregistrement..." : "Enregistrer la campagne"}
                     </Button>
-                    <Button onClick={exportCurrentPDF} size="sm" variant="outline">
-                      <FileText className="h-4 w-4 mr-1" /> Exporter PDF
+                    <Button onClick={exportCurrentPDF} variant="outline" className="h-11 px-5 text-sm font-bold rounded-xl border-border hover:border-primary/50">
+                      <FileText className="h-4 w-4 mr-2 text-primary" /> Exporter PDF
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-muted/40">
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Coût intrants</p>
-                      <p className="text-lg font-bold">{fmt(totalInputCost)} FCFA</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Coût intrants</p>
+                      <p className="text-2xl font-heading font-extrabold text-foreground">{fmt(totalInputCost)} <span className="text-sm font-semibold text-muted-foreground">F</span></p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Coût main d'œuvre</p>
-                      <p className="text-lg font-bold">{fmt(totalLabourCost)} FCFA</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Coût main d'œuvre</p>
+                      <p className="text-2xl font-heading font-extrabold text-foreground">{fmt(totalLabourCost)} <span className="text-sm font-semibold text-muted-foreground">F</span></p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Budget total prévisionnel</p>
-                      <p className="text-lg font-bold text-destructive">{fmt(totalBudget)} FCFA</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Budget total prévisionnel</p>
+                      <p className="text-2xl font-heading font-extrabold text-destructive">{fmt(totalBudget)} <span className="text-sm font-semibold text-muted-foreground">F</span></p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Profit prévisionnel</p>
-                      <p className={`text-lg font-bold ${profit >= 0 ? "text-primary" : "text-destructive"}`}>
-                        {profit >= 0 ? "+" : ""}{fmt(profit)} FCFA
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Profit net potentiel</p>
+                      <p className={`text-2xl font-heading font-extrabold ${profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+                        {profit >= 0 ? "+" : ""}{fmt(profit)} <span className="text-sm font-semibold text-muted-foreground">F</span>
                       </p>
                     </div>
                   </div>
                   {plantCount > 0 && (
                     <>
                       <Separator className="my-4" />
-                      <p className="text-sm text-muted-foreground">
-                        <strong>{fmt(plantCount)}</strong> plants/arbres · Durée estimée : <strong>{crop.growth_duration_days || "—"}</strong> jours ·
-                        Seuil de rentabilité : <strong>{fmt(breakEvenKg)} kg</strong> · ROI estimé : <strong>{roi}%</strong>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        <strong className="text-foreground">{fmt(plantCount)}</strong> plants/arbres · Durée estimée : <strong className="text-foreground">{crop.growth_duration_days || "—"}</strong> jours ·
+                        Seuil de rentabilité : <strong className="text-foreground">{fmt(breakEvenKg)} kg</strong> · ROI estimé : <strong className="text-primary">{roi}%</strong>
                       </p>
                     </>
                   )}
@@ -1184,19 +1238,21 @@ const CropPlanningPage = () => {
               </Card>
             </>
           )}
-        </TabsContent>
+        </div>
+      )}
 
-        {/* ONGLET 2 : MES CAMPAGNES PLANIFIÉES */}
-        <TabsContent value="mes-campagnes" className="space-y-4">
-          <div className="flex items-center justify-between">
+      {/* MODE 2 : MES CAMPAGNES PLANIFIÉES */}
+      {activeTab === "mes-campagnes" && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-lg font-heading font-semibold">Campagnes et Cycles enregistrés</h2>
-              <p className="text-xs text-muted-foreground">
+              <h2 className="text-2xl font-heading font-bold">Campagnes et Cycles enregistrés</h2>
+              <p className="text-sm font-medium text-muted-foreground">
                 Consultez, rechargez dans le simulateur ou téléchargez les fiches PDF de vos campagnes passées et prévisionnelles.
               </p>
             </div>
-            <Button size="sm" onClick={() => setActiveTab("simulateur")} className="gradient-primary text-primary-foreground">
-              <Plus className="h-4 w-4 mr-1.5" />
+            <Button onClick={() => setActiveTab("simulateur")} className="h-11 px-5 text-sm font-bold rounded-xl gradient-primary text-primary-foreground shadow-premium">
+              <Plus className="h-4 w-4 mr-2" />
               Nouvelle planification
             </Button>
           </div>
@@ -1318,8 +1374,8 @@ const CropPlanningPage = () => {
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 };

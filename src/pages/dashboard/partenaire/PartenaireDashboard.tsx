@@ -92,140 +92,138 @@ export default function PartenaireDashboard() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 animate-fade-in">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8 animate-fade-in pb-12">
       {/* Welcome Banner Spécialisé */}
-      <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
-              {getProfileIcon(activeMeta.iconName, "h-3.5 w-3.5")}
+      <div className="card-premium bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/25 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-card-elevated">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 text-primary text-xs font-bold uppercase tracking-wider">
+              {getProfileIcon(activeMeta.iconName, "h-4 w-4")}
               {activeMeta.badge}
             </span>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setIsSwitchDialogOpen(true)}
-              className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1 px-2.5 rounded-full border border-dashed border-border"
+              className="h-8 text-xs font-bold text-foreground hover:bg-muted gap-1.5 px-3 rounded-full border-dashed"
             >
-              <SlidersHorizontal className="h-3 w-3" /> Changer de profil métier
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Changer de profil métier
             </Button>
           </div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold">
+          <h1 className="text-3xl md:text-4xl font-heading font-extrabold text-foreground tracking-tight">
             Bonjour {profile?.full_name || sub.companyName}
           </h1>
-          <p className="text-sm font-medium text-foreground/90">
+          <p className="text-base font-bold text-foreground/90">
             {activeMeta.dashboardTitle}
           </p>
-          <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
+          <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed font-medium">
             {activeMeta.tagline}
           </p>
         </div>
 
-        <div className="flex flex-col items-start md:items-end gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-xl border shrink-0">
+        <div className="flex flex-col items-start md:items-end gap-2.5 bg-background/90 backdrop-blur-md p-5 rounded-2xl border border-border/80 shadow-xs shrink-0">
           <div className="flex items-center gap-2">
-            <Badge className="bg-emerald-600 text-white font-semibold">
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Formule {activePlan.title}
+            <Badge className="bg-emerald-600 text-white font-bold text-xs px-3 py-1">
+              <CheckCircle2 className="h-4 w-4 mr-1.5" /> Formule {activePlan.title}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs font-medium text-muted-foreground">
             Valide jusqu'au {new Date(sub.endDate).toLocaleDateString("fr-FR")}
           </p>
-          <Button asChild size="sm" variant="outline" className="text-xs font-semibold mt-1">
+          <Button asChild size="sm" variant="outline" className="h-10 text-xs font-bold rounded-xl mt-1 border-border hover:border-primary/50">
             <Link to="/dashboard/partenaire-abonnement">
-              Gérer mon abonnement <ArrowRight className="h-3 w-3 ml-1" />
+              Gérer mon abonnement <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
             </Link>
           </Button>
         </div>
       </div>
 
       {/* Vitrine Partenaire Publique & Lien Unique */}
-      <div className="bg-gradient-to-r from-emerald-500/10 via-primary/5 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
-            <Store className="h-3.5 w-3.5" /> Votre Vitrine Partenaire Dédiée & URL Unique
+      <div className="card-premium bg-gradient-to-r from-emerald-500/10 via-primary/5 to-teal-500/10 border border-emerald-500/30 rounded-2xl p-6 shadow-card-elevated flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
+            <Store className="h-4 w-4" /> Vitrine Partenaire Officielle & URL Dédiée
           </div>
-          <h3 className="text-base font-heading font-bold text-foreground">
+          <h3 className="text-xl font-heading font-bold text-foreground">
             Votre vitrine officielle KoobNaaba est active
           </h3>
-          <p className="text-xs text-muted-foreground max-w-2xl">
-            Tous vos produits, intrants, matériels et prestations spécialisés avec photos/vidéos sont synchronisés sur votre page vitrine, le module agriculteur et l'accueil.
+          <p className="text-sm text-muted-foreground max-w-2xl font-medium">
+            Tous vos produits, intrants, matériels et prestations spécialisés avec photos/vidéos sont synchronisés en direct sur votre page vitrine, le module agriculteur et l'accueil.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto shrink-0">
           <Button
             variant="outline"
-            size="sm"
-            className="gap-2 text-xs font-semibold"
+            className="h-11 px-4 gap-2 text-sm font-bold rounded-xl border-border hover:border-primary/50"
             onClick={() => {
               const url = `${window.location.origin}/partenaire/${user?.id || 'demo-partner-id'}`;
               navigator.clipboard.writeText(url);
               toast.success("Lien unique de votre vitrine copié dans le presse-papier !");
             }}
           >
-            <Copy className="h-3.5 w-3.5" /> Copier mon lien vitrine
+            <Copy className="h-4 w-4" /> Copier mon lien
           </Button>
           <Button
             asChild
-            size="sm"
-            className="gradient-primary text-primary-foreground text-xs font-semibold gap-2 shadow-xs"
+            className="h-11 px-5 gradient-primary text-primary-foreground text-sm font-bold rounded-xl gap-2 shadow-premium"
           >
             <Link to={`/partenaire/${user?.id || 'demo-partner-id'}`} target="_blank">
-              <ExternalLink className="h-3.5 w-3.5" /> Voir ma vitrine publique
+              <ExternalLink className="h-4 w-4" /> Voir ma vitrine publique
             </Link>
           </Button>
         </div>
       </div>
 
       {/* KPI Tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Link to="/dashboard/partenaire-mes-offres">
-          <Card className="hover:border-primary/50 transition-all h-full">
-            <CardHeader className="p-4 pb-1 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Offres & Articles</CardTitle>
-              <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600"><Store className="h-4 w-4" /></div>
+          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
+            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold text-muted-foreground">Offres & Articles</CardTitle>
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600"><Store className="h-5 w-5" /></div>
             </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-2xl font-heading font-bold">{offers.length}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{offers.filter(o => o.is_active).length} actifs sur la plateforme</p>
+            <CardContent className="p-5 pt-1">
+              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{offers.length}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-1">{offers.filter(o => o.is_active).length} actifs sur la plateforme</p>
             </CardContent>
           </Card>
         </Link>
 
         <Link to="/dashboard/missions">
-          <Card className="hover:border-primary/50 transition-all h-full">
-            <CardHeader className="p-4 pb-1 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Missions & Chantiers</CardTitle>
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600"><Briefcase className="h-4 w-4" /></div>
+          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
+            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold text-muted-foreground">Missions & Chantiers</CardTitle>
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600"><Briefcase className="h-5 w-5" /></div>
             </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-2xl font-heading font-bold">{activeMissions.length}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{missions.length} dossiers au total</p>
+            <CardContent className="p-5 pt-1">
+              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{activeMissions.length}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-1">{missions.length} dossiers au total</p>
             </CardContent>
           </Card>
         </Link>
 
         <Link to="/dashboard/quote-requests">
-          <Card className="hover:border-primary/50 transition-all h-full">
-            <CardHeader className="p-4 pb-1 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Demandes de devis</CardTitle>
-              <div className="p-2 rounded-lg bg-rose-500/10 text-rose-600"><FileText className="h-4 w-4" /></div>
+          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
+            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold text-muted-foreground">Demandes de devis</CardTitle>
+              <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600"><FileText className="h-5 w-5" /></div>
             </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-2xl font-heading font-bold">{pendingQuotes.length}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{quotes.length} demandes reçues</p>
+            <CardContent className="p-5 pt-1">
+              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{pendingQuotes.length}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-1">{quotes.length} demandes reçues</p>
             </CardContent>
           </Card>
         </Link>
 
         <Link to="/dashboard/revenus">
-          <Card className="hover:border-primary/50 transition-all h-full">
-            <CardHeader className="p-4 pb-1 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Recettes encaissées</CardTitle>
-              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600"><Wallet className="h-4 w-4" /></div>
+          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
+            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold text-muted-foreground">Recettes encaissées</CardTitle>
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600"><Wallet className="h-5 w-5" /></div>
             </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-2xl font-heading font-bold">{totalRevenue.toLocaleString("fr-FR")} F</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">+{pendingRevenue.toLocaleString("fr-FR")} F en cours</p>
+            <CardContent className="p-5 pt-1">
+              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{totalRevenue.toLocaleString("fr-FR")} F</p>
+              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">+{pendingRevenue.toLocaleString("fr-FR")} F en cours</p>
             </CardContent>
           </Card>
         </Link>
@@ -390,49 +388,49 @@ export default function PartenaireDashboard() {
       </div>
 
       {/* Pôle Spécialisé Principal */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-heading font-bold flex items-center gap-2">
-            <span className="p-1 rounded-lg bg-primary/10 text-primary">
-              {getProfileIcon(activeMeta.iconName, "h-5 w-5")}
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h2 className="text-2xl font-heading font-extrabold flex items-center gap-3 text-foreground">
+            <span className="p-2 rounded-xl bg-primary/10 text-primary">
+              {getProfileIcon(activeMeta.iconName, "h-6 w-6")}
             </span>
-            Votre Espace Métier : {activeMeta.title}
+            Votre Espace Métier Spécialisé : {activeMeta.title}
           </h2>
-          <span className="text-xs text-muted-foreground hidden sm:inline">{activeMeta.dashboardSubtitle}</span>
+          <span className="text-sm font-medium text-muted-foreground">{activeMeta.dashboardSubtitle}</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Pôle 1: Fournisseur d'Intrants & Semences */}
-          <Card className={`transition-all flex flex-col justify-between ${partnerType === "fournisseur_intrants" ? "border-primary ring-1 ring-primary shadow-xs" : "hover:border-primary/50"}`}>
+          <Card className={`card-premium transition-all flex flex-col justify-between shadow-card-elevated ${partnerType === "fournisseur_intrants" ? "border-primary ring-2 ring-primary/40 shadow-glow" : "hover:border-primary/50"}`}>
             <CardHeader className="pb-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-2">
-                <FlaskConical className="h-5 w-5" />
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3">
+                <FlaskConical className="h-6 w-6" />
               </div>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-bold">1. Intrants & Semences</CardTitle>
-                {partnerType === "fournisseur_intrants" && <Badge className="bg-primary text-primary-foreground text-[10px]">Votre Métier</Badge>}
+                <CardTitle className="text-lg font-heading font-bold">1. Intrants & Semences</CardTitle>
+                {partnerType === "fournisseur_intrants" && <Badge className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5">Votre Métier</Badge>}
               </div>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-sm text-muted-foreground font-medium mt-1">
                 Engrais NPK, urée, semences certifiées, biofertilisants et traitements homologués.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2 pt-0">
-              <div className="flex flex-col gap-1.5 text-xs">
-                <Link to="/dashboard/partenaire-mes-offres" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Store className="h-3.5 w-3.5 text-emerald-600" /> Mon catalogue d'intrants</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              <div className="flex flex-col gap-2 text-sm">
+                <Link to="/dashboard/partenaire-mes-offres" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
+                  <span className="flex items-center gap-2.5"><Store className="h-4 w-4 text-emerald-600" /> Mon catalogue d'intrants</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
-                <Link to="/dashboard/quote-requests" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 text-rose-600" /> Commandes d'engrais</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <Link to="/dashboard/quote-requests" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
+                  <span className="flex items-center gap-2.5"><FileText className="h-4 w-4 text-rose-600" /> Commandes d'engrais</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
-                <Link to="/dashboard/partenaire-fournisseurs" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Package className="h-3.5 w-3.5 text-indigo-600" /> Fournisseurs & Grossistes</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <Link to="/dashboard/partenaire-fournisseurs" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
+                  <span className="flex items-center gap-2.5"><Package className="h-4 w-4 text-indigo-600" /> Fournisseurs & Grossistes</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
-                <Link to="/dashboard/expert-calculator" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Calculator className="h-3.5 w-3.5 text-amber-600" /> Calculatrice de doses</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <Link to="/dashboard/expert-calculator" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
+                  <span className="flex items-center gap-2.5"><Calculator className="h-4 w-4 text-amber-600" /> Calculatrice de doses</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 </Link>
               </div>
             </CardContent>

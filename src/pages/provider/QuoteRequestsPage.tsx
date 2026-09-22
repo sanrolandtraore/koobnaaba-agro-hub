@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FileText, Phone, Calendar, Clock, Send, MessageSquareCheck, CheckCircle2, XCircle } from "lucide-react";
+import { FileText, Phone, Calendar, Clock, Send, CheckCheck, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { partnerStorage, QuoteRequest } from "@/lib/partnerStorage";
 
@@ -126,62 +125,94 @@ export default function QuoteRequestsPage() {
     );
   };
 
+  const [activeFilter, setActiveFilter] = useState<"pending" | "processed">("pending");
   const pending = quotes.filter((q) => q.status === "en_attente");
   const processed = quotes.filter((q) => q.status !== "en_attente");
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-          <FileText className="h-6 w-6" />
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
+      <div className="flex items-center gap-4">
+        <div className="p-3.5 rounded-2xl bg-primary/10 text-primary">
+          <FileText className="h-8 w-8" />
         </div>
         <div>
-          <h1 className="text-2xl font-heading font-bold">Demandes de Devis</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Devis reçus des exploitants agricoles pour vos engins, semences et prestations.
+          <h1 className="text-3xl md:text-4xl font-heading font-extrabold text-foreground tracking-tight">
+            Demandes de Devis Reçues
+          </h1>
+          <p className="text-base text-muted-foreground mt-1 font-medium">
+            Consultez les devis reçus des exploitants agricoles pour vos engins, semences et prestations.
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {[1, 2].map((i) => (
-            <Card key={i} className="h-32 animate-pulse bg-muted/40" />
+            <Card key={i} className="h-36 animate-pulse bg-muted/40 rounded-2xl" />
           ))}
         </div>
       ) : quotes.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center text-muted-foreground text-sm">
+        <Card className="border-dashed rounded-2xl">
+          <CardContent className="py-12 text-center text-muted-foreground text-base">
             Aucune demande de devis reçue pour le moment.
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="pending">
-          <TabsList className="grid grid-cols-2 w-full bg-muted/60 p-1">
-            <TabsTrigger value="pending">À traiter ({pending.length})</TabsTrigger>
-            <TabsTrigger value="processed">Traitées / Historique ({processed.length})</TabsTrigger>
-          </TabsList>
+        <div className="space-y-6">
+          {/* Sélecteur direct sans nav secondaire */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveFilter("pending")}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-base font-bold transition-all ${
+                activeFilter === "pending"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <Clock className="h-5 w-5" />
+              <span>À traiter</span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-background/50">
+                {pending.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("processed")}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-base font-bold transition-all ${
+                activeFilter === "processed"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <CheckCheck className="h-5 w-5" />
+              <span>Traitées / Historique</span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-background/50">
+                {processed.length}
+              </span>
+            </button>
+          </div>
 
-          <TabsContent value="pending" className="mt-4">
-            {pending.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Toutes les demandes de devis sont traitées.</CardContent></Card>
+          {activeFilter === "pending" && (
+            pending.length === 0 ? (
+              <Card className="rounded-2xl"><CardContent className="py-10 text-center text-muted-foreground text-base">Toutes les demandes de devis sont traitées.</CardContent></Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-2">
                 {pending.map((q) => <Row key={q.id} q={q} />)}
               </div>
-            )}
-          </TabsContent>
+            )
+          )}
 
-          <TabsContent value="processed" className="mt-4">
-            {processed.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Aucun devis archivé.</CardContent></Card>
+          {activeFilter === "processed" && (
+            processed.length === 0 ? (
+              <Card className="rounded-2xl"><CardContent className="py-10 text-center text-muted-foreground text-base">Aucun devis archivé.</CardContent></Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-2">
                 {processed.map((q) => <Row key={q.id} q={q} />)}
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            )
+          )}
+        </div>
       )}
     </div>
   );

@@ -1,90 +1,104 @@
 @import 'leaflet/dist/leaflet.css';
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Outfit:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 16.5px;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (max-width: 640px) {
+    html {
+      font-size: 15.5px;
+    }
+  }
+
   :root {
-    --background: 40 30% 97%;
-    --foreground: 30 20% 12%;
+    --background: 40 25% 98%;
+    --foreground: 220 20% 12%;
 
-    --card: 40 25% 99%;
-    --card-foreground: 30 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 12%;
 
-    --popover: 40 25% 99%;
-    --popover-foreground: 30 20% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 12%;
 
-    --primary: 142 45% 28%;
-    --primary-foreground: 40 30% 97%;
+    --primary: 142 55% 24%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 36 60% 55%;
-    --secondary-foreground: 30 20% 12%;
+    --secondary: 38 75% 50%;
+    --secondary-foreground: 220 20% 12%;
 
     --muted: 40 20% 93%;
-    --muted-foreground: 30 10% 46%;
+    --muted-foreground: 220 10% 40%;
 
-    --accent: 24 70% 50%;
-    --accent-foreground: 40 30% 97%;
+    --accent: 38 85% 52%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 40 30% 97%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 36 20% 88%;
-    --input: 36 20% 88%;
-    --ring: 142 45% 28%;
+    --border: 40 18% 88%;
+    --input: 40 18% 88%;
+    --ring: 142 55% 24%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --sidebar-background: 142 30% 15%;
-    --sidebar-foreground: 40 25% 92%;
-    --sidebar-primary: 36 60% 55%;
-    --sidebar-primary-foreground: 30 20% 12%;
-    --sidebar-accent: 142 25% 22%;
-    --sidebar-accent-foreground: 40 25% 92%;
-    --sidebar-border: 142 20% 25%;
-    --sidebar-ring: 36 60% 55%;
+    --sidebar-background: 142 45% 12%;
+    --sidebar-foreground: 40 25% 94%;
+    --sidebar-primary: 38 75% 50%;
+    --sidebar-primary-foreground: 220 20% 12%;
+    --sidebar-accent: 142 35% 18%;
+    --sidebar-accent-foreground: 40 25% 96%;
+    --sidebar-border: 142 30% 20%;
+    --sidebar-ring: 38 75% 50%;
 
-    --success: 142 60% 40%;
-    --success-foreground: 40 30% 97%;
-    --warning: 36 80% 50%;
-    --warning-foreground: 30 20% 12%;
-    --info: 200 60% 45%;
-    --info-foreground: 40 30% 97%;
+    --success: 142 60% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 85% 48%;
+    --warning-foreground: 220 20% 12%;
+    --info: 200 70% 40%;
+    --info-foreground: 0 0% 100%;
 
-    --font-heading: 'Space Grotesk', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-heading: 'Space Grotesk', 'Outfit', sans-serif;
+    --font-body: 'Plus Jakarta Sans', 'Figtree', sans-serif;
   }
 
   .dark {
-    --background: 30 15% 8%;
-    --foreground: 40 25% 92%;
-    --card: 30 15% 11%;
-    --card-foreground: 40 25% 92%;
-    --popover: 30 15% 11%;
-    --popover-foreground: 40 25% 92%;
-    --primary: 142 45% 38%;
-    --primary-foreground: 40 30% 97%;
-    --secondary: 36 50% 45%;
-    --secondary-foreground: 40 25% 92%;
-    --muted: 30 10% 18%;
-    --muted-foreground: 40 15% 55%;
-    --accent: 24 60% 45%;
-    --accent-foreground: 40 30% 97%;
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 40 30% 97%;
-    --border: 30 10% 20%;
-    --input: 30 10% 20%;
-    --ring: 142 45% 38%;
-    --sidebar-background: 30 15% 6%;
-    --sidebar-foreground: 40 25% 92%;
-    --sidebar-primary: 36 60% 55%;
-    --sidebar-primary-foreground: 30 20% 12%;
-    --sidebar-accent: 30 10% 14%;
-    --sidebar-accent-foreground: 40 25% 92%;
-    --sidebar-border: 30 10% 15%;
-    --sidebar-ring: 36 60% 55%;
+    --background: 222 35% 8%;
+    --foreground: 210 20% 96%;
+    --card: 222 30% 11%;
+    --card-foreground: 210 20% 96%;
+    --popover: 222 30% 11%;
+    --popover-foreground: 210 20% 96%;
+    --primary: 142 50% 42%;
+    --primary-foreground: 222 35% 8%;
+    --secondary: 38 65% 50%;
+    --secondary-foreground: 210 20% 96%;
+    --muted: 222 25% 16%;
+    --muted-foreground: 215 15% 65%;
+    --accent: 38 75% 50%;
+    --accent-foreground: 222 35% 8%;
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 20% 20%;
+    --input: 222 20% 20%;
+    --ring: 142 50% 42%;
+    --sidebar-background: 222 35% 6%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-primary: 38 75% 50%;
+    --sidebar-primary-foreground: 222 35% 8%;
+    --sidebar-accent: 222 25% 14%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 222 20% 16%;
+    --sidebar-ring: 38 75% 50%;
   }
 }
 
@@ -95,56 +109,85 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  p {
+    line-height: 1.65;
   }
 }
 
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(142 45% 28%), hsl(142 35% 20%));
+    background: linear-gradient(135deg, hsl(142 55% 24%), hsl(142 45% 18%));
   }
   .gradient-warm {
-    background: linear-gradient(135deg, hsl(36 60% 55%), hsl(24 70% 50%));
+    background: linear-gradient(135deg, hsl(38 75% 50%), hsl(24 75% 48%));
   }
   .gradient-hero {
-    background: linear-gradient(160deg, hsl(142 45% 28%) 0%, hsl(142 35% 18%) 50%, hsl(30 20% 12%) 100%);
+    background: linear-gradient(160deg, hsl(142 55% 24%) 0%, hsl(142 45% 16%) 55%, hsl(222 35% 10%) 100%);
   }
   .text-gradient-warm {
-    background: linear-gradient(135deg, hsl(36 60% 55%), hsl(24 70% 50%));
+    background: linear-gradient(135deg, hsl(38 75% 50%), hsl(24 75% 48%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .shadow-warm {
-    box-shadow: 0 10px 30px -10px hsl(36 60% 55% / 0.2);
+    box-shadow: 0 10px 30px -10px hsl(38 75% 50% / 0.25);
   }
   .shadow-primary {
-    box-shadow: 0 10px 30px -10px hsl(142 45% 28% / 0.25);
+    box-shadow: 0 12px 36px -10px hsl(142 55% 24% / 0.28);
+  }
+
+  /* Cartes et panneaux Premium */
+  .card-premium {
+    @apply rounded-2xl border border-border bg-card shadow-sm transition-all duration-300;
+  }
+  .card-premium:hover {
+    @apply border-primary/40 shadow-md;
+    transform: translateY(-2px);
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .dark .glass-panel {
+    background: rgba(18, 26, 38, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
 
-/* ===== Livestock module scoped theme (sage & cream, Outfit + Figtree, bento) ===== */
+/* ===== Thème Élevage & Zootechnie harmonisé ===== */
 @layer base {
   .livestock-theme {
-    --background: 60 20% 96%;       /* cream #f5f0e8 */
+    --background: 60 20% 97%;
     --foreground: 120 15% 14%;
     --card: 0 0% 100%;
     --card-foreground: 120 15% 14%;
     --popover: 0 0% 100%;
     --popover-foreground: 120 15% 14%;
-    --primary: 110 18% 48%;         /* sage #7d9b76 */
-    --primary-foreground: 60 20% 98%;
-    --secondary: 96 22% 72%;        /* light sage #a8c0a0 */
+    --primary: 110 25% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 96 25% 65%;
     --secondary-foreground: 120 20% 14%;
-    --muted: 90 18% 88%;            /* #dce5d4 */
-    --muted-foreground: 120 8% 38%;
-    --accent: 96 22% 72%;
+    --muted: 90 18% 90%;
+    --muted-foreground: 120 10% 36%;
+    --accent: 96 25% 65%;
     --accent-foreground: 120 20% 14%;
-    --border: 90 14% 84%;
-    --input: 90 14% 84%;
-    --ring: 110 18% 48%;
+    --border: 90 14% 86%;
+    --input: 90 14% 86%;
+    --ring: 110 25% 42%;
     --radius: 1.25rem;
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Figtree', sans-serif;
@@ -152,22 +195,22 @@
   }
   .dark .livestock-theme {
     --background: 120 12% 8%;
-    --foreground: 60 15% 92%;
+    --foreground: 60 15% 94%;
     --card: 120 10% 12%;
-    --card-foreground: 60 15% 92%;
+    --card-foreground: 60 15% 94%;
     --popover: 120 10% 12%;
-    --popover-foreground: 60 15% 92%;
-    --primary: 110 22% 58%;
+    --popover-foreground: 60 15% 94%;
+    --primary: 110 25% 52%;
     --primary-foreground: 120 20% 10%;
     --secondary: 96 18% 35%;
-    --secondary-foreground: 60 15% 92%;
+    --secondary-foreground: 60 15% 94%;
     --muted: 120 8% 18%;
     --muted-foreground: 60 10% 65%;
     --accent: 96 18% 35%;
-    --accent-foreground: 60 15% 92%;
+    --accent-foreground: 60 15% 94%;
     --border: 120 8% 22%;
     --input: 120 8% 22%;
-    --ring: 110 22% 58%;
+    --ring: 110 25% 52%;
   }
   .livestock-theme h1,
   .livestock-theme h2,
@@ -180,17 +223,17 @@
 
 @layer utilities {
   .livestock-bento-tile {
-    @apply rounded-3xl border border-border bg-card p-5 transition-all duration-300;
-    box-shadow: 0 1px 2px hsl(110 18% 28% / 0.04), 0 8px 24px -12px hsl(110 18% 28% / 0.08);
+    @apply rounded-3xl border border-border bg-card p-6 transition-all duration-300;
+    box-shadow: 0 1px 3px hsl(110 18% 28% / 0.05), 0 10px 28px -12px hsl(110 18% 28% / 0.1);
   }
   .livestock-bento-tile:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px hsl(110 18% 28% / 0.06), 0 16px 40px -16px hsl(110 18% 28% / 0.18);
+    box-shadow: 0 4px 10px hsl(110 18% 28% / 0.08), 0 20px 45px -16px hsl(110 18% 28% / 0.2);
   }
   .livestock-hero {
     background:
       radial-gradient(120% 80% at 0% 0%, hsl(96 30% 82% / 0.7), transparent 60%),
       radial-gradient(100% 80% at 100% 0%, hsl(110 22% 70% / 0.45), transparent 55%),
-      linear-gradient(135deg, hsl(110 18% 48%), hsl(110 22% 32%));
+      linear-gradient(135deg, hsl(110 25% 42%), hsl(110 28% 28%));
   }
 }

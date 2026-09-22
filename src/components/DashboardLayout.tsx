@@ -1,17 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { RoleSidebar, SidebarNavContent } from "@/components/RoleSidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Menu, Wifi, WifiOff, Sparkles, Smartphone } from "lucide-react";
 import logo from "@/assets/logo.png";
 import VoiceAssistant from "@/components/VoiceAssistant";
-import LanguageSelector from "@/components/LanguageSelector";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { useSubscription } from "@/hooks/useSubscription";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   const { isPremium } = useSubscription();
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -19,35 +32,67 @@ const DashboardLayout = () => {
       <RoleSidebar />
 
       <div className="flex flex-1 flex-col min-w-0">
-        {/* Top header (desktop & mobile) */}
-        <header className="flex items-center justify-between border-b border-border px-4 py-2.5 bg-background/95 backdrop-blur shrink-0">
+        {/* Top header Premium sans barres de nav superflues */}
+        <header className="flex items-center justify-between border-b border-border/80 px-4 md:px-8 py-3 bg-card/90 backdrop-blur-md shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden shrink-0 text-foreground">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Menu</span>
+                <Button variant="ghost" size="icon" className="md:hidden shrink-0 text-foreground h-11 w-11 rounded-xl">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Menu de navigation</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0 border-r border-sidebar-border">
+              <SheetContent side="left" className="w-80 p-0 border-r border-sidebar-border">
                 <SidebarNavContent onNavigate={() => setOpen(false)} />
               </SheetContent>
             </Sheet>
-            <img src={logo} alt="KoobNaaba" className="h-7 w-auto md:hidden" />
+            <img src={logo} alt="KoobNaaba" className="h-9 w-auto md:hidden" />
+            <span className="hidden md:inline-block font-heading font-semibold text-base text-foreground/80">
+              KoobNaaba Agro-Hub
+            </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <LanguageSelector className="text-xs" />
+          <div className="flex items-center gap-3">
+            {/* Indicateur de connectivité en direct */}
+            <Badge
+              variant="outline"
+              className={`gap-1.5 py-1 px-3 text-xs font-semibold rounded-full border transition-all ${
+                isOnline
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                  : "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300"
+              }`}
+            >
+              {isOnline ? (
+                <>
+                  <Wifi className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>En ligne</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-3.5 w-3.5 text-amber-600" />
+                  <span>Mode Hors-ligne actif</span>
+                </>
+              )}
+            </Badge>
+
+            {isPremium && (
+              <Badge className="hidden sm:inline-flex bg-primary/15 text-primary border-primary/20 gap-1 text-xs font-semibold py-1 px-2.5 rounded-full">
+                <Sparkles className="h-3.5 w-3.5 text-primary" /> Premium
+              </Badge>
+            )}
           </div>
         </header>
 
-        {/* Main content */}
+        {/* Main content avec typographie confortable et aérée */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container max-w-6xl py-4 px-4 md:py-6 md:px-8">
+          <div className="container max-w-6xl py-6 px-4 md:py-8 md:px-8">
             <Outlet />
           </div>
         </main>
       </div>
+
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
 
       {isPremium && <VoiceAssistant />}
     </div>
