@@ -1,14 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOfflineData } from "@/hooks/useOfflineData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Heart, Baby, Wallet, AlertTriangle, WifiOff, ArrowUpRight,
   Stethoscope, Wheat, Sprout, ShoppingCart, TrendingUp, TrendingDown, Bird, Fish,
 } from "lucide-react";
 import { LivestockZootechnicCard } from "@/components/livestock/LivestockZootechnicCard";
+import ProductServiceCatalog from "@/components/marketplace/ProductServiceCatalog";
 
 const speciesLabels: Record<string, string> = {
   bovin: "Bovins",
@@ -25,6 +27,7 @@ const speciesEmoji: Record<string, string> = {
 
 const LivestockDashboardPage = () => {
   const { user } = useAuth();
+  const [activeView, setActiveView] = useState<"cheptel" | "catalogue">("cheptel");
 
   const monthStart = useMemo(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
@@ -129,15 +132,67 @@ const LivestockDashboardPage = () => {
   const topSpecies = speciesEntries.sort((a, b) => Number(b[1]) - Number(a[1]))[0];
 
   return (
-    <div className="space-y-5 max-w-6xl mx-auto">
-      {/* Hero header */}
-      <section className="livestock-hero rounded-[2rem] p-6 md:p-8 text-primary-foreground relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 text-[10rem] opacity-10 select-none">
-          {topSpecies ? speciesEmoji[topSpecies[0]] : "🐄"}
+    <div className="space-y-6 max-w-6xl mx-auto pb-10">
+      {/* Sélecteur direct de vue sans nav secondaire */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/80 pb-4">
+        <div className="inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border shadow-xs">
+          <button
+            type="button"
+            onClick={() => setActiveView("cheptel")}
+            className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+              activeView === "cheptel"
+                ? "bg-primary text-primary-foreground shadow-premium"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <Bird className="h-5 w-5" />
+            Tableau de Bord Cheptel
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView("catalogue")}
+            className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+              activeView === "catalogue"
+                ? "bg-primary text-primary-foreground shadow-premium"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            Produits & Services Partenaires
+          </button>
         </div>
-        <div className="relative">
-          <p className="text-sm opacity-80">{greeting} 👋</p>
-          <h1 className="text-2xl md:text-3xl font-bold mt-1">Votre élevage en un coup d'œil</h1>
+
+        <Button
+          asChild
+          variant="outline"
+          className="h-11 px-4 text-sm font-bold rounded-xl border-border hover:border-primary/50"
+        >
+          <Link to="/dashboard/livestock-services">
+            <Stethoscope className="h-4 w-4 mr-2 text-primary" />
+            Demandes Vétérinaires
+          </Link>
+        </Button>
+      </div>
+
+      {activeView === "catalogue" ? (
+        <div className="animate-fade-in">
+          <ProductServiceCatalog
+            initialCategory="aliments_elevage"
+            title="Catalogue Produits & Services Pastoraux"
+            description="Commandez vos provendes, tourteaux de coton, kits prophylactiques, inséminations artificielles et équipements d'élevage directement."
+            defaultRole="eleveur"
+          />
+        </div>
+      ) : (
+        <div className="space-y-6 animate-fade-in">
+          {/* Hero header */}
+          <section className="livestock-hero rounded-[2rem] p-6 md:p-8 text-primary-foreground relative overflow-hidden">
+            <div className="absolute -right-10 -top-10 text-[10rem] opacity-10 select-none">
+              {topSpecies ? speciesEmoji[topSpecies[0]] : "🐄"}
+            </div>
+            <div className="relative">
+              <p className="text-sm opacity-80">{greeting} 👋</p>
+              <h1 className="text-2xl md:text-3xl font-bold mt-1">Votre élevage en un coup d'œil</h1>
           <div className="mt-5 flex flex-wrap gap-3 items-end">
             <div>
               <p className="text-xs uppercase tracking-wider opacity-70">Cheptel total</p>
@@ -308,6 +363,18 @@ const LivestockDashboardPage = () => {
           </ul>
         )}
       </section>
+
+      {/* Section directe Produits & Services Partenaires sur le Dashboard */}
+      <section className="pt-8 border-t border-border/80">
+        <ProductServiceCatalog
+          initialCategory="aliments_elevage"
+          title="Boutique & Services pour votre Élevage"
+          description="Aliments bétail, tourteaux de coton SN-CITEC, provendes, vaccins et prestations vétérinaires disponibles en commande directe."
+          defaultRole="eleveur"
+        />
+      </section>
+      </div>
+      )}
     </div>
   );
 };

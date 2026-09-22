@@ -413,6 +413,296 @@ const INITIAL_PARTNER_OFFERS: PartnerOffer[] = [
     is_active: true,
     created_at: "2026-02-18T16:00:00Z",
   },
+  {
+    id: "po-4",
+    owner_id: "demo-partner-id",
+    partner_name: "SN-CITEC Bobo-Dioulasso",
+    category: "aliments_elevage",
+    title: "Tourteau de Coton 1ère Pression SN-CITEC (Sac de 50 kg)",
+    description: "Aliment concentré de référence riche en protéines brutes (40%) et énergie pour l'embouche bovine, ovine et la supplémentation des vaches laitières en saison sèche.",
+    price_indication: "13 500 FCFA",
+    unit: "sac de 50 kg",
+    location_name: "Bobo-Dioulasso, Ouagadougou & dépôts régionaux",
+    contact_phone: "+226 20 98 22 22",
+    contact_email: "commercial@sncitec.bf",
+    website: "https://sncitec.bf",
+    image_url: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-5",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=800&auto=format&fit=crop&q=80",
+        title: "Tourteau de coton haute qualité",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-02-22T08:00:00Z",
+  },
+  {
+    id: "po-5",
+    owner_id: "demo-partner-id",
+    partner_name: "Faso Provendes & Nutrition Animale",
+    category: "aliments_elevage",
+    title: "Provende Complète Volailles & Pondeuses (Sac de 50 kg)",
+    description: "Formule équilibrée céréales locales, tourteau de soja, coquilles d'huître et prémix minéral-vitaminé. Optimise la ponte et la croissance des poulets locaux améliorés et de chair.",
+    price_indication: "18 200 FCFA",
+    unit: "sac de 50 kg",
+    location_name: "Kamboinsin, Ouagadougou & livraison provinces",
+    contact_phone: "+226 70 85 90 12",
+    contact_email: "contact@faso-provendes.bf",
+    website: null,
+    image_url: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-6",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800&auto=format&fit=crop&q=80",
+        title: "Aliment provende volailles",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-02-23T09:30:00Z",
+  },
+  {
+    id: "po-6",
+    owner_id: "demo-partner-id",
+    partner_name: "Coopérative Vétérinaire du Faso (COVEFA)",
+    category: "sante_veterinaire",
+    title: "Pack Prophylaxie & Déparasitage Ruminants (Albendazole 10% + Vitamines ADE)",
+    description: "Traitement vermifuge complet à large spectre contre strongles gastro-intestinaux, ténias et douves, combiné à un complexe vitaminé pour stimuler l'immunité et la prise de poids.",
+    price_indication: "9 500 FCFA",
+    unit: "pack soin 25 têtes",
+    location_name: "Réseau de 45 pharmacies vétérinaires agréées",
+    contact_phone: "+226 76 54 32 10",
+    contact_email: "sante@covefa.bf",
+    website: null,
+    image_url: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-7",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&auto=format&fit=crop&q=80",
+        title: "Kit soins et déparasitage vétérinaire",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-02-24T11:15:00Z",
+  },
+  {
+    id: "po-7",
+    owner_id: "demo-partner-id",
+    partner_name: "Centre National de Multiplication Génétique Pastorale",
+    category: "services",
+    title: "Insémination Artificielle Bovine - Souches Goudali & Montbéliarde",
+    description: "Amélioration génétique de votre troupeau. Protocole de synchronisation des chaleurs, paillettes certifiées haute valeur laitière ou bouchère et suivi vétérinaire de gestation.",
+    price_indication: "25 000 FCFA",
+    unit: "vache inséminée",
+    location_name: "Zones pastorales du Centre, Hauts-Bassins et Sahel",
+    contact_phone: "+226 70 33 44 55",
+    contact_email: "insemination@cnmgp.gov.bf",
+    website: null,
+    image_url: "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-8",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=800&auto=format&fit=crop&q=80",
+        title: "Reproduction et insémination bovine",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-02-25T14:00:00Z",
+  },
+  {
+    id: "po-8",
+    owner_id: "demo-partner-id",
+    partner_name: "Atelier Métallique Pastoral du Centre",
+    category: "materiel",
+    title: "Abreuvoirs Métalliques Galvanisés & Râteliers Bétail",
+    description: "Abreuvoir galvanisé avec flotteur à niveau constant et râtelier anti-gaspillage de foin. Conception renforcée adaptée aux bovins et petits ruminants.",
+    price_indication: "42 000 FCFA",
+    unit: "unité",
+    location_name: "Koubri & agences régionales",
+    contact_phone: "+226 78 22 11 00",
+    contact_email: "metallerie@pastoral-bf.com",
+    website: null,
+    image_url: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-9",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&auto=format&fit=crop&q=80",
+        title: "Équipement d'abreuvement et alimentation",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-02-26T10:00:00Z",
+  },
+  {
+    id: "po-9",
+    owner_id: "demo-partner-id",
+    partner_name: "SOPAM SA Burkina",
+    category: "intrants",
+    title: "Engrais Minéral Complexe NPK 14-23-14 Céréales & Coton (Sac 50 kg)",
+    description: "Engrais de fond complet haute solubilité. Stimule l'enracinement vigoureux du maïs, sorgho et riz de bas-fond. Conforme aux normes régionales CEDEAO.",
+    price_indication: "22 500 FCFA",
+    unit: "sac de 50 kg",
+    location_name: "Magasins régionaux Dédougou, Koupéla, Bobo, Ouaga",
+    contact_phone: "+226 25 36 10 20",
+    contact_email: "ventes@sopam-bf.com",
+    website: "https://sopam-bf.com",
+    image_url: "https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-10",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=800&auto=format&fit=crop&q=80",
+        title: "Sac d'engrais NPK certifié",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-02-27T08:30:00Z",
+  },
+  {
+    id: "po-10",
+    owner_id: "demo-partner-id",
+    partner_name: "Centrale d'Approvisionnement en Intrants Agricoles (CAIMA)",
+    category: "intrants",
+    title: "Urée Granulée 46% Azote Qualité Supérieure (Sac 50 kg)",
+    description: "Urée perle blanche à 46% d'azote pour couverture et tallage. Dissolution rapide et efficacité maximale pour doper le tallage et la vigueur foliaire.",
+    price_indication: "21 000 FCFA",
+    unit: "sac de 50 kg",
+    location_name: "Tous chefs-lieux de province",
+    contact_phone: "+226 70 01 23 45",
+    contact_email: "contact@caima-bf.com",
+    website: null,
+    image_url: "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-11",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=800&auto=format&fit=crop&q=80",
+        title: "Urée agricole certifiée",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-02-28T09:00:00Z",
+  },
+  {
+    id: "po-11",
+    owner_id: "demo-partner-id",
+    partner_name: "Burkina Solaire Irrigation & Tech",
+    category: "materiel",
+    title: "Kit Pompage Solaire Immergé 2 CV avec Panneaux Solaires & Contrôleur",
+    description: "Autonomie énergétique totale pour périmètres maraîchers et abreuvement du bétail. Débit garanti de 25 à 40 m³/jour jusqu'à 60 mètres de profondeur.",
+    price_indication: "650 000 FCFA",
+    unit: "kit complet installé",
+    location_name: "Installation sur toute l'étendue du territoire",
+    contact_phone: "+226 71 88 99 00",
+    contact_email: "solaire@irritech-bf.com",
+    website: null,
+    image_url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-12",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80",
+        title: "Station de pompage solaire agricole",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-03-01T10:00:00Z",
+  },
+  {
+    id: "po-12",
+    owner_id: "demo-partner-id",
+    partner_name: "GIE des Jeunes Machinistes du Sahel",
+    category: "services",
+    title: "Battage Mécanisé Mobile Céréales (Batteuse motorisée 12 CV)",
+    description: "Batteuse-vanneuse mobile déplacée directement sur votre aire de récolte. Traitement rapide du maïs, sorgho et niébé avec séparation propre des impuretés.",
+    price_indication: "1 250 FCFA",
+    unit: "sac de 100 kg battu",
+    location_name: "Boucle du Mouhoun, Centre-Ouest & Plateau Central",
+    contact_phone: "+226 72 33 22 11",
+    contact_email: "machinisme@sahel-gie.bf",
+    website: null,
+    image_url: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-13",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80",
+        title: "Chantier de battage mécanisé",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-03-02T12:00:00Z",
+  },
+  {
+    id: "po-13",
+    owner_id: "demo-partner-id",
+    partner_name: "Réseau des Caisses Populaires du Burkina (RCPB)",
+    category: "finance",
+    title: "Prêt de Campagne Agricole & Avance sur Récolte (Warrantage)",
+    description: "Crédit d'intrants et de campagne pour coopératives et exploitants individuels. Taux préférentiel et remboursement calqué sur la vente des récoltes.",
+    price_indication: "Taux bonifié 7.5% / an",
+    unit: "dossier financement",
+    location_name: "200 agences et caisses villageoises",
+    contact_phone: "+226 25 30 65 65",
+    contact_email: "creditrural@rcpb.bf",
+    website: "https://www.rcpb.bf",
+    image_url: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80",
+    ],
+    videos: [],
+    media: [
+      {
+        id: "m-14",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80",
+        title: "Financement et micro-crédit rural",
+      },
+    ],
+    is_active: true,
+    created_at: "2026-03-03T08:00:00Z",
+  },
 ];
 
 // ─── Missions pré-chargées ───
@@ -529,8 +819,17 @@ export const partnerStorage = {
   // ── OFFERS & PRODUCTS (avec Images & Vidéos) ──
   async getOffers(ownerId?: string): Promise<PartnerOffer[]> {
     const list = readLocal<PartnerOffer[]>(KEYS.OFFERS, INITIAL_PARTNER_OFFERS);
-    if (!localStorage.getItem(KEYS.OFFERS)) {
-      writeLocal(KEYS.OFFERS, INITIAL_PARTNER_OFFERS);
+    // Fusion automatique des nouvelles offres initiales dans le stockage local existant
+    const existingIds = new Set(list.map((o) => o.id));
+    let hasNew = false;
+    for (const init of INITIAL_PARTNER_OFFERS) {
+      if (!existingIds.has(init.id)) {
+        list.push(init);
+        hasNew = true;
+      }
+    }
+    if (hasNew || !localStorage.getItem(KEYS.OFFERS)) {
+      writeLocal(KEYS.OFFERS, list);
     }
     if (ownerId) {
       // Pour permettre au partenaire connecté de voir ses offres ainsi que les démos pré-chargées
@@ -740,6 +1039,9 @@ export const partnerStorage = {
     if (idx >= 0) list[idx] = saved;
     else list.unshift(saved);
     writeLocal(KEYS.QUOTES, list);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+    }
     return saved;
   },
 
@@ -750,12 +1052,18 @@ export const partnerStorage = {
       item.status = status;
       if (response !== undefined) item.response = response;
       writeLocal(KEYS.QUOTES, list);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+      }
     }
   },
 
   async deleteQuote(id: string): Promise<void> {
     const list = await this.getQuotes();
     writeLocal(KEYS.QUOTES, list.filter((q) => q.id !== id));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+    }
   },
 
   // ── CLIENTS PARTENAIRE ──

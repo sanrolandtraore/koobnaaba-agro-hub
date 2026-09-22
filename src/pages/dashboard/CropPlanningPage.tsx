@@ -31,7 +31,9 @@ import {
   CalendarDays,
   RefreshCw,
   FolderOpen,
+  ShoppingCart,
 } from "lucide-react";
+import ProductServiceCatalog from "@/components/marketplace/ProductServiceCatalog";
 import { Skeleton } from "@/components/ui/skeleton";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -723,6 +725,18 @@ const CropPlanningPage = () => {
                 </span>
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("catalogue")}
+              className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+                activeTab === "catalogue"
+                  ? "bg-primary text-primary-foreground shadow-premium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              }`}
+            >
+              <ShoppingCart className="h-5 w-5" />
+              Produits & Services
+            </button>
           </div>
 
           <Button asChild variant="secondary" className="h-12 px-5 text-base font-bold rounded-xl border border-border/80 shadow-xs hover:border-primary/40">
@@ -1118,6 +1132,21 @@ const CropPlanningPage = () => {
                         </Table>
                       </div>
                     )}
+
+                    <div className="pt-4 mt-3 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        Besoin d'acheter ces semences certifiées ou engrais ?
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setActiveTab("catalogue")}
+                        className="gradient-primary text-primary-foreground text-xs font-bold rounded-xl h-9 shadow-xs"
+                      >
+                        <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
+                        Commander sur le catalogue
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -1374,6 +1403,17 @@ const CropPlanningPage = () => {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* MODE 3 : CATALOGUE PRODUITS & SERVICES PARTENAIRES */}
+      {activeTab === "catalogue" && (
+        <div className="animate-fade-in">
+          <ProductServiceCatalog
+            title="Catalogue Produits & Services Partenaires"
+            description="Commandez vos semences certifiées, engrais minéraux, produits phytosanitaires, prestations de machinisme et accédez aux financements directement depuis votre tableau de bord."
+            defaultRole="agriculteur"
+          />
         </div>
       )}
     </div>

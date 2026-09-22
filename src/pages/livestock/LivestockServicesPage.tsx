@@ -13,8 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Plus, Stethoscope, Syringe, Beef, Baby, Utensils, ShieldCheck, GraduationCap,
-  ClipboardList, MapPin, Trash2, Clock, CheckCircle, XCircle, Loader2,
+  ClipboardList, MapPin, Trash2, Clock, CheckCircle, XCircle, Loader2, ShoppingCart,
 } from "lucide-react";
+import ProductServiceCatalog from "@/components/marketplace/ProductServiceCatalog";
 
 const LIVESTOCK_SERVICE_TYPES = [
   { value: "sante_animale", label: "Soins & santé animale", icon: Stethoscope, desc: "Consultation vétérinaire, diagnostic de maladies, traitements et suivi sanitaire du troupeau." },
@@ -49,6 +50,7 @@ type ServiceRequest = {
 
 const LivestockServicesPage = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<"catalogue" | "demandes">("catalogue");
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -115,19 +117,69 @@ const LivestockServicesPage = () => {
   const getServiceIcon = (type: string) => LIVESTOCK_SERVICE_TYPES.find(s => s.value === type)?.icon || ClipboardList;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-10">
+      {/* Header et sélecteur direct de mode sans nav secondaire */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-4">
         <div>
-          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
-            <Stethoscope className="h-6 w-6 text-primary" /> Services Vétérinaires
+          <h1 className="text-2xl md:text-3xl font-heading font-extrabold flex items-center gap-2">
+            <Stethoscope className="h-7 w-7 text-primary" /> Services & Soins Vétérinaires
           </h1>
-          <p className="text-muted-foreground mt-1">Demandez l'accompagnement de nos experts en élevage</p>
+          <p className="text-muted-foreground mt-1 text-base">
+            Commandez vos produits de soin et sollicitez l'accompagnement d'experts vétérinaires
+          </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground"><Plus className="h-4 w-4 mr-2" />Nouvelle demande</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+
+        {/* Pill switcher direct */}
+        <div className="inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border shadow-xs self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab("catalogue")}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+              activeTab === "catalogue"
+                ? "bg-primary text-primary-foreground shadow-premium"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Produits & Offres Directes
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("demandes")}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+              activeTab === "demandes"
+                ? "bg-primary text-primary-foreground shadow-premium"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Mes Demandes ({requests.length})
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "catalogue" ? (
+        <div className="animate-fade-in">
+          <ProductServiceCatalog
+            initialCategory="sante_veterinaire"
+            title="Catalogue Santé, Nutrition & Soins Pastoraux"
+            description="Packs prophylactiques, vaccins, compléments alimentaires, insémination artificielle et matériel d'élevage certifiés."
+            defaultRole="eleveur"
+          />
+        </div>
+      ) : (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex justify-between items-center">
+            <p className="text-sm font-medium text-muted-foreground">
+              Historique et suivi de vos demandes d'intervention vétérinaire sur site.
+            </p>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary text-primary-foreground font-bold rounded-xl h-11 px-5 shadow-premium">
+                  <Plus className="h-4 w-4 mr-2" />Nouvelle demande d'intervention
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-heading">Demander un service vétérinaire / élevage</DialogTitle>
             </DialogHeader>
@@ -270,6 +322,8 @@ const LivestockServicesPage = () => {
         )}
       </div>
     </div>
+  )}
+</div>
   );
 };
 
