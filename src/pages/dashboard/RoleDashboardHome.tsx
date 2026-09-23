@@ -4,11 +4,14 @@ import PartenaireDashboard from "@/pages/dashboard/partenaire/PartenaireDashboar
 import CropPlanningPage from "@/pages/dashboard/CropPlanningPage";
 
 const RoleDashboardHome = () => {
-  const { primaryRole } = useAuth();
+  const { primaryRole, partnerType } = useAuth();
+
+  // Éleveurs pastoraux et cabinets vétérinaires accèdent directement au tableau de bord Cheptel
+  if (primaryRole === "eleveur" || (primaryRole === "partenaire" && partnerType === "elevage_veterinaire")) {
+    return <LivestockDashboardPage />;
+  }
 
   switch (primaryRole) {
-    case "eleveur":
-      return <LivestockDashboardPage />;
     case "agriculteur":
     case "farmer":
       return <CropPlanningPage />;
