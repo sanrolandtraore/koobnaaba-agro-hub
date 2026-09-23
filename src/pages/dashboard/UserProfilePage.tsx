@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { isMissingColumnError } from "@/hooks/useOfflineData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,17 +81,42 @@ const UserProfilePage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, phone, country")
-        .eq("user_id", user.id)
-        .single();
-      if (data) {
+      let profileData: any = null;
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("full_name, phone, country")
+          .eq("user_id", user.id)
+          .single();
+        if (error && isMissingColumnError(error)) {
+          const { data: fallbackData } = await supabase
+            .from("profiles")
+            .select("full_name, phone")
+            .eq("user_id", user.id)
+            .single();
+          profileData = fallbackData;
+        } else {
+          profileData = data;
+        }
+      } catch (_e) {
+        const { data: fallbackData } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("user_id", user.id)
+          .single();
+        profileData = fallbackData;
+      }
+
+      const metaCountry = (user.user_metadata?.country as string) || localStorage.getItem(`nafa_user_country_${user.id}`) || "";
+
+      if (profileData) {
         setForm({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          country: (data as any).country || "",
+          full_name: profileData.full_name || "",
+          phone: profileData.phone || "",
+          country: profileData.country || metaCountry || "",
         });
+      } else {
+        setForm(f => ({ ...f, country: metaCountry }));
       }
       setLoading(false);
     };
@@ -100,7 +126,23 @@ const UserProfilePage = () => {
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase
+
+    if (form.country) {
+      localStorage.setItem(`nafa_user_country_${user.id}`, form.country);
+    }
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          country: form.country,
+          full_name: form.full_name,
+          phone: form.phone,
+        }
+      });
+    } catch (e) {
+      console.warn("Could not sync user_metadata country:", e);
+    }
+
+    let { error } = await supabase
       .from("profiles")
       .update({
         full_name: form.full_name,
@@ -108,6 +150,19 @@ const UserProfilePage = () => {
         country: form.country || null,
       } as any)
       .eq("user_id", user.id);
+
+    if (error && isMissingColumnError(error, "country")) {
+      console.warn("Colonne 'country' absente de profiles, réessai sans cette colonne.");
+      const retry = await supabase
+        .from("profiles")
+        .update({
+          full_name: form.full_name,
+          phone: form.phone,
+        } as any)
+        .eq("user_id", user.id);
+      error = retry.error;
+    }
+
     setSaving(false);
     if (error) {
       toast.error(error.message);

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { isMissingColumnError } from "@/hooks/useOfflineData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,21 +68,53 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, phone, country, avatar_url, preferences, email")
-        .eq("user_id", user.id)
-        .single();
-      if (data) {
+      let profileData: any = null;
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("full_name, phone, country, avatar_url, preferences, email")
+          .eq("user_id", user.id)
+          .single();
+        if (error && isMissingColumnError(error)) {
+          const { data: fallbackData } = await supabase
+            .from("profiles")
+            .select("full_name, phone, avatar_url, email")
+            .eq("user_id", user.id)
+            .single();
+          profileData = fallbackData;
+        } else {
+          profileData = data;
+        }
+      } catch (_e) {
+        const { data: fallbackData } = await supabase
+          .from("profiles")
+          .select("full_name, phone, avatar_url, email")
+          .eq("user_id", user.id)
+          .single();
+        profileData = fallbackData;
+      }
+
+      const metaCountry = (user.user_metadata?.country as string) || localStorage.getItem(`nafa_user_country_${user.id}`) || "";
+      const metaPrefs = (user.user_metadata?.preferences as any) || (() => {
+        try {
+          const raw = localStorage.getItem(`nafa_user_prefs_${user.id}`);
+          return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+      })();
+
+      if (profileData) {
         setProfileForm({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          country: (data as any).country || "",
-          avatar_url: data.avatar_url || "",
+          full_name: profileData.full_name || "",
+          phone: profileData.phone || "",
+          country: profileData.country || metaCountry || "",
+          avatar_url: profileData.avatar_url || "",
         });
-        setNewEmail((data as any).email || "");
-        const p = (data as any).preferences;
+        setNewEmail(profileData.email || user.email || "");
+        const p = profileData.preferences || metaPrefs;
         if (p) setPrefs({ theme: p.theme || "system", language: p.language || "fr", notifications: p.notifications !== false });
+      } else {
+        setProfileForm(f => ({ ...f, country: metaCountry }));
+        if (metaPrefs) setPrefs(metaPrefs);
       }
       setLoading(false);
     };
@@ -111,7 +144,24 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
   const handleSaveProfile = async () => {
     if (!user) return;
     setSavingProfile(true);
-    const { error } = await supabase
+
+    // Persist country to local storage and auth user_metadata
+    if (profileForm.country) {
+      localStorage.setItem(`nafa_user_country_${user.id}`, profileForm.country);
+    }
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          country: profileForm.country,
+          full_name: profileForm.full_name,
+          phone: profileForm.phone,
+        }
+      });
+    } catch (e) {
+      console.warn("Could not sync user_metadata country:", e);
+    }
+
+    let { error } = await supabase
       .from("profiles")
       .update({
         full_name: profileForm.full_name,
@@ -120,6 +170,21 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
         email: newEmail || null,
       } as any)
       .eq("user_id", user.id);
+
+    // If 'country' column does not exist on profiles in schema cache, retry without it!
+    if (error && isMissingColumnError(error, "country")) {
+      console.warn("Colonne 'country' absente de la table profiles, réessai sans cette colonne.");
+      const retry = await supabase
+        .from("profiles")
+        .update({
+          full_name: profileForm.full_name,
+          phone: profileForm.phone || null,
+          email: newEmail || null,
+        } as any)
+        .eq("user_id", user.id);
+      error = retry.error;
+    }
+
     setSavingProfile(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Profil mis à jour !");
@@ -139,10 +204,26 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
   const handleSavePrefs = async () => {
     if (!user) return;
     setSavingPrefs(true);
-    const { error } = await supabase
+
+    localStorage.setItem(`nafa_user_prefs_${user.id}`, JSON.stringify(prefs));
+    try {
+      await supabase.auth.updateUser({
+        data: { preferences: prefs }
+      });
+    } catch (e) {
+      console.warn("Could not sync user_metadata preferences:", e);
+    }
+
+    let { error } = await supabase
       .from("profiles")
       .update({ preferences: prefs } as any)
       .eq("user_id", user.id);
+
+    if (error && isMissingColumnError(error, "preferences")) {
+      console.warn("Colonne 'preferences' absente de profiles, conservé en métadonnées et local.");
+      error = null;
+    }
+
     setSavingPrefs(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Préférences enregistrées !");

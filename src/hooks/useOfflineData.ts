@@ -33,6 +33,25 @@ export function isMissingTableError(err: any): boolean {
   );
 }
 
+export function isMissingColumnError(err: any, column?: string): boolean {
+  if (!err) return false;
+  const msg = typeof err === 'string' ? err : (err.message || err.details || err.hint || '');
+  const code = err.code || '';
+  const isColError =
+    code === 'PGRST204' ||
+    code === '42703' ||
+    msg.includes('Could not find the') ||
+    msg.includes('column of') ||
+    msg.includes('in the schema cache') ||
+    (msg.includes('column') && msg.includes('does not exist'));
+
+  if (!isColError) return false;
+  if (column) {
+    return msg.includes(column);
+  }
+  return true;
+}
+
 const isOfflineTempId = (value: unknown): value is string => (
   typeof value === 'string' && value.startsWith('offline-')
 );
