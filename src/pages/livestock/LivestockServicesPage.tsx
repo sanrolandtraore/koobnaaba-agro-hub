@@ -16,6 +16,8 @@ import {
   ClipboardList, MapPin, Trash2, Clock, CheckCircle, XCircle, Loader2, ShoppingCart,
 } from "lucide-react";
 import ProductServiceCatalog from "@/components/marketplace/ProductServiceCatalog";
+import { isValidUuid, isMissingTableError, isInvalidUuidError } from "@/hooks/useOfflineData";
+import BackNavigationButton from "@/components/BackNavigationButton";
 
 const LIVESTOCK_SERVICE_TYPES = [
   { value: "sante_animale", label: "Soins & santé animale", icon: Stethoscope, desc: "Consultation vétérinaire, diagnostic de maladies, traitements et suivi sanitaire du troupeau." },
@@ -64,11 +66,31 @@ const LivestockServicesPage = () => {
 
   const fetchAll = async () => {
     if (!user) return;
-    const rRes = await supabase.from("service_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    const livestockTypes = LIVESTOCK_SERVICE_TYPES.map(s => s.value) as readonly string[];
-    const allReqs = (rRes.data as ServiceRequest[]) || [];
-    setRequests(allReqs.filter(r => livestockTypes.includes(r.service_type)));
-    setLoading(false);
+    try {
+      let allReqs: ServiceRequest[] = [];
+      if (isValidUuid(user.id)) {
+        const rRes = await supabase.from("service_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+        if (rRes.error && !isMissingTableError(rRes.error) && !isInvalidUuidError(rRes.error)) {
+          console.warn("Erreur chargement service_requests:", rRes.error);
+        }
+        if (rRes.data && rRes.data.length > 0) {
+          allReqs = rRes.data as ServiceRequest[];
+          localStorage.setItem(`nafa_service_requests_${user.id}`, JSON.stringify(rRes.data));
+        }
+      }
+      if (allReqs.length === 0) {
+        const cached = localStorage.getItem(`nafa_service_requests_${user.id}`);
+        if (cached) {
+          allReqs = JSON.parse(cached);
+        }
+      }
+      const livestockTypes = LIVESTOCK_SERVICE_TYPES.map(s => s.value) as readonly string[];
+      setRequests(allReqs.filter(r => livestockTypes.includes(r.service_type)));
+    } catch (err) {
+      console.warn("LivestockServicesPage fetchAll error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -81,36 +103,83 @@ const LivestockServicesPage = () => {
       toast.error("Sélectionnez un type de service");
       return;
     }
-    const { error } = await supabase.from("service_requests").insert({
+
+    const payload = {
       user_id: user!.id,
       service_type: form.service_type,
       description: form.description || null,
       location: form.location || null,
       preferred_date: form.preferred_date || null,
       phone: form.phone || null,
-    });
-    if (error) {
-      toast.error("Erreur: " + error.message);
-    } else {
-      toast.success("Demande envoyée avec succès !");
-      setForm({ service_type: "", description: "", location: "", preferred_date: "", phone: "" });
-      setOpen(false);
-      fetchAll();
+      status: "en_attente",
+    };
+
+    let remoteOk = false;
+    if (isValidUuid(user!.id)) {
+      const { error } = await supabase.from("service_requests").insert(payload);
+      if (!error) {
+        remoteOk = true;
+      } else if (!isMissingTableError(error) && !isInvalidUuidError(error)) {
+        toast.error("Erreur: " + error.message);
+        return;
+      }
     }
+
+    // Local storage persistence
+    const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const fullRow: ServiceRequest = {
+      ...payload,
+      id: localId,
+      farm_id: null,
+      created_at: new Date().toISOString(),
+    } as ServiceRequest;
+
+    const cachedKey = `nafa_service_requests_${user!.id}`;
+    const existing: ServiceRequest[] = JSON.parse(localStorage.getItem(cachedKey) || "[]");
+    localStorage.setItem(cachedKey, JSON.stringify([fullRow, ...existing]));
+
+    toast.success(remoteOk ? "Demande envoyée avec succès !" : "Demande enregistrée localement !");
+    setForm({ service_type: "", description: "", location: "", preferred_date: "", phone: "" });
+    setOpen(false);
+    fetchAll();
   };
 
   const handleCancel = async (id: string) => {
     if (!confirm("Annuler cette demande ?")) return;
-    const { error } = await supabase.from("service_requests").update({ status: "annulee" }).eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Demande annulée"); fetchAll(); }
+    if (isValidUuid(user?.id) && !id.startsWith("local-")) {
+      const { error } = await supabase.from("service_requests").update({ status: "annulee" }).eq("id", id);
+      if (error && !isMissingTableError(error)) {
+        toast.error(error.message);
+        return;
+      }
+    }
+    const cachedKey = `nafa_service_requests_${user?.id}`;
+    const existing: ServiceRequest[] = JSON.parse(localStorage.getItem(cachedKey) || "[]");
+    localStorage.setItem(
+      cachedKey,
+      JSON.stringify(existing.map(r => r.id === id ? { ...r, status: "annulee" } : r))
+    );
+    toast.success("Demande annulée");
+    fetchAll();
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette demande ?")) return;
-    const { error } = await supabase.from("service_requests").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Demande supprimée"); fetchAll(); }
+    if (isValidUuid(user?.id) && !id.startsWith("local-")) {
+      const { error } = await supabase.from("service_requests").delete().eq("id", id);
+      if (error && !isMissingTableError(error)) {
+        toast.error(error.message);
+        return;
+      }
+    }
+    const cachedKey = `nafa_service_requests_${user?.id}`;
+    const existing: ServiceRequest[] = JSON.parse(localStorage.getItem(cachedKey) || "[]");
+    localStorage.setItem(
+      cachedKey,
+      JSON.stringify(existing.filter(r => r.id !== id))
+    );
+    toast.success("Demande supprimée");
+    fetchAll();
   };
 
   const getServiceLabel = (type: string) => LIVESTOCK_SERVICE_TYPES.find(s => s.value === type)?.label || type;
@@ -120,13 +189,16 @@ const LivestockServicesPage = () => {
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-10">
       {/* Header et sélecteur direct de mode sans nav secondaire */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-heading font-extrabold flex items-center gap-2">
-            <Stethoscope className="h-7 w-7 text-primary" /> Services & Soins Vétérinaires
-          </h1>
-          <p className="text-muted-foreground mt-1 text-base">
-            Commandez vos produits de soin et sollicitez l'accompagnement d'experts vétérinaires
-          </p>
+        <div className="flex items-center gap-3">
+          <BackNavigationButton fallbackTo="/dashboard" />
+          <div>
+            <h1 className="text-2xl md:text-3xl font-heading font-extrabold flex items-center gap-2">
+              <Stethoscope className="h-7 w-7 text-primary" /> Services & Soins Vétérinaires
+            </h1>
+            <p className="text-muted-foreground mt-1 text-base">
+              Commandez vos produits de soin et sollicitez l'accompagnement d'experts vétérinaires
+            </p>
+          </div>
         </div>
 
         {/* Pill switcher direct */}

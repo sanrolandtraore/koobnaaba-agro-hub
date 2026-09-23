@@ -18,6 +18,8 @@ import {
   Clock, Loader2, XCircle, Eye, FileImage, Trash2, Package, Send, Shield,
   Tractor, Star, Calendar, Mail, Globe, Store,
 } from "lucide-react";
+import BackNavigationButton from "@/components/BackNavigationButton";
+import { isMissingTableError, isInvalidUuidError } from "@/hooks/useOfflineData";
 
 // ─── Service categories ───
 const CATEGORIES = [
@@ -225,11 +227,14 @@ const ServiceMarketplacePage = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
-            <Store className="h-6 w-6 text-primary" /> Marketplace Agricole
-          </h1>
-          <p className="text-muted-foreground mt-1">Services, matériels et fournisseurs — paiement sécurisé par NAFA - AGRITECH</p>
+        <div className="flex items-center gap-3">
+          <BackNavigationButton fallbackTo="/dashboard" />
+          <div>
+            <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+              <Store className="h-6 w-6 text-primary" /> Marketplace Agricole
+            </h1>
+            <p className="text-muted-foreground mt-0.5 text-sm">Services, matériels et fournisseurs — paiement sécurisé par NAFA - AGRITECH</p>
+          </div>
         </div>
         {isProvider && (
           <Button onClick={() => setShowCreateService(true)} className="gradient-primary text-primary-foreground">

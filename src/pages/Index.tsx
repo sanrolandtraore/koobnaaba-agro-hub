@@ -103,13 +103,13 @@ const Index = () => {
         </div>
         <div className="container max-w-5xl mx-auto px-4 py-20 relative z-10">
           <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
-            <img src={logo} alt="NAFA -AGRITECH" className="h-28 sm:h-32 w-auto drop-shadow-lg" />
+            <img src={logo} alt="NAFA - AGRITECH" className="h-28 sm:h-32 w-auto drop-shadow-lg" />
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-primary-foreground uppercase tracking-wider backdrop-blur-sm">
-              ✨ Plateforme Intelligente NAFA -AGRITECH
+              ✨ Plateforme Intelligente NAFA - AGRITECH
             </div>
             <div className="space-y-3">
               <h1 className="text-4xl sm:text-6xl md:text-7xl font-heading font-extrabold text-primary-foreground tracking-tight">
-                NAFA <span className="text-gradient-warm">-AGRITECH</span>
+                NAFA <span className="text-gradient-warm">- AGRITECH</span>
               </h1>
               <p className="text-xl sm:text-2xl text-emerald-200 font-semibold italic max-w-2xl mx-auto">
                 « La technologie au service de l'agriculture africaine »
@@ -471,7 +471,7 @@ const Index = () => {
         <div className="container max-w-5xl mx-auto px-4 py-12">
           <div className="grid gap-8 md:grid-cols-4">
             <div className="md:col-span-1 space-y-3">
-              <img src={logo} alt="NAFA -AGRITECH" className="h-12 w-auto" />
+              <img src={logo} alt="NAFA - AGRITECH" className="h-12 w-auto" />
               <div className="space-y-0.5">
                 <p className="text-sm font-bold text-foreground">NAFA - AGRITECH</p>
                 <p className="text-xs text-muted-foreground">La technologie au service de l'agriculture africaine.</p>
@@ -521,7 +521,7 @@ const Index = () => {
             </div>
           </div>
           <div className="mt-10 pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">© 2026 NAFA -AGRITECH. Tous droits réservés.</p>
+            <p className="text-xs text-muted-foreground">© 2026 NAFA - AGRITECH. Tous droits réservés.</p>
             <p className="text-xs text-muted-foreground">La technologie au service de l'agriculture africaine</p>
           </div>
         </div>

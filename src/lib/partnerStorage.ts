@@ -1156,7 +1156,7 @@ export const partnerStorage = {
         name: sub.companyName || "Mon Entreprise Partenaire",
         category: "Prestations & Commerce Agro-Pastoral",
         description:
-          "Partenaire agréé NAFA -AGRITECH offrant des prestations de travaux agricoles mécanisés, la fourniture d'intrants certifiés et l'accompagnement technique de terrain.",
+          "Partenaire agréé NAFA - AGRITECH offrant des prestations de travaux agricoles mécanisés, la fourniture d'intrants certifiés et l'accompagnement technique de terrain.",
         location: sub.location || sub.serviceArea || "Ouagadougou, Bobo-Dioulasso et régions du Burkina Faso",
         phone: sub.phone || sub.contactPhone || "+226 70 00 00 00",
         whatsapp: sub.phone || sub.contactPhone || "+226 70 00 00 00",
@@ -1164,7 +1164,7 @@ export const partnerStorage = {
         website: "https://nafa-agritech.com",
         logo: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=200&auto=format&fit=crop&q=80",
         cover: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&auto=format&fit=crop&q=80",
-        badge: "Partenaire Agréé NAFA -AGRITECH",
+        badge: "Partenaire Agréé NAFA - AGRITECH",
         is_verified: true,
         offersCount: userOffers.length,
       };
@@ -1195,7 +1195,7 @@ export const partnerStorage = {
             : entry.category === "banque"
             ? "Banque & Microfinance Agricole"
             : "Programme de Développement Agricole",
-        description: entry.description || "Partenaire officiel référencé sur le réseau NAFA -AGRITECH.",
+        description: entry.description || "Partenaire officiel référencé sur le réseau NAFA - AGRITECH.",
         location: entry.location || "Burkina Faso",
         phone: entry.phone || "+226 25 00 00 00",
         whatsapp: entry.phone || "+226 25 00 00 00",
@@ -1203,7 +1203,7 @@ export const partnerStorage = {
         website: entry.website || null,
         logo: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=200&auto=format&fit=crop&q=80",
         cover: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&auto=format&fit=crop&q=80",
-        badge: entry.badge || "Partenaire Agréé NAFA -AGRITECH",
+        badge: entry.badge || "Partenaire Agréé NAFA - AGRITECH",
         is_verified: true,
         offersCount: partnerOffers.length,
       };
@@ -1226,7 +1226,7 @@ export const partnerStorage = {
         id: offerMatch.owner_id,
         name: offerMatch.partner_name,
         category: "Partenaire Agricole & Prestations",
-        description: offerMatch.description || "Entreprise partenaire agro-pastorale agréée NAFA -AGRITECH.",
+        description: offerMatch.description || "Entreprise partenaire agro-pastorale agréée NAFA - AGRITECH.",
         location: offerMatch.location_name || "Burkina Faso",
         phone: offerMatch.contact_phone || "+226 70 00 00 00",
         whatsapp: offerMatch.contact_phone || "+226 70 00 00 00",
@@ -1234,7 +1234,7 @@ export const partnerStorage = {
         website: offerMatch.website || null,
         logo: offerMatch.image_url || "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=200&auto=format&fit=crop&q=80",
         cover: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&auto=format&fit=crop&q=80",
-        badge: "Partenaire Agréé NAFA -AGRITECH",
+        badge: "Partenaire Agréé NAFA - AGRITECH",
         is_verified: true,
         offersCount: partnerOffers.length,
       };
@@ -1246,7 +1246,7 @@ export const partnerStorage = {
       id: partnerIdOrSlug,
       name: fallbackName,
       category: "Partenaire Agro-Pastoral",
-      description: "Partenaire officiel NAFA -AGRITECH. Retrouvez ci-dessous nos produits, matériels et services certifiés.",
+      description: "Partenaire officiel NAFA - AGRITECH. Retrouvez ci-dessous nos produits, matériels et services certifiés.",
       location: "Burkina Faso",
       phone: "+226 70 00 00 00",
       whatsapp: "+226 70 00 00 00",
@@ -1254,7 +1254,7 @@ export const partnerStorage = {
       website: "https://nafa-agritech.com",
       logo: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=200&auto=format&fit=crop&q=80",
       cover: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&auto=format&fit=crop&q=80",
-      badge: "Partenaire Agréé NAFA -AGRITECH",
+      badge: "Partenaire Agréé NAFA - AGRITECH",
       is_verified: true,
       offersCount: 0,
     };

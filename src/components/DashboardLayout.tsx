@@ -10,6 +10,7 @@ import VoiceAssistant from "@/components/VoiceAssistant";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { useSubscription } from "@/hooks/useSubscription";
 import BackNavigationButton from "@/components/BackNavigationButton";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
@@ -51,9 +52,9 @@ const DashboardLayout = () => {
             {/* Bouton de navigation retour universel */}
             <BackNavigationButton />
 
-            <img src={logo} alt="NAFA -AGRITECH" className="h-8 sm:h-9 w-auto lg:hidden" />
+            <img src={logo} alt="NAFA - AGRITECH" className="h-8 sm:h-9 w-auto lg:hidden" />
             <span className="hidden lg:inline-block font-heading font-extrabold text-base text-foreground/90">
-              NAFA <span className="text-emerald-600 dark:text-emerald-400">-AGRITECH</span>
+              NAFA <span className="text-emerald-600 dark:text-emerald-400">- AGRITECH</span>
             </span>
           </div>
 
@@ -91,7 +92,9 @@ const DashboardLayout = () => {
         {/* Main content avec typographie confortable et aérée */}
         <main className="flex-1 overflow-y-auto">
           <div className="container max-w-6xl py-4 px-3.5 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
-            <Outlet />
+            <ErrorBoundary inline>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>

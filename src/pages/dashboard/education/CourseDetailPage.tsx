@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import BackNavigationButton from "@/components/BackNavigationButton";
 import { CheckCircle2, Circle, Clock, GraduationCap, Lightbulb } from "lucide-react";
 
+import { isValidUuid, isMissingTableError, isInvalidUuidError } from "@/hooks/useOfflineData";
+
 type Course = {
   id: string; slug: string; title: string; subtitle: string | null; summary: string | null;
   level: string; duration_min: number; icon: string; domain: string; category: string;
@@ -38,16 +40,37 @@ const CourseDetailPage = () => {
       if (!c) { setLoading(false); return; }
       setCourse(c as Course);
 
-      const [lRes, pRes] = await Promise.all([
+      const [lRes] = await Promise.all([
         supabase.from("course_lessons").select("*").eq("course_id", c.id).order("position"),
-        user
-          ? supabase.from("course_progress").select("lesson_id").eq("user_id", user.id).eq("course_id", c.id)
-          : Promise.resolve({ data: [] as any[] }),
       ]);
 
       const ls = (lRes.data as Lesson[]) || [];
       setLessons(ls);
-      setDoneIds((((pRes as any).data) || []).map((p: any) => p.lesson_id));
+
+      let remoteDone: string[] = [];
+      if (user && isValidUuid(user.id)) {
+        try {
+          const { data, error } = await supabase
+            .from("course_progress")
+            .select("lesson_id")
+            .eq("user_id", user.id)
+            .eq("course_id", c.id);
+          if (error && !isMissingTableError(error) && !isInvalidUuidError(error)) {
+            console.warn("course_progress load:", error);
+          }
+          if (data) {
+            remoteDone = data.map((p: any) => p.lesson_id);
+          }
+        } catch (e) {
+          console.warn("course_progress error:", e);
+        }
+      }
+
+      const localKey = `nafa_course_done_${c.id}_${user?.id || "guest"}`;
+      const savedLocal = JSON.parse(localStorage.getItem(localKey) || "[]");
+      const combinedDone = Array.from(new Set([...remoteDone, ...savedLocal]));
+      setDoneIds(combinedDone);
+
       setActiveId(ls[0]?.id ?? null);
       setLoading(false);
     };
@@ -62,20 +85,37 @@ const CourseDetailPage = () => {
     if (!user || !course) { toast.error("Connectez-vous pour suivre votre progression"); return; }
     setSaving(true);
     const isDone = doneIds.includes(lesson.id);
-    if (isDone) {
-      const { error } = await supabase
-        .from("course_progress")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("lesson_id", lesson.id);
-      if (error) { toast.error(error.message); setSaving(false); return; }
-      setDoneIds((ids) => ids.filter((id) => id !== lesson.id));
-    } else {
-      const { error } = await supabase.from("course_progress").insert({
-        user_id: user.id, course_id: course.id, lesson_id: lesson.id,
-      });
-      if (error) { toast.error(error.message); setSaving(false); return; }
-      setDoneIds((ids) => [...ids, lesson.id]);
+    const newDoneIds = isDone ? doneIds.filter((id) => id !== lesson.id) : [...doneIds, lesson.id];
+    setDoneIds(newDoneIds);
+
+    const localKey = `nafa_course_done_${course.id}_${user.id}`;
+    localStorage.setItem(localKey, JSON.stringify(newDoneIds));
+
+    if (isValidUuid(user.id)) {
+      try {
+        if (isDone) {
+          const { error } = await supabase
+            .from("course_progress")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("lesson_id", lesson.id);
+          if (error && !isMissingTableError(error) && !isInvalidUuidError(error)) {
+            console.warn("delete progress error:", error);
+          }
+        } else {
+          const { error } = await supabase.from("course_progress").insert({
+            user_id: user.id, course_id: course.id, lesson_id: lesson.id,
+          });
+          if (error && !isMissingTableError(error) && !isInvalidUuidError(error)) {
+            console.warn("insert progress error:", error);
+          }
+        }
+      } catch (err: any) {
+        console.warn("progress sync error:", err);
+      }
+    }
+
+    if (!isDone) {
       const next = lessons.find((l) => l.position > lesson.position);
       if (next) setActiveId(next.id);
       toast.success("Leçon terminée !");

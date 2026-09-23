@@ -131,8 +131,8 @@ export function useOfflineData<T = any>({
         setData(result || []);
         await cacheData(table, cacheKey, result || []);
       } catch (err: any) {
-        if (isMissingTableError(err)) {
-          console.warn(`Table "${table}" non trouvée sur le serveur (schema cache). Utilisation du cache local.`);
+        if (isMissingTableError(err) || isInvalidUuidError(err)) {
+          console.warn(`Table ou filtre "${table}" non résolu sur le serveur (${err.code || err.message}). Utilisation du cache local.`);
           const cached = await getCachedData(table, cacheKey);
           setData((cached as T[]) || []);
           setLoading(false);
@@ -206,8 +206,8 @@ export function useOfflineData<T = any>({
 
     const { data: result, error } = await (supabase.from(table as any) as any).insert(row).select();
     if (error) {
-      if (isMissingTableError(error)) {
-        console.warn(`Table distante "${table}" non configurée. Enregistrement local.`);
+      if (isMissingTableError(error) || isInvalidUuidError(error)) {
+        console.warn(`Table distante ou contrainte "${table}" (${error.code || error.message}). Enregistrement local.`);
         const tempId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const localRow = { ...row, id: tempId, created_at: new Date().toISOString() };
         await applyOptimisticInsert(table, cacheKey, localRow);
@@ -237,7 +237,7 @@ export function useOfflineData<T = any>({
 
       const { error } = await (supabase.from(table as any) as any).update(updates).eq('id', id);
       if (error) {
-        if (isMissingTableError(error)) {
+        if (isMissingTableError(error) || isInvalidUuidError(error)) {
           await applyOptimisticUpdate(table, cacheKey, id, updates);
           setData(prev => prev.map((r: any) => r.id === id ? { ...r, ...updates } : r));
           toast.success('Modification enregistrée localement');
@@ -272,7 +272,7 @@ export function useOfflineData<T = any>({
 
       const { error } = await (supabase.from(table as any) as any).delete().eq('id', id);
       if (error) {
-        if (isMissingTableError(error)) {
+        if (isMissingTableError(error) || isInvalidUuidError(error)) {
           await applyOptimisticDelete(table, cacheKey, id);
           setData(prev => prev.filter((r: any) => r.id !== id));
           toast.success('Suppression enregistrée localement');

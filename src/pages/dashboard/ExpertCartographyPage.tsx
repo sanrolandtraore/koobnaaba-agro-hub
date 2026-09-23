@@ -32,6 +32,8 @@ import {
   cacheData,
   getCachedData,
 } from "@/lib/offlineDb";
+import { isMissingTableError, isInvalidUuidError } from "@/hooks/useOfflineData";
+import BackNavigationButton from "@/components/BackNavigationButton";
 
 // ─── Types ───
 interface Coordinate { lat: number; lng: number; }
@@ -194,11 +196,17 @@ const ExpertCartographyPage = () => {
           supabase.from("field_observations").select("*").order("created_at", { ascending: false }),
           supabase.from("expert_parcels").select("*").order("created_at", { ascending: false }),
         ]);
-        if (obsRes.data) {
+        if (obsRes.error && (isMissingTableError(obsRes.error) || isInvalidUuidError(obsRes.error))) {
+          const cachedObs = await getCachedData("field_observations", cacheKey);
+          if (cachedObs) setObservations(cachedObs as FieldObservation[]);
+        } else if (obsRes.data) {
           setObservations(obsRes.data as FieldObservation[]);
           await cacheData("field_observations", cacheKey, obsRes.data);
         }
-        if (parcelRes.data) {
+        if (parcelRes.error && (isMissingTableError(parcelRes.error) || isInvalidUuidError(parcelRes.error))) {
+          const cachedParcels = await getCachedData("expert_parcels", cacheKey);
+          if (cachedParcels) setParcels(cachedParcels as ExpertParcel[]);
+        } else if (parcelRes.data) {
           setParcels(parcelRes.data as ExpertParcel[]);
           await cacheData("expert_parcels", cacheKey, parcelRes.data);
         }
@@ -482,8 +490,30 @@ const ExpertCartographyPage = () => {
       client_name: parcelForm.client_name || null,
     });
 
-    if (error) toast.error(error.message);
-    else {
+    if (error) {
+      if (isMissingTableError(error) || isInvalidUuidError(error)) {
+        const localParcel: ExpertParcel = {
+          id: `local-${Date.now()}`,
+          name: parcelForm.name.trim(),
+          geometry,
+          area_ha,
+          perimeter_m,
+          center_lat,
+          center_lng,
+          notes: parcelForm.notes || null,
+          client_name: parcelForm.client_name || null,
+          created_at: new Date().toISOString(),
+        } as any;
+        setParcels(prev => [localParcel, ...prev]);
+        toast.success(`Parcelle sauvegardée localement — ${area_ha} ha`);
+        setPolygonPoints([]);
+        setShowParcelDialog(false);
+        setParcelForm({ name: "", client_name: "", notes: "" });
+        setDrawingMode("none");
+      } else {
+        toast.error(error.message);
+      }
+    } else {
       toast.success(`Parcelle sauvegardée — ${area_ha} ha`);
       setPolygonPoints([]);
       setShowParcelDialog(false);
@@ -522,8 +552,31 @@ const ExpertCartographyPage = () => {
       photo_urls: photoUrls,
     });
 
-    if (error) toast.error(error.message);
-    else {
+    if (error) {
+      if (isMissingTableError(error) || isInvalidUuidError(error)) {
+        const localObs: FieldObservation = {
+          id: `local-${Date.now()}`,
+          user_id: user.id,
+          latitude: newObsCoord.lat,
+          longitude: newObsCoord.lng,
+          title: obsForm.title || "Observation",
+          description: obsForm.description || null,
+          observation_type: obsForm.observation_type,
+          severity: obsForm.severity,
+          parcel_name: obsForm.parcel_name || null,
+          photo_urls: photoUrls,
+          created_at: new Date().toISOString(),
+        } as any;
+        setObservations(prev => [localObs, ...prev]);
+        toast.success("Observation enregistrée localement");
+        setShowObsDialog(false);
+        setNewObsCoord(null);
+        setObsForm({ title: "", description: "", observation_type: "zone_malade", severity: "moyen", parcel_name: "" });
+        setObsPhotos([]);
+      } else {
+        toast.error(error.message);
+      }
+    } else {
       toast.success("Observation enregistrée");
       setShowObsDialog(false);
       setNewObsCoord(null);
@@ -536,16 +589,28 @@ const ExpertCartographyPage = () => {
 
   // ─── Delete observation ───
   const deleteObservation = async (id: string) => {
-    const { error } = await supabase.from("field_observations").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Observation supprimée"); fetchData(); }
+    if (!id.startsWith("local-")) {
+      const { error } = await supabase.from("field_observations").delete().eq("id", id);
+      if (error && !isMissingTableError(error) && !isInvalidUuidError(error)) {
+        toast.error(error.message);
+        return;
+      }
+    }
+    setObservations(prev => prev.filter(o => o.id !== id));
+    toast.success("Observation supprimée");
   };
 
   // ─── Delete parcel ───
   const deleteParcel = async (id: string) => {
-    const { error } = await supabase.from("expert_parcels").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Parcelle supprimée"); fetchData(); }
+    if (!id.startsWith("local-")) {
+      const { error } = await supabase.from("expert_parcels").delete().eq("id", id);
+      if (error && !isMissingTableError(error) && !isInvalidUuidError(error)) {
+        toast.error(error.message);
+        return;
+      }
+    }
+    setParcels(prev => prev.filter(p => p.id !== id));
+    toast.success("Parcelle supprimée");
   };
 
   const areaHa = computeAreaHa(polygonPoints);
@@ -560,13 +625,16 @@ const ExpertCartographyPage = () => {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
-          <MapPin className="h-6 w-6 text-primary" /> Cartographie GPS
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Mesurez un champ avec 4 coins GPS, obtenez la superficie en hectares et réutilisez-la dans les calculs
-        </p>
+      <div className="flex items-center gap-3">
+        <BackNavigationButton fallbackTo="/dashboard" />
+        <div>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            <MapPin className="h-6 w-6 text-primary" /> Cartographie GPS
+          </h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            Mesurez un champ avec 4 coins GPS, obtenez la superficie en hectares et réutilisez-la dans les calculs
+          </p>
+        </div>
       </div>
 
       {/* ─── Barre d'outils cartographie terrain NAFA - AGRITECH ─── */}

@@ -318,14 +318,14 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Header Premium Agrandie */}
       <div className="flex items-center gap-3.5 px-5 py-4 border-b border-sidebar-border/80">
-        <img src={logo} alt="NAFA -AGRITECH" className="h-12 w-auto shrink-0 drop-shadow-xs" />
+        <img src={logo} alt="NAFA - AGRITECH" className="h-12 w-auto shrink-0 drop-shadow-xs" />
         <div className="flex flex-col min-w-0">
           <span className="text-xs font-extrabold text-sidebar-primary tracking-wide flex items-center gap-1.5 truncate">
             <RoleIcon className="h-3.5 w-3.5 shrink-0 text-sidebar-primary" />
             <span className="truncate">{currentRoleLabel}</span>
           </span>
           <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate mt-0.5">
-            NAFA -AGRITECH
+            NAFA - AGRITECH
           </span>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useOfflineData } from "@/hooks/useOfflineData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,52 +9,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, CalendarDays, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Trash2, CalendarDays, CheckCircle2, AlertCircle, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import BackNavigationButton from "@/components/BackNavigationButton";
 
 const CalendarPage = () => {
-  const [events, setEvents] = useState<any[]>([]);
+  const { data: events, loading, isOffline, insertRow, updateRow, deleteRow } = useOfflineData({
+    table: "crop_calendar_events",
+    select: "*, crop_cycles(season, parcels(name), crop_references(name))",
+    orderBy: "planned_date",
+    ascending: true,
+  });
+
   const [cycles, setCycles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ crop_cycle_id: "", title: "", event_type: "tache", planned_date: "", notes: "" });
 
-  const fetchEvents = async () => {
-    const { data, error } = await supabase.from("crop_calendar_events").select("*, crop_cycles(season, parcels(name), crop_references(name))").order("planned_date", { ascending: true });
-    if (error) toast.error(error.message);
-    else setEvents(data || []);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchEvents();
-    supabase.from("crop_cycles").select("id, season, parcels(name), crop_references(name)").order("created_at", { ascending: false }).then(({ data }) => setCycles(data || []));
+    supabase
+      .from("crop_cycles")
+      .select("id, season, parcels(name), crop_references(name)")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setCycles(data || []))
+      .catch((err) => console.warn("Erreur chargement cycles:", err));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("crop_calendar_events").insert(form);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Événement ajouté !");
-    setForm({ crop_cycle_id: "", title: "", event_type: "tache", planned_date: "", notes: "" });
-    setOpen(false);
-    fetchEvents();
+    if (!form.crop_cycle_id) {
+      toast.error("Veuillez sélectionner un cycle cultural");
+      return;
+    }
+    if (!form.title.trim()) {
+      toast.error("Veuillez renseigner un titre");
+      return;
+    }
+    const res = await insertRow(form);
+    if (res) {
+      toast.success("Événement ajouté !");
+      setForm({ crop_cycle_id: "", title: "", event_type: "tache", planned_date: "", notes: "" });
+      setOpen(false);
+    }
   };
 
   const toggleComplete = async (ev: any) => {
-    const { error } = await supabase.from("crop_calendar_events").update({
+    await updateRow(ev.id, {
       completed: !ev.completed,
       completed_date: !ev.completed ? new Date().toISOString().split("T")[0] : null,
-    }).eq("id", ev.id);
-    if (error) toast.error(error.message);
-    else fetchEvents();
+    });
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ?")) return;
-    const { error } = await supabase.from("crop_calendar_events").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Supprimé"); fetchEvents(); }
+    const ok = await deleteRow(id);
+    if (ok) toast.success("Supprimé");
   };
 
   const today = new Date().toISOString().split("T")[0];
@@ -81,9 +90,15 @@ const CalendarPage = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-heading font-bold">Calendrier cultural</h1>
-          <p className="text-muted-foreground mt-1">Planification et suivi des tâches</p>
+        <div className="flex items-center gap-3">
+          <BackNavigationButton fallbackTo="/dashboard" />
+          <div>
+            <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+              Calendrier cultural
+              {isOffline && <WifiOff className="h-4 w-4 text-amber-500" />}
+            </h1>
+            <p className="text-muted-foreground mt-0.5 text-sm">Planification et suivi des tâches</p>
+          </div>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
