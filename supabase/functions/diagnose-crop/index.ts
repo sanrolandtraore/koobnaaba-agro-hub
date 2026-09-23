@@ -1,31 +1,23 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://koobnaaba-agro-hub.vercel.app",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Vary": "Origin",
-};
-
-const allowedOrigins = new Set([
-  "https://koobnaaba-agro-hub.vercel.app",
-  "https://koobnaaba-agro-hub.lovable.app",
-]);
 function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("Origin") ?? "";
+  const origin = req.headers.get("Origin") || "*";
   return {
-    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : "null",
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
   };
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: getCorsHeaders(req) });
+  const cors = getCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
     const auth = req.headers.get("Authorization") ?? "";
     if (!auth.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -33,19 +25,34 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: auth } } });
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     const body = await req.json();
     const { imageBase64, mimeType, cropKey, symptoms } = body ?? {};
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    if (!LOVABLE_API_KEY) {
+      console.warn("LOVABLE_API_KEY non configurée, retour signal fallback");
+      return new Response(JSON.stringify({
+        error: "AI_GATEWAY_NOT_CONFIGURED",
+        fallback_required: true,
+      }), {
+        status: 200,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
 
-    const systemPrompt = `Tu es un expert agronome spécialisé dans les cultures d'Afrique de l'Ouest (mil, sorgho, maïs, niébé, arachide, riz, coton, sésame, manioc, igname, oignon, tomate). À partir d'une photo de plante et/ou de symptômes décrits, tu identifies la cause la plus probable (maladie, ravageur, ou carence nutritionnelle) et proposes un traitement bio ET un traitement chimique adapté au contexte ouest-africain (produits homologués CEDEAO si possible). Réponds en français.`;
+    const systemPrompt = `Tu es un expert agronome senior de référence pour l'INERA (Institut de l'Environnement et de Recherches Agricoles du Burkina Faso) et le Comité Sahélien des Pesticides (CSP-CILSS). Tu analyses avec haute précision les cultures d'Afrique de l'Ouest (mil, sorgho, maïs, niébé, arachide, riz de bas-fond et pluvial, coton, sésame, manioc, igname, oignon, tomate, mangue, agrumes).
+À partir d'une photo et/ou des symptômes décrits, identifie la cause exacte (maladie fongique/bactérienne/virale, ravageur entomologique, carence N-P-K ou stress abiotique).
+Propose :
+1. Un protocole biologique traditionnel ou agro-écologique validé INERA (ex: extrait de neem Azadirachta indica 50g/L, cendre tamisée, Tithonia diversifolia, savon noir, rotation culturale, zaï).
+2. Un protocole chimique homologué CSP/CEDEAO avec matières actives autorisées au Sahel, dosages et Délais Avant Récolte (DAR).
+3. Les mesures préventives et variétés certifiées INERA résistantes.
+Réponds exclusivement en français.`;
 
     const userContent: any[] = [
-      { type: "text", text: `Culture: ${cropKey ?? "non précisée"}\nSymptômes décrits: ${symptoms ?? "voir image"}\n\nDonne ton diagnostic.` },
+      { type: "text", text: `Culture: ${cropKey ?? "non précisée"}\nSymptômes décrits: ${symptoms ?? "voir image"}\n\nDonne ton diagnostic agronomique complet.` },
     ];
     if (imageBase64) {
       userContent.push({ type: "image_url", image_url: { url: `data:${mimeType ?? "image/jpeg"};base64,${imageBase64}` } });
@@ -55,7 +62,7 @@ Deno.serve(async (req) => {
       type: "function",
       function: {
         name: "submit_diagnosis",
-        description: "Retourne un diagnostic agronomique structuré.",
+        description: "Retourne un diagnostic agronomique structuré conforme aux normes INERA et CSP.",
         parameters: {
           type: "object",
           properties: {
@@ -63,9 +70,9 @@ Deno.serve(async (req) => {
             cause_type: { type: "string", enum: ["maladie", "ravageur", "carence", "stress_hydrique", "stress_thermique", "autre"] },
             cause_name: { type: "string" },
             confidence: { type: "number", minimum: 0, maximum: 1 },
-            severity: { type: "string", enum: ["faible", "moyenne", "forte"] },
-            treatment_bio: { type: "string", description: "Traitement biologique avec dosage" },
-            treatment_chemical: { type: "string", description: "Traitement chimique homologué avec dosage et délai avant récolte" },
+            severity: { type: "string", enum: ["faible", "moyen", "forte"] },
+            treatment_bio: { type: "string", description: "Protocole biologique avec dosage" },
+            treatment_chemical: { type: "string", description: "Protocole chimique homologué CSP avec dosage et délai avant récolte (DAR)" },
             preventive_actions: { type: "array", items: { type: "string" } },
           },
           required: ["diagnosis_summary", "cause_type", "cause_name", "confidence", "severity", "treatment_bio", "treatment_chemical", "preventive_actions"],
@@ -91,22 +98,34 @@ Deno.serve(async (req) => {
     if (!aiResp.ok) {
       const txt = await aiResp.text();
       console.error("AI gateway error", aiResp.status, txt);
-      if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requêtes atteinte, réessayez dans un instant." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Crédits IA épuisés. Veuillez recharger votre espace." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error("AI gateway failure");
+      return new Response(JSON.stringify({
+        error: "AI_GATEWAY_ERROR",
+        status: aiResp.status,
+        fallback_required: true,
+      }), {
+        status: 200,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
     }
 
     const aiJson = await aiResp.json();
     const toolCall = aiJson.choices?.[0]?.message?.tool_calls?.[0];
     const args = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : null;
-    if (!args) throw new Error("Réponse IA invalide");
+    if (!args) {
+      return new Response(JSON.stringify({ fallback_required: true }), {
+        status: 200,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ success: true, diagnosis: args }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("diagnose-crop error", e);
-    const msg = e instanceof Error ? e.message : "Unknown error";
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ fallback_required: true, error: (e as Error).message }), {
+      status: 200,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
   }
 });

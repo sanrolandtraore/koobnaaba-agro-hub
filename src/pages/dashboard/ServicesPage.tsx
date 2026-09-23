@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { partnerStorage, PartnerOffer, QuoteRequest } from "@/lib/partnerStorage";
 import { ProductMediaViewer } from "@/components/partner/ProductMediaViewer";
+import { CropDiagnosisTool } from "@/components/expert/CropDiagnosisTool";
 import {
   Plus, Microscope, Bug, Droplets, Tractor, Fish, Egg,
   ClipboardList, MapPin, GraduationCap, Trash2, Clock, CheckCircle, XCircle, Loader2,
@@ -121,6 +122,7 @@ export default function ServicesPage() {
   const [farms, setFarms] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [aiDiagnosisOpen, setAiDiagnosisOpen] = useState(false);
 
   const [form, setForm] = useState({
     service_type: "",
@@ -402,6 +404,13 @@ export default function ServicesPage() {
 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <Button
+            onClick={() => setAiDiagnosisOpen(true)}
+            className="h-12 px-5 gradient-primary text-primary-foreground text-sm font-bold rounded-2xl shadow-primary gap-2"
+          >
+            <Microscope className="h-5 w-5" /> Diagnostic IA Immédiat
+          </Button>
+
+          <Button
             onClick={() => setActiveFilter("mes_demandes")}
             variant={activeFilter === "mes_demandes" ? "default" : "outline"}
             className="h-12 px-5 text-sm font-bold rounded-2xl gap-2 shadow-xs"
@@ -417,8 +426,8 @@ export default function ServicesPage() {
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="h-12 px-6 gradient-primary text-primary-foreground text-sm font-bold rounded-2xl shadow-primary gap-2">
-                <Plus className="h-5 w-5" /> Demander un service
+              <Button variant="outline" className="h-12 px-5 text-foreground text-sm font-bold rounded-2xl gap-2 shadow-xs">
+                <Plus className="h-5 w-5 text-primary" /> Demander un service
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
@@ -503,6 +512,52 @@ export default function ServicesPage() {
           </Dialog>
         </div>
       </div>
+
+      {/* Bannière Interactive Diagnostic IA Immédiat */}
+      <div className="bg-gradient-to-r from-emerald-500/15 via-primary/10 to-emerald-500/5 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
+            <Microscope className="h-7 w-7" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-heading font-extrabold text-foreground text-base sm:text-lg">
+                Diagnostic Végétal Express par IA & Expertise INERA
+              </h3>
+              <Badge className="bg-emerald-600 text-white text-[10px] font-bold py-0.5 px-2 rounded-full">
+                Opérationnel
+              </Badge>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
+              Photographiez vos feuilles, tiges ou ravageurs (chenilles légionnaires, thrips, mildiou, carences NPK) pour obtenir instantanément le diagnostic certifié et les protocoles de traitement biologiques et chimiques homologués CSP.
+            </p>
+          </div>
+        </div>
+        <Button
+          onClick={() => setAiDiagnosisOpen(true)}
+          className="shrink-0 h-12 px-6 gradient-primary text-primary-foreground font-bold rounded-2xl gap-2 shadow-primary text-sm w-full sm:w-auto"
+        >
+          <Sparkles className="h-4 w-4" /> Diagnostiquer maintenant
+        </Button>
+      </div>
+
+      {/* Modale Plein Écran Diagnostic IA Immédiat */}
+      <Dialog open={aiDiagnosisOpen} onOpenChange={setAiDiagnosisOpen}>
+        <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl sm:text-2xl font-bold flex items-center gap-2 text-foreground">
+              <Microscope className="h-6 w-6 text-primary" />
+              Diagnostic IA & Vision Agronomique Ouest-Africaine
+            </DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
+              Moteur Scientifique INERA Burkina & Comité Sahélien des Pesticides (CSP-CILSS). Fonctionne en ligne et hors-ligne sur le terrain.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-2">
+            <CropDiagnosisTool />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Barre de Recherche et Filtres Directs (Sans barres de navigation secondaires cachées) */}
       <div className="bg-card border border-border/80 rounded-3xl p-5 shadow-sm space-y-4">
@@ -708,8 +763,12 @@ export default function ServicesPage() {
                       key={value}
                       className="card-premium cursor-pointer border-border hover:border-primary/60 transition-all p-5 rounded-2xl"
                       onClick={() => {
-                        setForm((f) => ({ ...f, service_type: value }));
-                        setOpen(true);
+                        if (value === "diagnostic_ia") {
+                          setAiDiagnosisOpen(true);
+                        } else {
+                          setForm((f) => ({ ...f, service_type: value }));
+                          setOpen(true);
+                        }
                       }}
                     >
                       <div className="flex items-start gap-3.5">
