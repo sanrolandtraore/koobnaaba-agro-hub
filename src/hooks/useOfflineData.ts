@@ -20,6 +20,19 @@ interface UseOfflineDataOptions {
   limit?: number;
 }
 
+export function isMissingTableError(err: any): boolean {
+  if (!err) return false;
+  const msg = typeof err === 'string' ? err : (err.message || err.details || err.hint || '');
+  const code = err.code || '';
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    msg.includes('Could not find the table') ||
+    msg.includes('in the schema cache') ||
+    (msg.includes('relation') && msg.includes('does not exist'))
+  );
+}
+
 const isOfflineTempId = (value: unknown): value is string => (
   typeof value === 'string' && value.startsWith('offline-')
 );
@@ -87,6 +100,13 @@ export function useOfflineData<T = any>({
         setData(result || []);
         await cacheData(table, cacheKey, result || []);
       } catch (err: any) {
+        if (isMissingTableError(err)) {
+          console.warn(`Table "${table}" non trouvée sur le serveur (schema cache). Utilisation du cache local.`);
+          const cached = await getCachedData(table, cacheKey);
+          setData((cached as T[]) || []);
+          setLoading(false);
+          return;
+        }
         console.error('Fetch error, falling back to cache:', err);
         const cached = await getCachedData(table, cacheKey);
         if (cached) {
@@ -155,12 +175,21 @@ export function useOfflineData<T = any>({
 
     const { data: result, error } = await (supabase.from(table as any) as any).insert(row).select();
     if (error) {
+      if (isMissingTableError(error)) {
+        console.warn(`Table distante "${table}" non configurée. Enregistrement local.`);
+        const tempId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const localRow = { ...row, id: tempId, created_at: new Date().toISOString() };
+        await applyOptimisticInsert(table, cacheKey, localRow);
+        setData(prev => [localRow as T, ...prev]);
+        toast.success('Enregistré dans le stockage local');
+        return localRow;
+      }
       toast.error(error.message);
       return null;
     }
     await fetchData();
     return result?.[0] || null;
-  }, [table, ensureSession, fetchData, queueOfflineInsert]);
+  }, [table, cacheKey, ensureSession, fetchData, queueOfflineInsert]);
 
   const updateRow = useCallback(async (id: string, updates: any) => {
     if (navigator.onLine) {
@@ -177,6 +206,12 @@ export function useOfflineData<T = any>({
 
       const { error } = await (supabase.from(table as any) as any).update(updates).eq('id', id);
       if (error) {
+        if (isMissingTableError(error)) {
+          await applyOptimisticUpdate(table, cacheKey, id, updates);
+          setData(prev => prev.map((r: any) => r.id === id ? { ...r, ...updates } : r));
+          toast.success('Modification enregistrée localement');
+          return true;
+        }
         toast.error(error.message);
         return false;
       }
@@ -206,6 +241,12 @@ export function useOfflineData<T = any>({
 
       const { error } = await (supabase.from(table as any) as any).delete().eq('id', id);
       if (error) {
+        if (isMissingTableError(error)) {
+          await applyOptimisticDelete(table, cacheKey, id);
+          setData(prev => prev.filter((r: any) => r.id !== id));
+          toast.success('Suppression enregistrée localement');
+          return true;
+        }
         toast.error(error.message);
         return false;
       }

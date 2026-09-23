@@ -10,6 +10,8 @@ import { Eye, Download, FileText, Loader2 } from "lucide-react";
 import ExportPreviewTable from "@/components/ExportPreviewTable";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { isMissingTableError } from "@/hooks/useOfflineData";
+import { getCachedData } from "@/lib/offlineDb";
 
 type ExportType = "cycles" | "costs" | "activities" | "harvests" | "investment" | "workers" | "equipment";
 
@@ -31,7 +33,22 @@ const fetchData = async (type: ExportType) => {
     case "harvests": return supabase.from("harvests").select("date, lot_number, quantity_kg, quality_grade, unit_price_kg, buyer, sold, crop_cycles(season, crop_references(name))").order("date", { ascending: false });
     case "investment": return supabase.from("investment_plans").select("total_input_cost, total_labor_cost, total_equipment_cost, total_transport_cost, total_investment, expected_revenue, expected_roi_percent, break_even_yield_kg, crop_cycles(season, parcels(name), crop_references(name))").order("created_at", { ascending: false });
     case "workers": return supabase.from("workers").select("full_name, role, phone, daily_rate, status, farms(name)").order("full_name");
-    case "equipment": return supabase.from("equipment").select("name, type, status, purchase_date, purchase_cost, farms(name)").order("name");
+    case "equipment": {
+      try {
+        const res = await supabase.from("equipment").select("name, type, status, purchase_date, purchase_cost, farms(name)").order("name");
+        if (res.error && isMissingTableError(res.error)) {
+          const cached = await getCachedData("equipment", "useOfflineData_equipment_*, farms(name)");
+          return { data: (cached as any[]) || [], error: null };
+        }
+        return res;
+      } catch (err: any) {
+        if (isMissingTableError(err)) {
+          const cached = await getCachedData("equipment", "useOfflineData_equipment_*, farms(name)");
+          return { data: (cached as any[]) || [], error: null };
+        }
+        return { data: null, error: err };
+      }
+    }
   }
 };
 
@@ -55,12 +72,26 @@ const AgriculteurExportPage = () => {
     setLoading(true);
     try {
       const { data, error } = await fetchData(selected);
-      if (error) throw error;
-      if (!data?.length) { toast.error("Aucune donnée à exporter"); setPreviewRows(null); return; }
+      if (error) {
+        if (isMissingTableError(error)) {
+          toast.info("Aucune donnée disponible pour ce module");
+          setPreviewRows(null);
+          return;
+        }
+        throw error;
+      }
+      if (!data?.length) { toast.info("Aucune donnée à exporter"); setPreviewRows(null); return; }
       const rows = data.map(flattenRow);
       setPreviewHeaders(Object.keys(rows[0]));
       setPreviewRows(rows);
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) {
+      if (isMissingTableError(err)) {
+        toast.info("Aucune donnée disponible pour ce module");
+        setPreviewRows(null);
+      } else {
+        toast.error(err.message);
+      }
+    }
     finally { setLoading(false); }
   };
 

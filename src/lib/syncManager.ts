@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getSyncQueue, removeSyncQueueItem, updateSyncQueueItem, getSyncQueueCount, replaceOfflineId } from './offlineDb';
 import { toast } from 'sonner';
+import { isMissingTableError } from '@/hooks/useOfflineData';
 
 const MAX_RETRIES = 5;
 
@@ -70,17 +71,27 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
       }
 
       if (error) {
-        console.error(`Sync failed for ${item.table}:`, error);
-        await updateSyncQueueItem(item.id, { retries: item.retries + 1 });
-        failed++;
+        if (isMissingTableError(error)) {
+          console.warn(`Table distante non disponible pour "${item.table}". L'élément reste conservé localement.`);
+          await removeSyncQueueItem(item.id);
+        } else {
+          console.error(`Sync failed for ${item.table}:`, error);
+          await updateSyncQueueItem(item.id, { retries: item.retries + 1 });
+          failed++;
+        }
       } else {
         await removeSyncQueueItem(item.id);
         synced++;
       }
     } catch (err) {
-      console.error(`Sync error for ${item.table}:`, err);
-      await updateSyncQueueItem(item.id, { retries: item.retries + 1 });
-      failed++;
+      if (isMissingTableError(err)) {
+        console.warn(`Table distante non disponible pour "${item.table}". L'élément reste conservé localement.`);
+        await removeSyncQueueItem(item.id);
+      } else {
+        console.error(`Sync error for ${item.table}:`, err);
+        await updateSyncQueueItem(item.id, { retries: item.retries + 1 });
+        failed++;
+      }
     }
   }
 

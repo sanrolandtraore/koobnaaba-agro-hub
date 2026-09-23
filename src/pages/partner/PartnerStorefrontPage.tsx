@@ -16,9 +16,11 @@ import {
 import { ProductMediaViewer } from "@/components/partner/ProductMediaViewer";
 import {
   Phone, Mail, MessageCircle, Share2, MapPin, CheckCircle2, ShieldCheck,
-  Search, ArrowLeft, Store, Package, Tractor, Beef, FileText, Send, Sparkles, Globe
+  Search, ArrowLeft, Store, Package, Tractor, Beef, FileText, Send, Sparkles, Globe, Award
 } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { PartnerVerifiedBadge } from "@/components/partner/PartnerVerifiedBadge";
+import { getStoredPartnerKyc, PartnerKycDossier } from "@/lib/partnerKyc";
 
 export default function PartnerStorefrontPage() {
   const { partnerId } = useParams<{ partnerId: string }>();
@@ -27,6 +29,15 @@ export default function PartnerStorefrontPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [kyc, setKyc] = useState<PartnerKycDossier>(() => getStoredPartnerKyc(partnerId || "current"));
+
+  useEffect(() => {
+    const handleKycUpdate = () => {
+      setKyc(getStoredPartnerKyc(partnerId || "current"));
+    };
+    window.addEventListener("nafa-partner-kyc-updated", handleKycUpdate);
+    return () => window.removeEventListener("nafa-partner-kyc-updated", handleKycUpdate);
+  }, [partnerId]);
 
   // Quote / Order Modal state
   const [selectedOffer, setSelectedOffer] = useState<PartnerOffer | null>(null);
@@ -221,9 +232,13 @@ export default function PartnerStorefrontPage() {
                     <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-foreground">
                       {partner.name}
                     </h1>
-                    <Badge className="bg-emerald-600 text-white font-semibold text-xs gap-1">
-                      <ShieldCheck className="h-3.5 w-3.5" /> {partner.badge}
-                    </Badge>
+                    <PartnerVerifiedBadge
+                      isVerified={partner.verified || kyc.status === "verifie"}
+                      kyc={kyc}
+                      partnerName={partner.name}
+                      size="sm"
+                      variant="pill"
+                    />
                   </div>
                   <p className="text-xs sm:text-sm font-medium text-primary flex items-center gap-1.5">
                     <Store className="h-4 w-4" /> {partner.category}
@@ -270,6 +285,29 @@ export default function PartnerStorefrontPage() {
                 )}
               </div>
             </div>
+
+            {/* Certification & Trust Banner */}
+            {(partner.verified || kyc.status === "verifie") && (
+              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0">
+                    <Award className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-foreground flex items-center gap-1">
+                      Partenaire Certifié & Agréé NAFA - AGRITECH
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 inline" />
+                    </span>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Matricule officiel : <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">{kyc.certificationId || "NAFA-CERT-2026-BF"}</span> · {kyc.type === "personne_morale" ? `Personne Morale (${kyc.moraleData.legalForm})` : "Personne Physique Accréditée"} · Garantie Anti-fraude & Conformité
+                    </p>
+                  </div>
+                </div>
+                <Badge className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 shrink-0 hidden sm:inline-flex">
+                  Compte Vérifié
+                </Badge>
+              </div>
+            )}
 
             {/* Description */}
             <div className="pt-2 border-t border-border/60">

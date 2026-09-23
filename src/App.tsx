@@ -63,6 +63,7 @@ const ProgrammesPage = lazy(() => import("./pages/dashboard/partenaire/Programme
 const ServicesBancairesPage = lazy(() => import("./pages/dashboard/partenaire/ServicesBancairesPage"));
 const PartnersDirectoryPage = lazy(() => import("./pages/dashboard/PartnersDirectoryPage"));
 const ProviderSubscriptionPage = lazy(() => import("./pages/dashboard/partenaire/ProviderSubscriptionPage"));
+const PartnerKycPage = lazy(() => import("./pages/dashboard/partenaire/PartnerKycPage"));
 const MyOffersPage = lazy(() => import("./pages/provider/MyOffersPage"));
 const MissionsPage = lazy(() => import("./pages/provider/MissionsPage"));
 const InterventionsPage = lazy(() => import("./pages/provider/InterventionsPage"));
@@ -162,6 +163,8 @@ const App = () => (
                 <Route path="partenaire-banques" element={<Suspense fallback={<PageLoader />}><ServicesBancairesPage /></Suspense>} />
                 <Route path="partners-directory" element={<Suspense fallback={<PageLoader />}><PartnersDirectoryPage /></Suspense>} />
                 <Route path="partenaire-vitrine" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
+                <Route path="partenaire-kyc" element={<Suspense fallback={<PageLoader />}><PartnerKycPage /></Suspense>} />
+                <Route path="partenaire-verification" element={<Suspense fallback={<PageLoader />}><PartnerKycPage /></Suspense>} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />

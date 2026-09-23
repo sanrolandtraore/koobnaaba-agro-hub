@@ -8,7 +8,7 @@ import {
   Users, Wrench, Package, CalendarDays, BarChart3, Download, Settings, Tractor,
   Beef, Heart, Baby, Utensils, Wallet, Building2, Compass, Handshake, ClipboardList,
   FolderOpen, Layers, Award, Store, Eye, Microscope, FileText, BookOpen, Sparkles,
-  Briefcase, ShieldCheck, Landmark, FolderKanban, FlaskConical,
+  Briefcase, ShieldCheck, Landmark, FolderKanban, FlaskConical, BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -49,6 +49,7 @@ export const fournisseurNav: NavItem[] = [
   { to: "/dashboard/revenus", labelKey: "Chiffre d'affaires & Recettes", icon: Wallet, section: "Vente & Intrants" },
   { to: "/dashboard/partenaire-fournisseurs", labelKey: "Fournisseurs", icon: Package, section: "Approvisionnement" },
   { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-kyc", labelKey: "Vérification KYC & Certification", icon: BadgeCheck, section: "Visibilité & Gestion" },
   { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
   { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
@@ -63,6 +64,7 @@ export const machinismeNav: NavItem[] = [
   { to: "/dashboard/provider-clients", labelKey: "Portefeuille Clients", icon: Users, section: "Flotte & Chantiers" },
   { to: "/dashboard/revenus", labelKey: "Chiffre d'affaires & Recettes", icon: Wallet, section: "Flotte & Chantiers" },
   { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-kyc", labelKey: "Vérification KYC & Certification", icon: BadgeCheck, section: "Visibilité & Gestion" },
   { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
   { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
@@ -78,6 +80,7 @@ export const agronomeNav: NavItem[] = [
   { to: "/dashboard/crop-library", labelKey: "Fiches techniques", icon: BookOpen, section: "Expertise Agronomique" },
   { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Clients & Conseils" },
   { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-kyc", labelKey: "Vérification KYC & Certification", icon: BadgeCheck, section: "Visibilité & Gestion" },
   { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
   { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
@@ -92,6 +95,7 @@ export const veterinaireNav: NavItem[] = [
   { to: "/dashboard/livestock-services", labelKey: "Services Vétérinaires", icon: ClipboardList, section: "Pôle Vétérinaire & Cheptel" },
   { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Clients & Soins" },
   { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-kyc", labelKey: "Vérification KYC & Certification", icon: BadgeCheck, section: "Visibilité & Gestion" },
   { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
   { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
@@ -105,6 +109,7 @@ export const institutionNav: NavItem[] = [
   { to: "/dashboard/partners-directory", labelKey: "Annuaire Partenaires", icon: Handshake, section: "Finance & Assurance" },
   { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Dossiers & Crédits" },
   { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-kyc", labelKey: "Vérification KYC & Certification", icon: BadgeCheck, section: "Visibilité & Gestion" },
   { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
   { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
@@ -148,6 +153,7 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard/partners-directory", labelKey: "Annuaire Partenaires", icon: Handshake, section: "Réseau Écosystème" },
 
   // Pôle 5: Gestion & Configuration
+  { to: "/dashboard/partenaire-kyc", labelKey: "Vérification KYC & Certification", icon: BadgeCheck, section: "Gestion & Paramètres" },
   { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Gestion & Paramètres" },
   { to: "/dashboard/export", labelKey: "Export PDF/CSV", icon: Download, section: "Gestion & Paramètres" },
   { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Gestion & Paramètres" },

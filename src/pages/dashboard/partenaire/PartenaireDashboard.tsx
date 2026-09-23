@@ -52,6 +52,9 @@ import {
   DollarSign,
   Tag,
   AlertCircle,
+  BadgeCheck,
+  ShieldCheck,
+  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStoredProviderSubscription } from "@/lib/providerSubscription";
@@ -70,6 +73,8 @@ import {
 import { OFFER_CATEGORIES } from "@/pages/provider/partnerCategories";
 import ProductMediaUploader from "@/components/partner/ProductMediaUploader";
 import ProductMediaViewer from "@/components/partner/ProductMediaViewer";
+import { PartnerVerifiedBadge } from "@/components/partner/PartnerVerifiedBadge";
+import { getStoredPartnerKyc, PartnerKycDossier } from "@/lib/partnerKyc";
 
 const getProfileIcon = (iconName: string, className = "h-5 w-5") => {
   switch (iconName) {
@@ -135,6 +140,9 @@ export default function PartenaireDashboard() {
 
   const activeMeta = PARTNER_PROFILES[partnerType] || PARTNER_PROFILES.fournisseur_intrants;
 
+  const partnerId = user?.id || "current";
+  const [kycDossier, setKycDossier] = useState<PartnerKycDossier>(() => getStoredPartnerKyc(partnerId));
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -156,9 +164,16 @@ export default function PartenaireDashboard() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
+    const handleKycUpdate = () => {
+      setKycDossier(getStoredPartnerKyc(partnerId));
+    };
     window.addEventListener("nafa-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
-  }, [user]);
+    window.addEventListener("nafa-partner-kyc-updated", handleKycUpdate);
+    return () => {
+      window.removeEventListener("nafa-partner-data-updated", handleUpdate);
+      window.removeEventListener("nafa-partner-kyc-updated", handleKycUpdate);
+    };
+  }, [user, partnerId]);
 
   // Ouverture du modal en mode Ajout
   const openCreateOffer = () => {
@@ -347,15 +362,36 @@ export default function PartenaireDashboard() {
             <span className="text-xs text-muted-foreground">• Compte Professionnel Agréé</span>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">
-            {profile?.full_name || sub.companyName || "Mon Entreprise Partenaire"}
-          </h1>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">
+              {profile?.full_name || sub.companyName || "Mon Entreprise Partenaire"}
+            </h1>
+            <PartnerVerifiedBadge
+              isVerified={kycDossier.status === "verifie"}
+              kyc={kycDossier}
+              partnerName={profile?.full_name || sub.companyName}
+              size="sm"
+              variant="pill"
+            />
+          </div>
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
             {activeMeta.tagline}. Modifiez vos produits, personnalisez vos prix, vos photos et vos vidéos de démonstration en direct.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-border text-xs h-10 gap-1.5 hover:bg-muted"
+          >
+            <Link to="/dashboard/partenaire-kyc">
+              <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" />
+              {kycDossier.status === "verifie" ? "Certifié KYC" : "Vérification KYC"}
+            </Link>
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -379,6 +415,104 @@ export default function PartenaireDashboard() {
           </Button>
         </div>
       </div>
+
+      {/* ── BANNIÈRE KYC & STATUT DE CERTIFICATION ── */}
+      {kycDossier.status === "verifie" ? (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-600 text-white shrink-0">
+              <Award className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-emerald-950 dark:text-emerald-100">
+                  Compte Partenaire Certifié NAFA - AGRITECH
+                </span>
+                <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0 font-bold">
+                  {kycDossier.type === "personne_morale" ? "Personne Morale (RCCM/IFU)" : "Personne Physique (CNIB)"}
+                </Badge>
+              </div>
+              <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80 mt-0.5">
+                Matricule officiel : <span className="font-mono font-bold">{kycDossier.certificationId || "NAFA-CERT-2026-BF"}</span> · Vos offres bénéficient de la priorité d'affichage et du badge vérifié.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" variant="outline" className="border-emerald-500/40 text-emerald-800 dark:text-emerald-300 text-xs shrink-0 rounded-xl">
+            <Link to="/dashboard/partenaire-kyc">
+              Voir mon dossier
+            </Link>
+          </Button>
+        </div>
+      ) : kycDossier.status === "en_attente" ? (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-500 text-white shrink-0">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="font-bold text-sm text-amber-950 dark:text-amber-100">
+                Dossier KYC en cours d'instruction
+              </span>
+              <p className="text-xs text-amber-900/80 dark:text-amber-200/80 mt-0.5">
+                Vos pièces justificatives ({kycDossier.type === "personne_morale" ? "RCCM / IFU" : "CNIB / Identité"}) sont en cours de contrôle par nos équipes de conformité.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" variant="outline" className="border-amber-500/40 text-amber-800 dark:text-amber-300 text-xs shrink-0 rounded-xl">
+            <Link to="/dashboard/partenaire-kyc">
+              Suivre le statut
+            </Link>
+          </Button>
+        </div>
+      ) : kycDossier.status === "rejete" ? (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-destructive/10 border border-destructive/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-destructive text-white shrink-0">
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="font-bold text-sm text-destructive">
+                Dossier KYC non conforme : action requise
+              </span>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {kycDossier.rejectionReason || "Les pièces fournies sont incomplètes ou illisibles."} Veuillez soumettre à nouveau votre dossier pour obtenir le badge certifié.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" variant="destructive" className="text-xs shrink-0 rounded-xl">
+            <Link to="/dashboard/partenaire-kyc">
+              Mettre à jour le dossier
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-primary/10 to-transparent border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-600 text-white shrink-0">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-foreground">
+                  Obtenez votre Badge Partenaire Certifié (KYC)
+                </span>
+                <Badge className="bg-emerald-600/20 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 py-0 font-bold border-emerald-500/30">
+                  Gratuit
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Validez votre identité (Personne Physique ou Morale) pour rassurer les acheteurs, sécuriser vos contrats et booster vos ventes.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="gradient-primary text-primary-foreground font-semibold text-xs shrink-0 rounded-xl">
+            <Link to="/dashboard/partenaire-kyc">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+              Vérifier mon compte
+            </Link>
+          </Button>
+        </div>
+      )}
 
       {/* ── 2. BLOCS STATS ESSENTIELLES (3 CARTES CLAIRES) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">

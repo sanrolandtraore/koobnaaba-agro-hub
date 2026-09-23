@@ -72,6 +72,7 @@ describe("Architecture & Module Consolidation: Agriculteur vs Partenaire Hub", (
     expect(paths).toContain("/dashboard/partners-directory");
 
     // Pôle 5: Gestion & Administration
+    expect(paths).toContain("/dashboard/partenaire-kyc");
     expect(paths).toContain("/dashboard/partenaire-abonnement");
     expect(paths).toContain("/dashboard/export");
     expect(paths).toContain("/dashboard/settings");

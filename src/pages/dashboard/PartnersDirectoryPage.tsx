@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Truck, ShieldCheck, FolderKanban, Landmark, Handshake, Phone, Mail, MapPin, Globe, Search } from "lucide-react";
+import { Truck, ShieldCheck, FolderKanban, Landmark, Handshake, Phone, Mail, MapPin, Globe, Search, CheckCircle2 } from "lucide-react";
 import { partnerStorage, PartnerCategory, PartnerEntry } from "@/lib/partnerStorage";
+import { PartnerVerifiedBadge } from "@/components/partner/PartnerVerifiedBadge";
 
 const TABS: { value: PartnerCategory; label: string; icon: any }[] = [
   { value: "fournisseur", label: "Fournisseurs d'intrants", icon: Truck },
@@ -129,15 +130,13 @@ export default function PartnersDirectoryPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                   <CardTitle className="text-lg font-heading font-bold leading-snug">{e.name}</CardTitle>
-                  {e.badge ? (
-                    <Badge variant="secondary" className="text-xs shrink-0 font-bold px-2.5 py-0.5">
-                      {e.badge}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs shrink-0 font-semibold px-2 py-0.5">
-                      Partenaire vérifié
-                    </Badge>
-                  )}
+                  <PartnerVerifiedBadge
+                    isVerified={true}
+                    partnerName={e.name}
+                    size="xs"
+                    variant="pill"
+                    showPopover={false}
+                  />
                 </div>
                 {e.contact_name && (
                   <p className="text-sm text-muted-foreground font-medium">Contact : {e.contact_name}</p>
