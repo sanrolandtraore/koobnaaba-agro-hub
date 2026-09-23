@@ -8,6 +8,9 @@ export interface ProviderSubscription {
   phone: string;
   email: string;
   location: string;
+  serviceArea?: string;
+  contactPhone?: string;
+  contactEmail?: string;
   startDate: string;
   endDate: string;
   isActive: boolean;
@@ -39,7 +42,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     targetBadge: "Visiteur / Test",
     monthlyPriceFCFA: 0,
     annualPriceFCFA: 0,
-    tagline: "Pour découvrir l'écosystème NAFA -AGRITECH",
+    tagline: "Pour découvrir l'écosystème NAFA - AGRITECH",
     features: [
       "Consultation du catalogue d'offres",
       "Fiches techniques cultures (accès limité)",
@@ -61,13 +64,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     features: [
       "Publication illimitée de produits (intrants, semences, petit matériel)",
       "Réception directe des demandes de devis clients",
-      "Visibilité prioritaire sur le Marketplace NAFA -AGRITECH",
+      "Visibilité prioritaire sur le Marketplace NAFA - AGRITECH",
       "Calculatrice de doses pour conseiller les clients au comptoir",
       "Factures et bons de commande PDF",
     ],
     toolsIncluded: [
       { name: "Gestion de mes offres & catalogue", description: "Gérer stock, prix et visibilité", route: "/dashboard/partenaire-mes-offres" },
-      { name: "Marketplace NAFA -AGRITECH", description: "Présence auprès des producteurs", route: "/dashboard/marketplace" },
+      { name: "Marketplace NAFA - AGRITECH", description: "Présence auprès des producteurs", route: "/dashboard/marketplace" },
       { name: "Calculatrice agronomique", description: "Aide au calcul de doses et fertilisation", route: "/dashboard/expert-calculator" },
       { name: "Fiches techniques 12 cultures", description: "Conseil client certifié", route: "/dashboard/crop-library" },
     ],
@@ -81,14 +84,14 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     annualPriceFCFA: 350000,
     tagline: "Pour les entrepreneurs de travaux agricoles, loueurs de tracteurs, drones et experts agronomes",
     features: [
-      "Toute la suite d'aide à la décision NAFA -AGRITECH débloquée",
+      "Toute la suite d'aide à la décision NAFA - AGRITECH débloquée",
       "Diagnostic IA illimité (maladies, ravageurs, carences)",
       "Générateur d'ordonnances agronomiques certifiées PDF",
       "Scouting terrain géolocalisé avec relevé GPS et export de rapports",
       "Gestion de la flotte de matériel en location & réservations avec acompte séquestre",
       "Carnet de suivi des exploitations clientes et tournées",
       "Export PDF/CSV des diagnostics et comptes-rendus d'intervention",
-      "Badge officiel 'Partenaire Agréé NAFA -AGRITECH'",
+      "Badge officiel 'Partenaire Agréé NAFA - AGRITECH'",
     ],
     toolsIncluded: [
       { name: "Diagnostic IA Végétal", description: "Analyse instantanée par vision IA", route: "/dashboard/expert-diagnosis" },
@@ -116,7 +119,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       "Support agronomique dédié 7j/7 et formations d'équipes",
     ],
     toolsIncluded: [
-      { name: "Suite complète Aide à la Décision", description: "Tous les outils NAFA -AGRITECH en illimité", route: "/dashboard/expert-toolbox" },
+      { name: "Suite complète Aide à la Décision", description: "Tous les outils NAFA - AGRITECH en illimité", route: "/dashboard/expert-toolbox" },
       { name: "Statistiques & KPIs d'impact", description: "Rapports consolidés pour partenaires/bailleurs", route: "/dashboard/expert-analytics" },
       { name: "Annuaire des partenaires régionaux", description: "Réseau national d'acteurs", route: "/dashboard/partners-directory" },
     ],
@@ -125,8 +128,28 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 
 const LOCAL_STORAGE_KEY = "nafa_provider_subscription";
 
-export function getStoredProviderSubscription(): ProviderSubscription {
+export function isSubscriptionActive(sub?: ProviderSubscription | null): boolean {
+  if (!sub || !sub.isActive) return false;
+  if (!sub.endDate) return false;
+  const end = new Date(sub.endDate);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return end.getTime() >= now.getTime();
+}
+
+export function getSubscriptionDaysRemaining(sub?: ProviderSubscription | null): number {
+  if (!sub || !sub.endDate || !sub.isActive) return 0;
+  const end = new Date(sub.endDate).getTime();
+  const diff = end - Date.now();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+export function getStoredProviderSubscription(userId?: string): ProviderSubscription {
   try {
+    if (userId) {
+      const userRaw = localStorage.getItem(`${LOCAL_STORAGE_KEY}_${userId}`);
+      if (userRaw) return JSON.parse(userRaw);
+    }
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -136,14 +159,13 @@ export function getStoredProviderSubscription(): ProviderSubscription {
     console.error("Failed to parse provider subscription", e);
   }
 
-  // Default initial trial / standard active state for demo/production use
   return {
     tier: "pro_prestataire",
     activityType: "polyvalent",
-    companyName: "Mon Entreprise Agricole",
-    phone: "+226 70 00 00 00",
-    email: "contact@entreprise.bf",
-    location: "Ouagadougou / Bobo-Dioulasso",
+    companyName: "Mon Entreprise Partenaire",
+    phone: "+226 ",
+    email: "partenaire@nafa-agritech.com",
+    location: "Burkina Faso",
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     isActive: true,
@@ -162,10 +184,13 @@ export function getStoredProviderSubscription(): ProviderSubscription {
   };
 }
 
-export function saveProviderSubscription(sub: ProviderSubscription): void {
+export function saveProviderSubscription(sub: ProviderSubscription, userId?: string): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sub));
-    window.dispatchEvent(new Event("nafa-subscription-updated"));
+    if (userId) {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_${userId}`, JSON.stringify(sub));
+    }
+    window.dispatchEvent(new CustomEvent("nafa-subscription-updated", { detail: sub }));
   } catch (e) {
     console.error("Failed to save provider subscription", e);
   }

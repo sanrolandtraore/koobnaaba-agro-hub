@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, CheckCircle2, ArrowRight, ShieldCheck, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getStoredProviderSubscription, SUBSCRIPTION_PLANS } from "@/lib/providerSubscription";
+import { getStoredProviderSubscription, SUBSCRIPTION_PLANS, isSubscriptionActive, getSubscriptionDaysRemaining } from "@/lib/providerSubscription";
+import { Clock } from "lucide-react";
 import { getStoredPartnerKyc } from "@/lib/partnerKyc";
 import { PartnerVerifiedBadge } from "@/components/partner/PartnerVerifiedBadge";
 
@@ -12,6 +13,8 @@ const PartenaireSettingsTab = () => {
   const sub = getStoredProviderSubscription();
   const plan = SUBSCRIPTION_PLANS.find(p => p.id === sub.tier) || SUBSCRIPTION_PLANS[2];
   const kyc = getStoredPartnerKyc();
+  const isActiveSub = isSubscriptionActive(sub);
+  const daysLeft = getSubscriptionDaysRemaining(sub);
 
   return (
     <div className="space-y-4">
@@ -63,9 +66,15 @@ const PartenaireSettingsTab = () => {
             <CardTitle className="text-base flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" /> Abonnement Prestataire & Partenaire
             </CardTitle>
-            <Badge className="bg-emerald-600 text-white font-semibold">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Actif
-            </Badge>
+            {isActiveSub ? (
+              <Badge className="bg-emerald-600 text-white font-semibold">
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Actif {daysLeft > 0 ? `(${daysLeft}j)` : ""}
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="font-semibold">
+                <Clock className="h-3 w-3 mr-1" /> Expiré
+              </Badge>
+            )}
           </div>
           <CardDescription>
             Formule actuelle : <strong>{plan.title}</strong> ({sub.companyName})
@@ -75,9 +84,9 @@ const PartenaireSettingsTab = () => {
           <p className="text-muted-foreground">
             Valide jusqu'au <strong>{new Date(sub.endDate).toLocaleDateString("fr-FR")}</strong>. Votre compte donne accès à l'ensemble des outils d'aide à la décision NAFA - AGRITECH : Diagnostic IA, Ordonnances signées, Scouting terrain, Flotte de location et Offres de vente.
           </p>
-          <Button asChild size="sm" className="gradient-primary text-primary-foreground font-semibold">
+          <Button asChild size="sm" className={isActiveSub ? "gradient-primary text-primary-foreground font-semibold" : "bg-amber-600 hover:bg-amber-700 text-white font-semibold"}>
             <Link to="/dashboard/partenaire-abonnement">
-              Modifier ou renouveler mon abonnement <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+              {isActiveSub ? "Modifier ou renouveler mon abonnement" : "Réactiver mon abonnement maintenant"} <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
             </Link>
           </Button>
         </CardContent>

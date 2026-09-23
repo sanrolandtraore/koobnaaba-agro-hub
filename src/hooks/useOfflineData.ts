@@ -52,6 +52,18 @@ export function isMissingColumnError(err: any, column?: string): boolean {
   return true;
 }
 
+export function isValidUuid(str: unknown): str is string {
+  if (typeof str !== 'string' || !str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str.trim());
+}
+
+export function isInvalidUuidError(err: any): boolean {
+  if (!err) return false;
+  const msg = typeof err === 'string' ? err : (err.message || err.details || err.hint || '');
+  const code = err.code || '';
+  return code === '22P02' || msg.includes('invalid input syntax for type uuid');
+}
+
 const isOfflineTempId = (value: unknown): value is string => (
   typeof value === 'string' && value.startsWith('offline-')
 );

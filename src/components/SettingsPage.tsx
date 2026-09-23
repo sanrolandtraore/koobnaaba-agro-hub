@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { isMissingColumnError } from "@/hooks/useOfflineData";
+import { isMissingColumnError, isValidUuid, isInvalidUuidError } from "@/hooks/useOfflineData";
 import BackNavigationButton from "@/components/BackNavigationButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,7 +70,8 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     if (!user) return;
     const load = async () => {
       let profileData: any = null;
-      try {
+      if (isValidUuid(user.id)) {
+        try {
         const { data, error } = await supabase
           .from("profiles")
           .select("full_name, phone, country, avatar_url, preferences, email")
@@ -86,13 +87,18 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
         } else {
           profileData = data;
         }
-      } catch (_e) {
-        const { data: fallbackData } = await supabase
-          .from("profiles")
-          .select("full_name, phone, avatar_url, email")
-          .eq("user_id", user.id)
-          .single();
-        profileData = fallbackData;
+        } catch (_e) {
+          try {
+            const { data: fallbackData } = await supabase
+              .from("profiles")
+              .select("full_name, phone, avatar_url, email")
+              .eq("user_id", user.id)
+              .single();
+            profileData = fallbackData;
+          } catch (_err) {
+            // ignore
+          }
+        }
       }
 
       const metaCountry = (user.user_metadata?.country as string) || localStorage.getItem(`nafa_user_country_${user.id}`) || "";
@@ -137,7 +143,7 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
     const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
     const avatarUrl = `${publicUrl}?t=${Date.now()}`;
 
-    await supabase.from("profiles").update({ avatar_url: avatarUrl } as any).eq("user_id", user.id);
+    if (isValidUuid(user.id)) { await supabase.from("profiles").update({ avatar_url: avatarUrl } as any).eq("user_id", user.id); }
     setProfileForm(f => ({ ...f, avatar_url: avatarUrl }));
     toast.success("Photo mise à jour !");
   };
@@ -162,28 +168,37 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
       console.warn("Could not sync user_metadata country:", e);
     }
 
-    let { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: profileForm.full_name,
-        phone: profileForm.phone || null,
-        country: profileForm.country || null,
-        email: newEmail || null,
-      } as any)
-      .eq("user_id", user.id);
-
-    // If 'country' column does not exist on profiles in schema cache, retry without it!
-    if (error && isMissingColumnError(error, "country")) {
-      console.warn("Colonne 'country' absente de la table profiles, réessai sans cette colonne.");
-      const retry = await supabase
+    let error: any = null;
+    if (isValidUuid(user.id)) {
+      const res = await supabase
         .from("profiles")
         .update({
           full_name: profileForm.full_name,
           phone: profileForm.phone || null,
+          country: profileForm.country || null,
           email: newEmail || null,
         } as any)
         .eq("user_id", user.id);
-      error = retry.error;
+      error = res.error;
+
+      // If 'country' column does not exist on profiles in schema cache, retry without it!
+      if (error && isMissingColumnError(error, "country")) {
+        console.warn("Colonne 'country' absente de la table profiles, réessai sans cette colonne.");
+        const retry = await supabase
+          .from("profiles")
+          .update({
+            full_name: profileForm.full_name,
+            phone: profileForm.phone || null,
+            email: newEmail || null,
+          } as any)
+          .eq("user_id", user.id);
+        error = retry.error;
+      }
+
+      if (error && isInvalidUuidError(error)) {
+        console.warn("UUID syntax error bypassed for local account:", error);
+        error = null;
+      }
     }
 
     setSavingProfile(false);
@@ -215,14 +230,23 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
       console.warn("Could not sync user_metadata preferences:", e);
     }
 
-    let { error } = await supabase
-      .from("profiles")
-      .update({ preferences: prefs } as any)
-      .eq("user_id", user.id);
+    let error: any = null;
+    if (isValidUuid(user.id)) {
+      const res = await supabase
+        .from("profiles")
+        .update({ preferences: prefs } as any)
+        .eq("user_id", user.id);
+      error = res.error;
 
-    if (error && isMissingColumnError(error, "preferences")) {
-      console.warn("Colonne 'preferences' absente de profiles, conservé en métadonnées et local.");
-      error = null;
+      if (error && isMissingColumnError(error, "preferences")) {
+        console.warn("Colonne 'preferences' absente de profiles, conservé en métadonnées et local.");
+        error = null;
+      }
+
+      if (error && isInvalidUuidError(error)) {
+        console.warn("UUID syntax error bypassed for preferences:", error);
+        error = null;
+      }
     }
 
     setSavingPrefs(false);

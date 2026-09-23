@@ -9,6 +9,30 @@ import {
   saveStoredPartnerProfileType,
 } from "@/lib/partnerProfiles";
 import { saveProviderSubscription, getStoredProviderSubscription } from "@/lib/providerSubscription";
+import { isValidUuid } from "@/hooks/useOfflineData";
+
+export function phoneToDeterministicUuid(phone: string): string {
+  const digits = (phone || "").replace(/[^0-9]/g, "") || "0000000000";
+  let h1 = 0x811c9dc5;
+  let h2 = 0xcbf29ce4;
+  for (let i = 0; i < digits.length; i++) {
+    const code = digits.charCodeAt(i);
+    h1 = Math.imul(h1 ^ code, 0x01000193);
+    h2 = Math.imul(h2 ^ code, 0x5bd1e995);
+  }
+  const hex1 = (h1 >>> 0).toString(16).padStart(8, "0");
+  const hex2 = (h2 >>> 0).toString(16).padStart(8, "0");
+  const hex3 = digits.slice(-8).padStart(8, "0");
+  const hex4 = digits.slice(0, 8).padStart(8, "0");
+  const rawHex = (hex1 + hex2 + hex3 + hex4 + "0123456789abcdef").toLowerCase().slice(0, 32);
+
+  const p1 = rawHex.slice(0, 8);
+  const p2 = rawHex.slice(8, 12);
+  const p3 = "4" + rawHex.slice(13, 16);
+  const p4 = "a" + rawHex.slice(17, 20);
+  const p5 = rawHex.slice(20, 32);
+  return `${p1}-${p2}-${p3}-${p4}-${p5}`;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -79,6 +103,11 @@ export function getLocalSession(): NafaLocalSession | null {
       localStorage.removeItem(LOCAL_SESSION_KEY);
       return null;
     }
+    // Auto-migration immédiate si userId n'est pas un UUID valide RFC 4122 (ex: "usr-22675774852")
+    if (s.userId && (!isValidUuid(s.userId) || s.userId.startsWith("usr-"))) {
+      s.userId = phoneToDeterministicUuid(s.phone || s.userId);
+      saveLocalSession(s);
+    }
     return s;
   } catch (_e) {
     return null;
@@ -87,6 +116,9 @@ export function getLocalSession(): NafaLocalSession | null {
 
 export function saveLocalSession(s: NafaLocalSession) {
   try {
+    if (s.userId && (!isValidUuid(s.userId) || s.userId.startsWith("usr-"))) {
+      s.userId = phoneToDeterministicUuid(s.phone || s.userId);
+    }
     localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(s));
     if (s.phone) {
       const accounts = getStoredPhoneAccounts();
@@ -109,15 +141,29 @@ export function clearLocalSession() {
 export function getStoredPhoneAccounts(): Record<string, NafaLocalSession> {
   try {
     const raw = localStorage.getItem(REGISTERED_ACCOUNTS_KEY);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return {};
+    const accounts = JSON.parse(raw) as Record<string, NafaLocalSession>;
+    let changed = false;
+    for (const key of Object.keys(accounts)) {
+      const acc = accounts[key];
+      if (acc && acc.userId && (!isValidUuid(acc.userId) || acc.userId.startsWith("usr-"))) {
+        acc.userId = phoneToDeterministicUuid(acc.phone || acc.userId);
+        changed = true;
+      }
+    }
+    if (changed) {
+      localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(accounts));
+    }
+    return accounts;
   } catch (_e) {
     return {};
   }
 }
 
 function sessionToUser(s: NafaLocalSession): User {
+  const cleanId = isValidUuid(s.userId) ? s.userId : phoneToDeterministicUuid(s.phone || s.userId);
   return {
-    id: s.userId,
+    id: cleanId,
     email: s.email,
     phone: s.phone || undefined,
     aud: "authenticated",
@@ -531,9 +577,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Ignorer l'erreur de suppression en sessionStorage
     }
 
-    const simUserId = "usr-" + normalized.replace(/[^0-9]/g, "");
+    const simUserId = phoneToDeterministicUuid(normalized);
     const storedAccounts = getStoredPhoneAccounts();
     const existingAccount = storedAccounts[normalized];
+    if (existingAccount && existingAccount.userId && (!isValidUuid(existingAccount.userId) || existingAccount.userId.startsWith("usr-"))) {
+      existingAccount.userId = simUserId;
+    }
 
     // Nouveau compte sans profil renseigné : demander les informations de profil (Étape 3)
     if (!profileData && !existingAccount) {

@@ -111,11 +111,19 @@ const UNIT_OPTIONS = [
 
 export default function PartenaireDashboard() {
   const { user, profile, partnerType, setPartnerType } = useAuth();
-  const [sub] = useState(() => getStoredProviderSubscription());
+  const [sub, setSub] = useState(() => getStoredProviderSubscription(user?.id));
   const [offers, setOffers] = useState<PartnerOffer[]>([]);
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [missions, setMissions] = useState<PartnerMission[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      setSub(e?.detail || getStoredProviderSubscription(user?.id));
+    };
+    window.addEventListener("nafa-subscription-updated", handler);
+    return () => window.removeEventListener("nafa-subscription-updated", handler);
+  }, [user]);
 
   // Vue active : "offres" ou "commandes"
   const [activeTab, setActiveTab] = useState<"offres" | "commandes">("offres");
@@ -389,6 +397,18 @@ export default function PartenaireDashboard() {
             <Link to="/dashboard/partenaire-kyc">
               <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" />
               {kycDossier.status === "verifie" ? "Certifié KYC" : "Vérification KYC"}
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-border text-xs h-10 gap-1.5 hover:bg-muted"
+          >
+            <Link to="/dashboard/partenaire-abonnement">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span>Abonnement {sub.tier === "enterprise" ? "Entreprise" : sub.tier === "starter" ? "Starter" : sub.tier === "free" ? "Découverte" : "Pro"}</span>
             </Link>
           </Button>
 

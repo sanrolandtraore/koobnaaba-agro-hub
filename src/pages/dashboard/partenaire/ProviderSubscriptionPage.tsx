@@ -6,12 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   ShieldCheck, Check, Sparkles, Tractor, Store, Wrench, Microscope, FileText,
   Eye, Calculator, MapPin, Users, ArrowRight, Zap, Phone, CheckCircle2, Clock
 } from "lucide-react";
 import { toast } from "sonner";
+import BackNavigationButton from "@/components/BackNavigationButton";
+import { supabase } from "@/integrations/supabase/client";
 import {
   SUBSCRIPTION_PLANS,
   SubscriptionPlan,
@@ -20,66 +29,96 @@ import {
   getStoredProviderSubscription,
   saveProviderSubscription,
   ProviderSubscription,
+  isSubscriptionActive,
+  getSubscriptionDaysRemaining,
 } from "@/lib/providerSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProviderSubscriptionPage() {
-  const { profile } = useAuth();
-  const [sub, setSub] = useState<ProviderSubscription>(getStoredProviderSubscription());
+  const { user, profile } = useAuth();
+  const [sub, setSub] = useState<ProviderSubscription>(() => getStoredProviderSubscription(user?.id));
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
 
   // Form fields for subscription modal
-  const [companyName, setCompanyName] = useState(sub.companyName || profile?.full_name || "");
+  const initialCompany = (sub.companyName && !sub.companyName.includes("Mon Entreprise")) 
+    ? sub.companyName 
+    : (user?.user_metadata?.company_name as string) || profile?.full_name || "";
+  const initialPhone = (sub.phone && sub.phone !== "+226 70 00 00 00" && sub.phone !== "+226 ")
+    ? sub.phone
+    : profile?.phone || user?.phone || "+226 ";
+
+  const [companyName, setCompanyName] = useState(initialCompany);
   const [activityType, setActivityType] = useState<ProviderActivityType>(sub.activityType || "services_agronomiques");
-  const [phone, setPhone] = useState(sub.phone || profile?.phone || "");
+  const [phone, setPhone] = useState(initialPhone);
   const [paymentMethod, setPaymentMethod] = useState<"orange_money" | "moov_money" | "wave" | "virement">("orange_money");
   const [transactionRef, setTransactionRef] = useState("");
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    const handler = () => setSub(getStoredProviderSubscription());
+    // If metadata has subscription data, synchronize
+    const metaSub = user?.user_metadata?.provider_subscription as ProviderSubscription | undefined;
+    if (metaSub && metaSub.tier) {
+      saveProviderSubscription(metaSub, user?.id);
+      setSub(metaSub);
+    } else {
+      setSub(getStoredProviderSubscription(user?.id));
+    }
+
+    const handler = (e: any) => {
+      const updated = e?.detail || getStoredProviderSubscription(user?.id);
+      setSub(updated);
+    };
     window.addEventListener("nafa-subscription-updated", handler);
     return () => window.removeEventListener("nafa-subscription-updated", handler);
-  }, []);
+  }, [user]);
 
   const openSubscribe = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
-    setCompanyName(sub.companyName || profile?.full_name || "");
-    setPhone(sub.phone || profile?.phone || "+226 ");
+    const existingName = (sub.companyName && !sub.companyName.includes("Mon Entreprise")) ? sub.companyName : "";
+    setCompanyName(existingName || (user?.user_metadata?.company_name as string) || profile?.full_name || "");
+    const existingPhone = (sub.phone && sub.phone !== "+226 70 00 00 00" && sub.phone !== "+226 ") ? sub.phone : "";
+    setPhone(existingPhone || profile?.phone || user?.phone || "+226 ");
+    setTransactionRef("");
     setSubscribeModalOpen(true);
   };
 
-  const handleConfirmSubscription = () => {
+  const handleConfirmSubscription = async () => {
     if (!selectedPlan) return;
     if (!companyName.trim()) {
       toast.error("Veuillez renseigner le nom de votre entreprise");
       return;
     }
-    if (!phone.trim()) {
+    if (!phone.trim() || phone.trim() === "+226") {
       toast.error("Veuillez renseigner un numéro de téléphone de contact");
       return;
     }
 
     setProcessing(true);
-    setTimeout(() => {
+    try {
       const now = new Date();
-      const durationDays = billingCycle === "annual" ? 365 : 30;
-      const endDate = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+      const isCurrentlyActive = isSubscriptionActive(sub);
+      const currentEnd = sub.endDate ? new Date(sub.endDate) : now;
+      const baseDate = (isCurrentlyActive && sub.tier === selectedPlan.id && currentEnd > now) ? currentEnd : now;
+      const durationDays = selectedPlan.id === "free" ? 3650 : (billingCycle === "annual" ? 365 : 30);
+      const endDate = new Date(baseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
       const updated: ProviderSubscription = {
         tier: selectedPlan.id,
         activityType,
         companyName,
         phone,
-        email: profile?.email || sub.email,
+        email: profile?.email || user?.email || sub.email,
         location: sub.location || "Burkina Faso",
+        serviceArea: sub.location || "Burkina Faso",
+        contactPhone: phone,
+        contactEmail: profile?.email || user?.email || sub.email,
         startDate: now.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
         isActive: true,
-        paymentMethod,
-        paymentReference: transactionRef || `PAY-${Math.floor(100000 + Math.random() * 900000)}`,
+        paymentMethod: selectedPlan.id === "free" ? "especes" : paymentMethod,
+        paymentReference: selectedPlan.id === "free" ? "FREE-TRIAL" : (transactionRef || `PAY-${Math.floor(100000 + Math.random() * 900000)}`),
         toolsUnlocked: [
           "diagnostic_ia",
           "ordonnances_pdf",
@@ -92,24 +131,42 @@ export default function ProviderSubscriptionPage() {
         ],
       };
 
-      saveProviderSubscription(updated);
+      saveProviderSubscription(updated, user?.id);
       setSub(updated);
+
+      if (user?.id) {
+        await supabase.auth.updateUser({
+          data: {
+            provider_subscription: updated,
+            company_name: companyName,
+          }
+        }).catch(err => console.warn("Supabase auth updateUser metadata sync bypassed:", err));
+      }
+
       setProcessing(false);
       setSubscribeModalOpen(false);
       toast.success(`Abonnement ${selectedPlan.title} activé avec succès ! Tous les outils NAFA - AGRITECH sont débloqués.`);
-    }, 600);
+    } catch (err: any) {
+      setProcessing(false);
+      toast.error(err.message || "Erreur lors de l'activation");
+    }
   };
 
   const activePlanInfo = SUBSCRIPTION_PLANS.find(p => p.id === sub.tier) || SUBSCRIPTION_PLANS[2];
+  const isActiveSub = isSubscriptionActive(sub);
+  const daysLeft = getSubscriptionDaysRemaining(sub);
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8 animate-fade-in">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8 animate-fade-in pb-16">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-2">
-            <Sparkles className="h-3.5 w-3.5" />
-            Entreprises Prestataires & Partenaires
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <BackNavigationButton fallbackTo="/dashboard" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+              <Sparkles className="h-3.5 w-3.5" />
+              Entreprises Prestataires & Partenaires
+            </div>
           </div>
           <h1 className="text-2xl md:text-3xl font-heading font-bold">
             Abonnements & Outils Professionnels NAFA - AGRITECH
@@ -123,13 +180,19 @@ export default function ProviderSubscriptionPage() {
         <div className="bg-card border rounded-2xl p-4 shadow-sm min-w-[260px]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-muted-foreground uppercase font-semibold">Statut actuel</span>
-            <Badge className="bg-emerald-600 text-white font-semibold">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Actif
-            </Badge>
+            {isActiveSub ? (
+              <Badge className="bg-emerald-600 text-white font-semibold">
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Actif {daysLeft > 0 ? `(${daysLeft}j)` : ""}
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="font-semibold">
+                <Clock className="h-3 w-3 mr-1" /> Expiré
+              </Badge>
+            )}
           </div>
           <p className="text-base font-bold text-foreground mt-1">{activePlanInfo.title}</p>
           <p className="text-xs text-muted-foreground">
-            {sub.companyName} • Jusqu'au {new Date(sub.endDate).toLocaleDateString("fr-FR")}
+            {sub.companyName || "Mon Entreprise Partenaire"} • {isActiveSub ? `Jusqu'au ${new Date(sub.endDate).toLocaleDateString("fr-FR")}` : "Renouvellement requis"}
           </p>
         </div>
       </div>
@@ -258,7 +321,9 @@ export default function ProviderSubscriptionPage() {
                       {plan.targetBadge}
                     </Badge>
                     {isCurrent && (
-                      <Badge className="bg-emerald-600 text-white text-[10px]">Actuel</Badge>
+                      <Badge className={isActiveSub ? "bg-emerald-600 text-white text-[10px]" : "bg-amber-600 text-white text-[10px]"}>
+                        {isActiveSub ? "Actuel" : "Expiré"}
+                      </Badge>
                     )}
                   </div>
                   <CardTitle className="text-lg font-heading">{plan.title}</CardTitle>
@@ -313,12 +378,12 @@ export default function ProviderSubscriptionPage() {
               <CardFooter className="pt-2">
                 <Button
                   onClick={() => openSubscribe(plan)}
-                  variant={isCurrent ? "outline" : plan.popular ? "default" : "secondary"}
+                  variant={isCurrent && isActiveSub ? "outline" : plan.popular ? "default" : "secondary"}
                   className={`w-full font-semibold ${
-                    plan.popular && !isCurrent ? "gradient-primary text-primary-foreground shadow-warm" : ""
+                    plan.popular && (!isCurrent || !isActiveSub) ? "gradient-primary text-primary-foreground shadow-warm" : ""
                   }`}
                 >
-                  {isCurrent ? "Renouveler / Modifier" : "Souscrire cet abonnement"}
+                  {isCurrent ? (isActiveSub ? "Renouveler / Prolonger" : "Réactiver cet abonnement") : "Souscrire cet abonnement"}
                 </Button>
               </CardFooter>
             </Card>
@@ -334,7 +399,7 @@ export default function ProviderSubscriptionPage() {
               Souscription : {selectedPlan?.title}
             </DialogTitle>
             <DialogDescription>
-              Enregistrez votre entreprise prestataire et confirmez votre mode de règlement Mobile Money / Virement.
+              Enregistrez votre entreprise prestataire et confirmez l'activation de votre accès professionnel.
             </DialogDescription>
           </DialogHeader>
 
@@ -375,50 +440,58 @@ export default function ProviderSubscriptionPage() {
               <div className="space-y-2">
                 <Label className="text-xs font-semibold">Périodicité</Label>
                 <div className="h-10 px-3 py-2 bg-muted rounded-md text-xs font-semibold flex items-center">
-                  {billingCycle === "annual" ? "Annuel (365 jours)" : "Mensuel (30 jours)"}
+                  {selectedPlan?.id === "free" ? "Illimité (Découverte)" : (billingCycle === "annual" ? "Annuel (365 jours)" : "Mensuel (30 jours)")}
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2 pt-2 border-t">
-              <Label className="text-xs font-semibold">Mode de paiement professionnel</Label>
-              <RadioGroup
-                value={paymentMethod}
-                onValueChange={(v: any) => setPaymentMethod(v)}
-                className="grid grid-cols-2 gap-2"
-              >
-                <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
-                  <RadioGroupItem value="orange_money" id="om" />
-                  <Label htmlFor="om" className="text-xs cursor-pointer font-medium">Orange Money BF (*144#)</Label>
+            {selectedPlan?.id === "free" ? (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-800 dark:text-emerald-200">
+                ✨ L'accès <strong>Découverte</strong> est 100% gratuit et s'active immédiatement sans aucun paiement.
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-xs font-semibold">Mode de paiement professionnel</Label>
+                  <RadioGroup
+                    value={paymentMethod}
+                    onValueChange={(v: any) => setPaymentMethod(v)}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="orange_money" id="om" />
+                      <Label htmlFor="om" className="text-xs cursor-pointer font-medium">Orange Money BF (*144#)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="moov_money" id="moov" />
+                      <Label htmlFor="moov" className="text-xs cursor-pointer font-medium">Moov Money (*555#)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="wave" id="wave" />
+                      <Label htmlFor="wave" className="text-xs cursor-pointer font-medium">Wave Burkina</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="virement" id="vir" />
+                      <Label htmlFor="vir" className="text-xs cursor-pointer font-medium">Virement bancaire / Facture</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
-                  <RadioGroupItem value="moov_money" id="moov" />
-                  <Label htmlFor="moov" className="text-xs cursor-pointer font-medium">Moov Money (*555#)</Label>
-                </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
-                  <RadioGroupItem value="wave" id="wave" />
-                  <Label htmlFor="wave" className="text-xs cursor-pointer font-medium">Wave Burkina</Label>
-                </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-2.5 cursor-pointer hover:bg-muted/50">
-                  <RadioGroupItem value="virement" id="vir" />
-                  <Label htmlFor="vir" className="text-xs cursor-pointer font-medium">Virement bancaire / Facture</Label>
-                </div>
-              </RadioGroup>
-            </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold">Référence ou Numéro de transaction (optionnel)</Label>
-              <Input
-                placeholder="Ex: OM-39281920 ou Référence chèque/virement"
-                value={transactionRef}
-                onChange={(e) => setTransactionRef(e.target.value)}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Montant à régler : <strong className="text-foreground">
-                  {(billingCycle === "annual" ? selectedPlan?.annualPriceFCFA : selectedPlan?.monthlyPriceFCFA)?.toLocaleString("fr-FR")} FCFA
-                </strong>
-              </p>
-            </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold">Référence ou Numéro de transaction (optionnel)</Label>
+                  <Input
+                    placeholder="Ex: OM-39281920 ou Référence chèque/virement"
+                    value={transactionRef}
+                    onChange={(e) => setTransactionRef(e.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Montant à régler : <strong className="text-foreground">
+                      {(billingCycle === "annual" ? selectedPlan?.annualPriceFCFA : selectedPlan?.monthlyPriceFCFA)?.toLocaleString("fr-FR")} FCFA
+                    </strong>
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { isMissingColumnError } from "@/hooks/useOfflineData";
+import { isMissingColumnError, isValidUuid, isInvalidUuidError } from "@/hooks/useOfflineData";
 import BackNavigationButton from "@/components/BackNavigationButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,7 +83,8 @@ const UserProfilePage = () => {
     if (!user) return;
     const load = async () => {
       let profileData: any = null;
-      try {
+      if (isValidUuid(user.id)) {
+        try {
         const { data, error } = await supabase
           .from("profiles")
           .select("full_name, phone, country")
@@ -99,13 +100,18 @@ const UserProfilePage = () => {
         } else {
           profileData = data;
         }
-      } catch (_e) {
-        const { data: fallbackData } = await supabase
-          .from("profiles")
-          .select("full_name, phone")
-          .eq("user_id", user.id)
-          .single();
-        profileData = fallbackData;
+        } catch (_e) {
+          try {
+            const { data: fallbackData } = await supabase
+              .from("profiles")
+              .select("full_name, phone")
+              .eq("user_id", user.id)
+              .single();
+            profileData = fallbackData;
+          } catch (_err) {
+            // ignore
+          }
+        }
       }
 
       const metaCountry = (user.user_metadata?.country as string) || localStorage.getItem(`nafa_user_country_${user.id}`) || "";
@@ -143,25 +149,34 @@ const UserProfilePage = () => {
       console.warn("Could not sync user_metadata country:", e);
     }
 
-    let { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: form.full_name,
-        phone: form.phone,
-        country: form.country || null,
-      } as any)
-      .eq("user_id", user.id);
-
-    if (error && isMissingColumnError(error, "country")) {
-      console.warn("Colonne 'country' absente de profiles, réessai sans cette colonne.");
-      const retry = await supabase
+    let error: any = null;
+    if (isValidUuid(user.id)) {
+      const res = await supabase
         .from("profiles")
         .update({
           full_name: form.full_name,
           phone: form.phone,
+          country: form.country || null,
         } as any)
         .eq("user_id", user.id);
-      error = retry.error;
+      error = res.error;
+
+      if (error && isMissingColumnError(error, "country")) {
+        console.warn("Colonne 'country' absente de profiles, réessai sans cette colonne.");
+        const retry = await supabase
+          .from("profiles")
+          .update({
+            full_name: form.full_name,
+            phone: form.phone,
+          } as any)
+          .eq("user_id", user.id);
+        error = retry.error;
+      }
+
+      if (error && isInvalidUuidError(error)) {
+        console.warn("UUID syntax error bypassed for local profile:", error);
+        error = null;
+      }
     }
 
     setSaving(false);
