@@ -83,20 +83,22 @@
     "toolbox": "Boîte à outils",
     "myClients": "Mes clients",
     "aiDiagnosis": "Diagnostic IA",
-    "calculator": "Calculatrice",
-    "prescriptions": "Ordonnances",
+    "calculator": "Calculateur agricole",
+    "prescriptions": "Prescriptions",
     "technicalSheets": "Fiches techniques",
-    "scouting": "Scouting terrain",
+    "scouting": "Inspection terrain",
     "gpsMapping": "Cartographie GPS",
     "statistics": "Statistiques",
     "education": "Formations",
-    "providerSubscription": "Abonnement Entreprise",
+    "providerSubscription": "Abonnement partenaire",
     "myOffers": "Mes offres & Ventes",
     "equipmentFleet": "Parc matériel & Location",
     "missions": "Missions & Travaux",
     "interventions": "Interventions terrain",
     "quoteRequests": "Demandes de devis",
     "revenue": "Chiffre d'affaires & Recettes",
-    "providerClients": "Portefeuille Clients"
+    "providerClients": "Portefeuille Clients",
+    "publicShowcase": "Vitrine publique",
+    "vitrine": "Vitrine publique"
   }
 }

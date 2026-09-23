@@ -4,6 +4,7 @@ import {
   eleveurNav,
   partenaireNav,
   getNavForRole,
+  getNavLabel,
   roleLabelKeys,
   roleIcons,
 } from "@/components/RoleSidebar";
@@ -97,5 +98,36 @@ describe("Architecture & Module Consolidation: Agriculteur vs Partenaire Hub", (
     expect(roleIcons.agriculteur).toBe(Calculator);
     expect(roleIcons.partenaire).toBe(Store);
     expect(roleIcons.eleveur).toBe(Beef);
+  });
+
+  it("ensures zero 'nav.' prefixes exist in any navigation item and translates all required keys to French", () => {
+    const allNavLists = [
+      ...agriculteurNav,
+      ...eleveurNav,
+      ...partenaireNav,
+    ];
+
+    allNavLists.forEach((item) => {
+      expect(item.labelKey).not.toMatch(/^nav\./);
+    });
+
+    // Required replacements test
+    const requiredMappings: Record<string, string> = {
+      "nav.aiDiagnosis": "Diagnostic IA",
+      "nav.prescriptions": "Prescriptions",
+      "nav.scouting": "Inspection terrain",
+      "nav.calculator": "Calculateur agricole",
+      "nav.gpsMapping": "Cartographie GPS",
+      "nav.technicalSheets": "Fiches techniques",
+      "nav.quoteRequests": "Demandes de devis",
+      "Vitrine Publique": "Vitrine publique",
+      "nav.providerSubscription": "Abonnement partenaire",
+      "nav.settings": "Paramètres",
+    };
+
+    Object.entries(requiredMappings).forEach(([key, expectedLabel]) => {
+      const resolved = getNavLabel({ to: "/dummy", labelKey: key, icon: Calculator });
+      expect(resolved).toBe(expectedLabel);
+    });
   });
 });

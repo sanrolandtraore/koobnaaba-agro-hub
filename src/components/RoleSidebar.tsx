@@ -17,95 +17,96 @@ import { PartnerProfileType, PARTNER_PROFILES } from "@/lib/partnerProfiles";
 export type NavItem = {
   to: string;
   labelKey: string;
+  label?: string;
   icon: React.ElementType;
   section?: string;
 };
 
 /** Module « Agriculteur » : Planning et Services Experts uniquement. */
 export const agriculteurNav: NavItem[] = [
-  { to: "/dashboard/crop-planning", labelKey: "nav.planning", icon: Calculator },
-  { to: "/dashboard/services", labelKey: "nav.expertServices", icon: ClipboardList },
+  { to: "/dashboard/crop-planning", labelKey: "Planification", icon: Calculator },
+  { to: "/dashboard/services", labelKey: "Services Experts", icon: ClipboardList },
 ];
 
 /** Module « Éleveur » (Filière Pastorale directe) */
 export const eleveurNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/animals", labelKey: "nav.animals", icon: Beef },
-  { to: "/dashboard/animal-health", labelKey: "nav.health", icon: Heart },
-  { to: "/dashboard/animal-reproduction", labelKey: "nav.reproduction", icon: Baby },
-  { to: "/dashboard/animal-feeding", labelKey: "nav.feeding", icon: Utensils },
-  { to: "/dashboard/livestock-services", labelKey: "nav.vetServices", icon: ClipboardList },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
-  { to: "/dashboard/export", labelKey: "nav.export", icon: Download },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/animals", labelKey: "Animaux", icon: Beef },
+  { to: "/dashboard/animal-health", labelKey: "Santé", icon: Heart },
+  { to: "/dashboard/animal-reproduction", labelKey: "Reproduction", icon: Baby },
+  { to: "/dashboard/animal-feeding", labelKey: "Alimentation", icon: Utensils },
+  { to: "/dashboard/livestock-services", labelKey: "Services Vétérinaires", icon: ClipboardList },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings },
+  { to: "/dashboard/export", labelKey: "Export PDF/CSV", icon: Download },
 ];
 
 /** 1. Profil Partenaire : Fournisseur d'Intrants & Semences */
 export const fournisseurNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/partenaire-mes-offres", labelKey: "nav.myOffers", icon: Store, section: "Vente & Intrants" },
-  { to: "/dashboard/quote-requests", labelKey: "nav.quoteRequests", icon: FileText, section: "Vente & Intrants" },
-  { to: "/dashboard/provider-clients", labelKey: "nav.providerClients", icon: Users, section: "Vente & Intrants" },
-  { to: "/dashboard/revenus", labelKey: "nav.revenue", icon: Wallet, section: "Vente & Intrants" },
-  { to: "/dashboard/partenaire-fournisseurs", labelKey: "nav.suppliers", icon: Package, section: "Approvisionnement" },
-  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine Publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
-  { to: "/dashboard/partenaire-abonnement", labelKey: "nav.providerSubscription", icon: Sparkles, section: "Visibilité & Gestion" },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings, section: "Visibilité & Gestion" },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/partenaire-mes-offres", labelKey: "Mes offres & Ventes", icon: Store, section: "Vente & Intrants" },
+  { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Vente & Intrants" },
+  { to: "/dashboard/provider-clients", labelKey: "Portefeuille Clients", icon: Users, section: "Vente & Intrants" },
+  { to: "/dashboard/revenus", labelKey: "Chiffre d'affaires & Recettes", icon: Wallet, section: "Vente & Intrants" },
+  { to: "/dashboard/partenaire-fournisseurs", labelKey: "Fournisseurs", icon: Package, section: "Approvisionnement" },
+  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
 
 /** 2. Profil Partenaire : Machinisme & Travaux Agricoles (Location & Chantiers) */
 export const machinismeNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/equipment", labelKey: "nav.equipmentFleet", icon: Tractor, section: "Flotte & Chantiers" },
-  { to: "/dashboard/missions", labelKey: "nav.missions", icon: Briefcase, section: "Flotte & Chantiers" },
-  { to: "/dashboard/interventions", labelKey: "nav.interventions", icon: ClipboardList, section: "Flotte & Chantiers" },
-  { to: "/dashboard/quote-requests", labelKey: "nav.quoteRequests", icon: FileText, section: "Flotte & Chantiers" },
-  { to: "/dashboard/provider-clients", labelKey: "nav.providerClients", icon: Users, section: "Flotte & Chantiers" },
-  { to: "/dashboard/revenus", labelKey: "nav.revenue", icon: Wallet, section: "Flotte & Chantiers" },
-  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine Publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
-  { to: "/dashboard/partenaire-abonnement", labelKey: "nav.providerSubscription", icon: Sparkles, section: "Visibilité & Gestion" },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings, section: "Visibilité & Gestion" },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/equipment", labelKey: "Parc matériel & Location", icon: Tractor, section: "Flotte & Chantiers" },
+  { to: "/dashboard/missions", labelKey: "Missions & Travaux", icon: Briefcase, section: "Flotte & Chantiers" },
+  { to: "/dashboard/interventions", labelKey: "Interventions terrain", icon: ClipboardList, section: "Flotte & Chantiers" },
+  { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Flotte & Chantiers" },
+  { to: "/dashboard/provider-clients", labelKey: "Portefeuille Clients", icon: Users, section: "Flotte & Chantiers" },
+  { to: "/dashboard/revenus", labelKey: "Chiffre d'affaires & Recettes", icon: Wallet, section: "Flotte & Chantiers" },
+  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
 
 /** 3. Profil Partenaire : Cabinet d'Agronomie & Conseil Technique */
 export const agronomeNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/expert-diagnosis", labelKey: "nav.aiDiagnosis", icon: Microscope, section: "Expertise Agronomique" },
-  { to: "/dashboard/expert-prescriptions", labelKey: "nav.prescriptions", icon: FileText, section: "Expertise Agronomique" },
-  { to: "/dashboard/scouting", labelKey: "nav.scouting", icon: Eye, section: "Expertise Agronomique" },
-  { to: "/dashboard/expert-calculator", labelKey: "nav.calculator", icon: Calculator, section: "Expertise Agronomique" },
-  { to: "/dashboard/expert-cartography", labelKey: "nav.gpsMapping", icon: MapPin, section: "Expertise Agronomique" },
-  { to: "/dashboard/crop-library", labelKey: "nav.technicalSheets", icon: BookOpen, section: "Expertise Agronomique" },
-  { to: "/dashboard/quote-requests", labelKey: "nav.quoteRequests", icon: FileText, section: "Clients & Conseils" },
-  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine Publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
-  { to: "/dashboard/partenaire-abonnement", labelKey: "nav.providerSubscription", icon: Sparkles, section: "Visibilité & Gestion" },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings, section: "Visibilité & Gestion" },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/expert-diagnosis", labelKey: "Diagnostic IA", icon: Microscope, section: "Expertise Agronomique" },
+  { to: "/dashboard/expert-prescriptions", labelKey: "Prescriptions", icon: FileText, section: "Expertise Agronomique" },
+  { to: "/dashboard/scouting", labelKey: "Inspection terrain", icon: Eye, section: "Expertise Agronomique" },
+  { to: "/dashboard/expert-calculator", labelKey: "Calculateur agricole", icon: Calculator, section: "Expertise Agronomique" },
+  { to: "/dashboard/expert-cartography", labelKey: "Cartographie GPS", icon: MapPin, section: "Expertise Agronomique" },
+  { to: "/dashboard/crop-library", labelKey: "Fiches techniques", icon: BookOpen, section: "Expertise Agronomique" },
+  { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Clients & Conseils" },
+  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
 
 /** 4. Profil Partenaire : Santé Animale, Élevage & Zootechnie */
 export const veterinaireNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/animals", labelKey: "nav.animals", icon: Beef, section: "Pôle Vétérinaire & Cheptel" },
-  { to: "/dashboard/animal-health", labelKey: "nav.health", icon: Heart, section: "Pôle Vétérinaire & Cheptel" },
-  { to: "/dashboard/animal-feeding", labelKey: "nav.feeding", icon: Utensils, section: "Pôle Vétérinaire & Cheptel" },
-  { to: "/dashboard/animal-reproduction", labelKey: "nav.reproduction", icon: Baby, section: "Pôle Vétérinaire & Cheptel" },
-  { to: "/dashboard/livestock-services", labelKey: "nav.vetServices", icon: ClipboardList, section: "Pôle Vétérinaire & Cheptel" },
-  { to: "/dashboard/quote-requests", labelKey: "nav.quoteRequests", icon: FileText, section: "Clients & Soins" },
-  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine Publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
-  { to: "/dashboard/partenaire-abonnement", labelKey: "nav.providerSubscription", icon: Sparkles, section: "Visibilité & Gestion" },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings, section: "Visibilité & Gestion" },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/animals", labelKey: "Animaux", icon: Beef, section: "Pôle Vétérinaire & Cheptel" },
+  { to: "/dashboard/animal-health", labelKey: "Santé", icon: Heart, section: "Pôle Vétérinaire & Cheptel" },
+  { to: "/dashboard/animal-feeding", labelKey: "Alimentation", icon: Utensils, section: "Pôle Vétérinaire & Cheptel" },
+  { to: "/dashboard/animal-reproduction", labelKey: "Reproduction", icon: Baby, section: "Pôle Vétérinaire & Cheptel" },
+  { to: "/dashboard/livestock-services", labelKey: "Services Vétérinaires", icon: ClipboardList, section: "Pôle Vétérinaire & Cheptel" },
+  { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Clients & Soins" },
+  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
 
 /** 5. Profil Partenaire : Banque, Microfinance & Assurance Agricole */
 export const institutionNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/partenaire-banques", labelKey: "nav.banking", icon: Landmark, section: "Finance & Assurance" },
-  { to: "/dashboard/partenaire-assurance", labelKey: "nav.insurance", icon: ShieldCheck, section: "Finance & Assurance" },
-  { to: "/dashboard/partenaire-programmes", labelKey: "nav.programs", icon: FolderKanban, section: "Finance & Assurance" },
-  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake, section: "Finance & Assurance" },
-  { to: "/dashboard/quote-requests", labelKey: "nav.quoteRequests", icon: FileText, section: "Dossiers & Crédits" },
-  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine Publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
-  { to: "/dashboard/partenaire-abonnement", labelKey: "nav.providerSubscription", icon: Sparkles, section: "Visibilité & Gestion" },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings, section: "Visibilité & Gestion" },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/partenaire-banques", labelKey: "Services bancaires agricoles", icon: Landmark, section: "Finance & Assurance" },
+  { to: "/dashboard/partenaire-assurance", labelKey: "Assurance agricole", icon: ShieldCheck, section: "Finance & Assurance" },
+  { to: "/dashboard/partenaire-programmes", labelKey: "Programmes & Projets", icon: FolderKanban, section: "Finance & Assurance" },
+  { to: "/dashboard/partners-directory", labelKey: "Annuaire Partenaires", icon: Handshake, section: "Finance & Assurance" },
+  { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Dossiers & Crédits" },
+  { to: "/dashboard/partenaire-vitrine", labelKey: "Vitrine publique", icon: ShieldCheck, section: "Visibilité & Gestion" },
+  { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Visibilité & Gestion" },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Visibilité & Gestion" },
 ];
 
 /**
@@ -113,44 +114,57 @@ export const institutionNav: NavItem[] = [
  * Regroupe l'ensemble des expertises pour les entreprises polyvalentes.
  */
 export const partenaireNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
 
   // Pôle 1: Expertise Agronome
-  { to: "/dashboard/expert-diagnosis", labelKey: "nav.aiDiagnosis", icon: Microscope, section: "Expertise Agronome" },
-  { to: "/dashboard/expert-prescriptions", labelKey: "nav.prescriptions", icon: FileText, section: "Expertise Agronome" },
-  { to: "/dashboard/scouting", labelKey: "nav.scouting", icon: Eye, section: "Expertise Agronome" },
-  { to: "/dashboard/expert-calculator", labelKey: "nav.calculator", icon: Calculator, section: "Expertise Agronome" },
-  { to: "/dashboard/expert-cartography", labelKey: "nav.gpsMapping", icon: MapPin, section: "Expertise Agronome" },
-  { to: "/dashboard/crop-library", labelKey: "nav.technicalSheets", icon: BookOpen, section: "Expertise Agronome" },
+  { to: "/dashboard/expert-diagnosis", labelKey: "Diagnostic IA", icon: Microscope, section: "Expertise Agronome" },
+  { to: "/dashboard/expert-prescriptions", labelKey: "Prescriptions", icon: FileText, section: "Expertise Agronome" },
+  { to: "/dashboard/scouting", labelKey: "Inspection terrain", icon: Eye, section: "Expertise Agronome" },
+  { to: "/dashboard/expert-calculator", labelKey: "Calculateur agricole", icon: Calculator, section: "Expertise Agronome" },
+  { to: "/dashboard/expert-cartography", labelKey: "Cartographie GPS", icon: MapPin, section: "Expertise Agronome" },
+  { to: "/dashboard/crop-library", labelKey: "Fiches techniques", icon: BookOpen, section: "Expertise Agronome" },
 
   // Pôle 2: Élevage & Zootechnie
-  { to: "/dashboard/animals", labelKey: "nav.animals", icon: Beef, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/animal-health", labelKey: "nav.health", icon: Heart, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/animal-feeding", labelKey: "nav.feeding", icon: Utensils, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/animal-reproduction", labelKey: "nav.reproduction", icon: Baby, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/livestock-services", labelKey: "nav.vetServices", icon: ClipboardList, section: "Élevage & Zootechnie" },
+  { to: "/dashboard/animals", labelKey: "Animaux", icon: Beef, section: "Élevage & Zootechnie" },
+  { to: "/dashboard/animal-health", labelKey: "Santé", icon: Heart, section: "Élevage & Zootechnie" },
+  { to: "/dashboard/animal-feeding", labelKey: "Alimentation", icon: Utensils, section: "Élevage & Zootechnie" },
+  { to: "/dashboard/animal-reproduction", labelKey: "Reproduction", icon: Baby, section: "Élevage & Zootechnie" },
+  { to: "/dashboard/livestock-services", labelKey: "Services Vétérinaires", icon: ClipboardList, section: "Élevage & Zootechnie" },
 
   // Pôle 3: Commerce, Matériel & Chantiers
-  { to: "/dashboard/partenaire-mes-offres", labelKey: "nav.myOffers", icon: Store, section: "Commerce & Chantiers" },
-  { to: "/dashboard/quote-requests", labelKey: "nav.quoteRequests", icon: FileText, section: "Commerce & Chantiers" },
-  { to: "/dashboard/missions", labelKey: "nav.missions", icon: Briefcase, section: "Commerce & Chantiers" },
-  { to: "/dashboard/interventions", labelKey: "nav.interventions", icon: ClipboardList, section: "Commerce & Chantiers" },
-  { to: "/dashboard/equipment", labelKey: "nav.equipmentFleet", icon: Tractor, section: "Commerce & Chantiers" },
-  { to: "/dashboard/provider-clients", labelKey: "nav.providerClients", icon: Users, section: "Commerce & Chantiers" },
-  { to: "/dashboard/revenus", labelKey: "nav.revenue", icon: Wallet, section: "Commerce & Chantiers" },
+  { to: "/dashboard/partenaire-mes-offres", labelKey: "Mes offres & Ventes", icon: Store, section: "Commerce & Chantiers" },
+  { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Commerce & Chantiers" },
+  { to: "/dashboard/missions", labelKey: "Missions & Travaux", icon: Briefcase, section: "Commerce & Chantiers" },
+  { to: "/dashboard/interventions", labelKey: "Interventions terrain", icon: ClipboardList, section: "Commerce & Chantiers" },
+  { to: "/dashboard/equipment", labelKey: "Parc matériel & Location", icon: Tractor, section: "Commerce & Chantiers" },
+  { to: "/dashboard/provider-clients", labelKey: "Portefeuille Clients", icon: Users, section: "Commerce & Chantiers" },
+  { to: "/dashboard/revenus", labelKey: "Chiffre d'affaires & Recettes", icon: Wallet, section: "Commerce & Chantiers" },
 
   // Pôle 4: Réseau Écosystème & Partenariats
-  { to: "/dashboard/partenaire-fournisseurs", labelKey: "nav.suppliers", icon: Package, section: "Réseau Écosystème" },
-  { to: "/dashboard/partenaire-assurance", labelKey: "nav.insurance", icon: ShieldCheck, section: "Réseau Écosystème" },
-  { to: "/dashboard/partenaire-banques", labelKey: "nav.banking", icon: Landmark, section: "Réseau Écosystème" },
-  { to: "/dashboard/partenaire-programmes", labelKey: "nav.programs", icon: FolderKanban, section: "Réseau Écosystème" },
-  { to: "/dashboard/partners-directory", labelKey: "nav.partners", icon: Handshake, section: "Réseau Écosystème" },
+  { to: "/dashboard/partenaire-fournisseurs", labelKey: "Fournisseurs", icon: Package, section: "Réseau Écosystème" },
+  { to: "/dashboard/partenaire-assurance", labelKey: "Assurance agricole", icon: ShieldCheck, section: "Réseau Écosystème" },
+  { to: "/dashboard/partenaire-banques", labelKey: "Services bancaires agricoles", icon: Landmark, section: "Réseau Écosystème" },
+  { to: "/dashboard/partenaire-programmes", labelKey: "Programmes & Projets", icon: FolderKanban, section: "Réseau Écosystème" },
+  { to: "/dashboard/partners-directory", labelKey: "Annuaire Partenaires", icon: Handshake, section: "Réseau Écosystème" },
 
   // Pôle 5: Gestion & Configuration
-  { to: "/dashboard/partenaire-abonnement", labelKey: "nav.providerSubscription", icon: Sparkles, section: "Gestion & Paramètres" },
-  { to: "/dashboard/export", labelKey: "nav.export", icon: Download, section: "Gestion & Paramètres" },
-  { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings, section: "Gestion & Paramètres" },
+  { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Gestion & Paramètres" },
+  { to: "/dashboard/export", labelKey: "Export PDF/CSV", icon: Download, section: "Gestion & Paramètres" },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Gestion & Paramètres" },
 ];
+
+export const roleDisplayNames: Record<string, string> = {
+  agriculteur: "Agriculteur",
+  eleveur: "Éleveur",
+  formation: "Partenaire Formation",
+  agent_technique: "Expert Agronome",
+  expert: "Expert Agronome",
+  partenaire: "Partenaire",
+  admin: "Administrateur",
+  manager: "Gestionnaire",
+  farmer: "Agriculteur",
+  viewer: "Observateur",
+};
 
 export const roleLabelKeys: Record<string, string> = {
   agriculteur: "roles.agriculteur",
@@ -185,6 +199,65 @@ export const partnerTypeIcons: Record<PartnerProfileType, React.ElementType> = {
   elevage_veterinaire: Beef,
   institution_agri: Landmark,
   polyvalent: Handshake,
+};
+
+/**
+ * Bulletproof mapping to prevent any raw translation key or "nav." from ever showing in the UI.
+ */
+export const getNavLabel = (item: NavItem, t?: (key: string) => string): string => {
+  const key = item.label || item.labelKey;
+  if (!key) return "";
+
+  const dictionary: Record<string, string> = {
+    "nav.aiDiagnosis": "Diagnostic IA",
+    "nav.prescriptions": "Prescriptions",
+    "nav.scouting": "Inspection terrain",
+    "nav.calculator": "Calculateur agricole",
+    "nav.gpsMapping": "Cartographie GPS",
+    "nav.technicalSheets": "Fiches techniques",
+    "nav.quoteRequests": "Demandes de devis",
+    "Vitrine Publique": "Vitrine publique",
+    "nav.providerSubscription": "Abonnement partenaire",
+    "nav.settings": "Paramètres",
+    "nav.dashboard": "Tableau de bord",
+    "nav.planning": "Planification",
+    "nav.expertServices": "Services Experts",
+    "nav.animals": "Animaux",
+    "nav.health": "Santé",
+    "nav.reproduction": "Reproduction",
+    "nav.feeding": "Alimentation",
+    "nav.vetServices": "Services Vétérinaires",
+    "nav.export": "Export PDF/CSV",
+    "nav.myOffers": "Mes offres & Ventes",
+    "nav.providerClients": "Portefeuille Clients",
+    "nav.revenue": "Chiffre d'affaires & Recettes",
+    "nav.suppliers": "Fournisseurs",
+    "nav.equipmentFleet": "Parc matériel & Location",
+    "nav.missions": "Missions & Travaux",
+    "nav.interventions": "Interventions terrain",
+    "nav.banking": "Services bancaires agricoles",
+    "nav.insurance": "Assurance agricole",
+    "nav.programs": "Programmes & Projets",
+    "nav.partners": "Annuaire Partenaires",
+  };
+
+  if (dictionary[key]) {
+    return dictionary[key];
+  }
+
+  if (!key.startsWith("nav.")) {
+    return key;
+  }
+
+  if (t) {
+    const translated = t(key);
+    if (translated && !translated.startsWith("nav.")) {
+      return translated;
+    }
+  }
+
+  const raw = key.replace(/^nav\./, "");
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 };
 
 /**
@@ -231,6 +304,10 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
     ? partnerTypeIcons[partnerType] || Handshake
     : roleIcons[effectiveRole || "agriculteur"] || Calculator;
 
+  const currentRoleLabel = isPartner && partnerMeta
+    ? partnerMeta.shortLabel
+    : roleDisplayNames[primaryRole || "agriculteur"] || (roleLabelKeys[primaryRole || "agriculteur"] ? t(roleLabelKeys[primaryRole || "agriculteur"]) : "Agriculteur");
+
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Header Premium Agrandie */}
@@ -239,9 +316,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
         <div className="flex flex-col min-w-0">
           <span className="text-xs font-extrabold text-sidebar-primary tracking-wide flex items-center gap-1.5 truncate">
             <RoleIcon className="h-3.5 w-3.5 shrink-0 text-sidebar-primary" />
-            <span className="truncate">
-              {isPartner && partnerMeta ? partnerMeta.shortLabel : t(roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
-            </span>
+            <span className="truncate">{currentRoleLabel}</span>
           </span>
           <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate mt-0.5">
             NAFA -AGRITECH
@@ -249,9 +324,10 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
         </div>
       </div>
 
-      {/* Navigation épurée avec polices agrandies et icônes généreuses */}
+      {/* Navigation épurée avec polices agrandies et libellés français clairs */}
       <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5">
-        {nav.main.map(({ to, labelKey, icon: Icon, section }, index) => {
+        {nav.main.map((item, index) => {
+          const { to, icon: Icon, section } = item;
           const isFirstOfSection = Boolean(section && (index === 0 || nav.main[index - 1]?.section !== section));
           const isActive = (
             to === "/dashboard"
@@ -260,6 +336,8 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
                 ? (location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/crop-planning"))
                 : location.pathname.startsWith(to)
           );
+
+          const displayLabel = getNavLabel(item, t);
 
           return (
             <div key={to} className="space-y-1">
@@ -279,7 +357,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
                 )}
               >
                 <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-sidebar-primary" : "text-sidebar-foreground/70")} />
-                <span className="leading-snug">{labelKey.startsWith("nav.") ? t(labelKey) : labelKey}</span>
+                <span className="leading-snug">{displayLabel}</span>
               </Link>
             </div>
           );
@@ -297,7 +375,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
             <User className="h-5 w-5 text-sidebar-accent-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-sidebar-foreground truncate">{profile?.full_name || t("common.user")}</p>
+            <p className="text-sm font-semibold text-sidebar-foreground truncate">{profile?.full_name || "Utilisateur"}</p>
             <p className="text-xs text-sidebar-foreground/60 truncate">Mon profil & compte</p>
           </div>
         </Link>
@@ -309,7 +387,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
           onClick={() => { onNavigate?.(); signOut(); }}
         >
           <LogOut className="h-4 w-4 mr-2" />
-          {t("common.logout")}
+          Déconnexion
         </Button>
       </div>
     </div>
