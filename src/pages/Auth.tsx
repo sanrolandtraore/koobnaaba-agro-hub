@@ -38,7 +38,14 @@ const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signInWithPhoneOtp, verifyPhoneOtp, signIn, signUp, signInOffline } = useAuth();
+  const { user, signInWithPhoneOtp, verifyPhoneOtp, signIn, signUp, signInOffline } = useAuth();
+
+  // Redirection immédiate si déjà connecté
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
 
   // Mode principal : "whatsapp" (par défaut, ultra simple) ou "classic" (fallback mot de passe)
   const [flow, setFlow] = useState<AuthFlow>("whatsapp");
@@ -139,9 +146,18 @@ export default function Auth() {
       const res = await verifyPhoneOtp(fullPhone, otpToken.trim());
       if (res.error) {
         toast.error(res.error.message || "Code incorrect.");
-      } else {
-        // Succès ! Demander le nom et rôle s'il s'agit d'un nouveau compte
+      } else if (res.isNewUser) {
+        // Nouveau compte : demander le nom et rôle
+        toast.success("Code vérifié !", {
+          description: "Veuillez renseigner votre nom pour finaliser votre compte.",
+        });
         setWaStep("profile");
+      } else {
+        // Compte déjà connu : redirection directe
+        toast.success("Connexion réussie !", {
+          description: "Bon retour sur NAFA -AGRITECH !",
+        });
+        navigate("/dashboard");
       }
     } catch (err: any) {
       toast.error("Erreur de vérification : " + (err?.message || "Erreur inconnue"));

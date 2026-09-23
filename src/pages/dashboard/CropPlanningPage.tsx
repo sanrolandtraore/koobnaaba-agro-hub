@@ -218,7 +218,7 @@ const CropPlanningPage = () => {
   const [climateZones, setClimateZones] = useState<any[]>(CLIMATE_ZONES_BURKINA);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"simulateur" | "mes-campagnes">("simulateur");
+  const [activeTab, setActiveTab] = useState<"simulateur" | "mes-campagnes" | "catalogue">("simulateur");
 
   // Selection state
   const [selectedParcel, setSelectedParcel] = useState("");
@@ -693,34 +693,33 @@ const CropPlanningPage = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Sélecteur direct sans nav secondaire */}
-          <div className="inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border shadow-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full">
+          <div className="grid grid-cols-3 sm:inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border shadow-xs">
             <button
               type="button"
               onClick={() => setActiveTab("simulateur")}
-              className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-base font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                 activeTab === "simulateur"
                   ? "bg-primary text-primary-foreground shadow-premium"
                   : "text-muted-foreground hover:text-foreground hover:bg-background/50"
               }`}
             >
-              <Calculator className="h-5 w-5" />
-              Simulateur & Calcul
+              <Calculator className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              <span>Simulateur</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("mes-campagnes")}
-              className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-base font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                 activeTab === "mes-campagnes"
                   ? "bg-primary text-primary-foreground shadow-premium"
                   : "text-muted-foreground hover:text-foreground hover:bg-background/50"
               }`}
             >
-              <CalendarDays className="h-5 w-5" />
-              Mes Campagnes
+              <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              <span>Campagnes</span>
               {savedPlans.length > 0 && (
-                <span className="ml-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-primary/20 text-primary">
+                <span className="hidden sm:inline-flex ml-1.5 px-2 py-0.5 rounded-full text-xs font-extrabold bg-primary/20 text-primary">
                   {savedPlans.length}
                 </span>
               )}
@@ -728,20 +727,20 @@ const CropPlanningPage = () => {
             <button
               type="button"
               onClick={() => setActiveTab("catalogue")}
-              className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-base font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                 activeTab === "catalogue"
                   ? "bg-primary text-primary-foreground shadow-premium"
                   : "text-muted-foreground hover:text-foreground hover:bg-background/50"
               }`}
             >
-              <ShoppingCart className="h-5 w-5" />
-              Produits & Services
+              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              <span>Boutique</span>
             </button>
           </div>
 
-          <Button asChild variant="secondary" className="h-12 px-5 text-base font-bold rounded-xl border border-border/80 shadow-xs hover:border-primary/40">
+          <Button asChild variant="secondary" className="h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base font-bold rounded-xl border border-border/80 shadow-xs hover:border-primary/40 shrink-0">
             <Link to="/dashboard/services">
-              <ClipboardList className="h-5 w-5 mr-2 text-primary" />
+              <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
               Services Experts
             </Link>
           </Button>

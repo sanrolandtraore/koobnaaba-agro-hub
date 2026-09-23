@@ -134,38 +134,38 @@ const LivestockDashboardPage = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
       {/* Sélecteur direct de vue sans nav secondaire */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/80 pb-4">
-        <div className="inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border/80 pb-4">
+        <div className="grid grid-cols-2 sm:inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border shadow-xs">
           <button
             type="button"
             onClick={() => setActiveView("cheptel")}
-            className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+            className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-base font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
               activeView === "cheptel"
                 ? "bg-primary text-primary-foreground shadow-premium"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/50"
             }`}
           >
-            <Bird className="h-5 w-5" />
-            Tableau de Bord Cheptel
+            <Bird className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+            <span>Mon Cheptel</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveView("catalogue")}
-            className={`px-5 py-2.5 rounded-xl text-base font-bold transition-all flex items-center gap-2 ${
+            className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-base font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
               activeView === "catalogue"
                 ? "bg-primary text-primary-foreground shadow-premium"
                 : "text-muted-foreground hover:text-foreground hover:bg-background/50"
             }`}
           >
-            <ShoppingCart className="h-5 w-5" />
-            Produits & Services Partenaires
+            <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+            <span>Boutique & Intrants</span>
           </button>
         </div>
 
         <Button
           asChild
           variant="outline"
-          className="h-11 px-4 text-sm font-bold rounded-xl border-border hover:border-primary/50"
+          className="h-11 px-4 text-sm font-bold rounded-xl border-border hover:border-primary/50 shrink-0"
         >
           <Link to="/dashboard/livestock-services">
             <Stethoscope className="h-4 w-4 mr-2 text-primary" />

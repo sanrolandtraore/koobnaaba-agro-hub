@@ -49,21 +49,99 @@ interface AuthContextType {
       servicesOffered?: string;
       serviceArea?: string;
     }
-  ) => Promise<{ error: any }>;
+  ) => Promise<{ error: any; isNewUser?: boolean }>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export interface NafaLocalSession {
+  userId: string;
+  email: string;
+  phone?: string | null;
+  fullName: string;
+  roles: string[];
+  partnerType?: PartnerProfileType;
+  profile: { full_name: string; phone: string | null; email: string | null; avatar_url: string | null };
+  savedAt: number;
+}
+
+const LOCAL_SESSION_KEY = "nafa_session_v1";
+const REGISTERED_ACCOUNTS_KEY = "nafa_phone_accounts_v1";
+
+export function getLocalSession(): NafaLocalSession | null {
+  try {
+    const raw = localStorage.getItem(LOCAL_SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw) as NafaLocalSession;
+    if (Date.now() - s.savedAt > 30 * 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(LOCAL_SESSION_KEY);
+      return null;
+    }
+    return s;
+  } catch (_e) {
+    return null;
+  }
+}
+
+export function saveLocalSession(s: NafaLocalSession) {
+  try {
+    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(s));
+    if (s.phone) {
+      const accounts = getStoredPhoneAccounts();
+      accounts[s.phone] = s;
+      localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(accounts));
+    }
+  } catch (e) {
+    console.warn("Failed to persist local session", e);
+  }
+}
+
+export function clearLocalSession() {
+  try {
+    localStorage.removeItem(LOCAL_SESSION_KEY);
+  } catch (_e) {
+    // ignore
+  }
+}
+
+export function getStoredPhoneAccounts(): Record<string, NafaLocalSession> {
+  try {
+    const raw = localStorage.getItem(REGISTERED_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_e) {
+    return {};
+  }
+}
+
+function sessionToUser(s: NafaLocalSession): User {
+  return {
+    id: s.userId,
+    email: s.email,
+    phone: s.phone || undefined,
+    aud: "authenticated",
+    role: "authenticated",
+    app_metadata: { provider: "phone" },
+    user_metadata: {
+      full_name: s.fullName || s.profile?.full_name,
+      role: s.roles[0] || "agriculteur",
+      phone: s.phone,
+      partner_type: s.partnerType,
+    },
+    created_at: new Date(s.savedAt).toISOString(),
+  } as unknown as User;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const initialSession = getLocalSession();
+  const [user, setUser] = useState<User | null>(() => (initialSession ? sessionToUser(initialSession) : null));
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
-  const [roles, setRoles] = useState<string[]>([]);
-  const [partnerType, setPartnerTypeState] = useState<PartnerProfileType>(() => getStoredPartnerProfileType());
-  const [isOfflineSession, setIsOfflineSession] = useState(false);
+  const [loading, setLoading] = useState(!initialSession);
+  const [profile, setProfile] = useState<AuthContextType["profile"]>(() => initialSession?.profile ?? null);
+  const [roles, setRoles] = useState<string[]>(() => initialSession?.roles ?? []);
+  const [partnerType, setPartnerTypeState] = useState<PartnerProfileType>(() => initialSession?.partnerType ?? getStoredPartnerProfileType(initialSession?.userId));
+  const [isOfflineSession, setIsOfflineSession] = useState(!navigator.onLine);
   // Vrai uniquement quand l'utilisateur clique lui-même sur « Se déconnecter »
   const explicitSignOutRef = useRef(false);
 
@@ -98,7 +176,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Cache session for offline use
-  const cacheSession = async (userId: string, email: string, profileData: any, rolesData: string[]) => {
+  const cacheSession = async (userId: string, email: string, profileData: any, rolesData: string[], phone?: string | null) => {
+    const pType = getStoredPartnerProfileType(userId);
+    const sessionObj: NafaLocalSession = {
+      userId,
+      email: email || '',
+      phone: phone || profileData?.phone || null,
+      fullName: profileData?.full_name || '',
+      roles: rolesData,
+      partnerType: pType,
+      profile: profileData || { full_name: '', phone: null, email: null, avatar_url: null },
+      savedAt: Date.now(),
+    };
+    saveLocalSession(sessionObj);
     try {
       await saveOfflineSession({
         userId,
@@ -113,14 +203,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const tryOfflineRestore = async (force = false) => {
-    if (!force && navigator.onLine) return false;
+  const tryOfflineRestore = async (_force = false) => {
     try {
+      const local = getLocalSession();
+      if (local) {
+        setUser(sessionToUser(local));
+        setProfile(local.profile);
+        setRoles(local.roles);
+        setIsOfflineSession(true);
+        setPartnerTypeState(local.partnerType || getStoredPartnerProfileType(local.userId));
+        return true;
+      }
       const cached = await getOfflineSession();
       if (cached) {
-        setUser({ id: cached.userId, email: cached.email } as User);
-        setProfile(cached.profile);
-        setRoles(cached.roles);
+        const fallbackSession: NafaLocalSession = {
+          userId: cached.userId,
+          email: cached.email,
+          phone: cached.profile?.phone || null,
+          fullName: cached.fullName,
+          roles: cached.roles,
+          partnerType: getStoredPartnerProfileType(cached.userId),
+          profile: cached.profile,
+          savedAt: cached.savedAt,
+        };
+        saveLocalSession(fallbackSession);
+        setUser(sessionToUser(fallbackSession));
+        setProfile(fallbackSession.profile);
+        setRoles(fallbackSession.roles);
         setIsOfflineSession(true);
         setPartnerTypeState(getStoredPartnerProfileType(cached.userId));
         return true;
@@ -135,13 +244,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!session) {
-          if (!explicitSignOutRef.current && !navigator.onLine) {
-            const restored = await tryOfflineRestore(true);
-            if (restored) {
-              setSession(null);
-              setLoading(false);
-              return;
-            }
+          if (explicitSignOutRef.current) {
+            clearLocalSession();
+            await clearOfflineSession();
+            setSession(null);
+            setUser(null);
+            setIsOfflineSession(false);
+            setProfile(null);
+            setRoles([]);
+            setLoading(false);
+            return;
+          }
+          const restored = await tryOfflineRestore(true);
+          if (restored) {
+            setSession(null);
+            setLoading(false);
+            return;
           }
           setSession(null);
           setUser(null);
@@ -167,16 +285,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(async () => {
           const p = await fetchProfile(session.user.id);
           const r = await fetchRoles(session.user.id);
-          await cacheSession(session.user.id, session.user.email || '', p, r);
+          await cacheSession(session.user.id, session.user.email || '', p, r, session.user.phone);
         }, 0);
         setLoading(false);
       }
     );
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
       if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        setIsOfflineSession(false);
         const metaPartnerType = session.user.user_metadata?.partner_type as PartnerProfileType | undefined;
         if (metaPartnerType) {
           setPartnerTypeState(metaPartnerType);
@@ -186,21 +305,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         const p = await fetchProfile(session.user.id);
         const r = await fetchRoles(session.user.id);
-        await cacheSession(session.user.id, session.user.email || '', p, r);
+        await cacheSession(session.user.id, session.user.email || '', p, r, session.user.phone);
         setLoading(false);
       } else {
-        const restored = await tryOfflineRestore();
-        if (!restored) {
+        if (!explicitSignOutRef.current) {
+          await tryOfflineRestore(true);
+        } else {
+          setUser(null);
           setProfile(null);
           setRoles([]);
         }
         setLoading(false);
       }
     }).catch(async () => {
-      const restored = await tryOfflineRestore();
-      if (!restored) {
-        setProfile(null);
-        setRoles([]);
+      if (!explicitSignOutRef.current) {
+        await tryOfflineRestore(true);
       }
       setLoading(false);
     });
@@ -367,7 +486,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       servicesOffered?: string;
       serviceArea?: string;
     }
-  ) => {
+  ): Promise<{ error: any; isNewUser?: boolean }> => {
     const rawClean = phone.replace(/[^0-9]/g, "");
     const normalized = phone.startsWith("+") ? phone : (rawClean.length === 8 ? "+226" + rawClean : "+" + rawClean);
 
@@ -382,7 +501,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
         if (!error && data.user) {
           verifiedOnline = true;
-          return { error: null };
         }
       } catch (e) {
         console.warn("Supabase verifyOtp exception:", e);
@@ -409,17 +527,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       sessionStorage.removeItem("koobnaaba_otp_" + normalized);
-    } catch (e) {}
+    } catch (_e) {
+      // Ignorer l'erreur de suppression en sessionStorage
+    }
 
-    // Initialisation immédiate de la session locale
     const simUserId = "usr-" + normalized.replace(/[^0-9]/g, "");
-    const safeRole = profileData?.role || "agriculteur";
-    const fullName = profileData?.fullName || "Producteur Agricole";
+    const storedAccounts = getStoredPhoneAccounts();
+    const existingAccount = storedAccounts[normalized];
+
+    // Nouveau compte sans profil renseigné : demander les informations de profil (Étape 3)
+    if (!profileData && !existingAccount) {
+      return { error: null, isNewUser: true };
+    }
+
+    const safeRole = profileData?.role || existingAccount?.roles?.[0] || "agriculteur";
+    const fullName = profileData?.fullName || existingAccount?.fullName || "Producteur Agricole";
+    const partnerT = profileData?.partnerType || existingAccount?.partnerType || "fournisseur_intrants";
 
     const simUser: any = {
-      id: simUserId,
+      id: existingAccount?.userId || simUserId,
       phone: normalized,
-      email: `${normalized.replace(/[^0-9]/g, '')}@koobnaaba.local`,
+      email: `${normalized.replace(/[^0-9]/g, '')}@nafa-agritech.local`,
       aud: "authenticated",
       role: "authenticated",
       created_at: new Date().toISOString(),
@@ -427,6 +555,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         full_name: fullName,
         role: safeRole,
         phone: normalized,
+        partner_type: safeRole === "partenaire" ? partnerT : undefined,
       },
     };
 
@@ -442,14 +571,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(simUser);
     setProfile(simProfile);
     setRoles(simRoles);
-    setIsOfflineSession(true);
+    setIsOfflineSession(false);
 
-    if (safeRole === "partenaire" && profileData?.partnerType) {
-      setPartnerType(profileData.partnerType);
+    if (safeRole === "partenaire") {
+      setPartnerType(partnerT);
     }
 
-    await cacheSession(simUser.id, simUser.email, simProfile, simRoles);
-    return { error: null };
+    const sessionObj: NafaLocalSession = {
+      userId: simUser.id,
+      email: simUser.email,
+      phone: normalized,
+      fullName,
+      roles: simRoles,
+      partnerType: safeRole === "partenaire" ? partnerT : undefined,
+      profile: simProfile,
+      savedAt: Date.now(),
+    };
+
+    saveLocalSession(sessionObj);
+    await cacheSession(simUser.id, simUser.email, simProfile, simRoles, normalized);
+    return { error: null, isNewUser: false };
   };
 
   const signOut = async () => {
@@ -457,6 +598,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const currentUserId = user?.id;
     try { await supabase.auth.signOut(); } catch (error) { console.warn("Supabase sign-out failed:", error); }
 
+    clearLocalSession();
     if (currentUserId) await clearUserOfflineData(currentUserId);
     await clearOfflineSession();
     await clearOfflineCredentials();
@@ -465,6 +607,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfile(null);
     setRoles([]);
     setIsOfflineSession(false);
+    explicitSignOutRef.current = false;
   };
 
   const hasRole = (role: string) => roles.includes(role);
