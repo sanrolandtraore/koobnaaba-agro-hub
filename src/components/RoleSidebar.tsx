@@ -324,7 +324,7 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
 
 // Desktop sidebar
 export const RoleSidebar = () => (
-  <aside className="hidden md:flex h-screen w-72 flex-col border-r border-sidebar-border/80 shrink-0">
+  <aside className="hidden lg:flex h-screen w-72 flex-col border-r border-sidebar-border/80 shrink-0">
     <SidebarNavContent />
   </aside>
 );

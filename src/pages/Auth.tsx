@@ -8,14 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
-  Lock, User, Wheat, Bug, Users, GraduationCap, Handshake, Phone, Mail, ArrowLeft,
-  KeyRound, WifiOff, Microscope, FlaskConical, Tractor, Beef, Landmark, Store, ShieldCheck
+  Phone, KeyRound, User, Wheat, Beef, Handshake, ArrowLeft, ArrowRight,
+  ShieldCheck, CheckCircle2, Lock, Mail, Store, WifiOff, Sparkles, HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { hasOfflineCredentials } from "@/lib/offlineAuth";
 import logo from "@/assets/logo.png";
-import LanguageSelector from "@/components/LanguageSelector";
 import {
   PartnerProfileType,
   PARTNER_PROFILE_LIST,
@@ -23,100 +22,197 @@ import {
 } from "@/lib/partnerProfiles";
 import { partnerTypeIcons } from "@/components/RoleSidebar";
 
-const ROLES = [
-  { value: "agriculteur", label: "Agriculteur", icon: Wheat, desc: "Planning des cultures & Services d'experts" },
-  { value: "partenaire", label: "Partenaire Spécialisé", icon: Handshake, desc: "Intrants, Machinisme, Agronomie, Élevage ou Finance" },
-] as const;
+type AuthFlow = "whatsapp" | "classic";
+type WhatsAppStep = "phone" | "otp" | "profile";
+type ClassicMode = "login" | "register" | "forgot";
 
-const ALLOWED_ROLES = [...ROLES.map(r => r.value), "eleveur", "agent_technique", "expert", "formation", "farmer"] as string[];
-
-const cleanPhone = (phone: string) => phone.replace(/[^0-9+]/g, "");
-const normalizePhone = (phone: string) => {
-  const cleaned = cleanPhone(phone);
-  if (cleaned.startsWith("+")) return cleaned;
-  if (cleaned.startsWith("00")) return "+" + cleaned.slice(2);
-  if (cleaned.length === 8) return "+226" + cleaned;
-  return cleaned;
+const cleanPhone = (p: string) => p.replace(/[^0-9+]/g, "");
+const normalizePhone = (p: string) => {
+  const c = cleanPhone(p);
+  if (c.startsWith("+")) return c;
+  if (c.startsWith("00")) return "+" + c.slice(2);
+  if (c.length === 8) return "+226" + c;
+  return c.startsWith("226") ? "+" + c : "+226" + c;
 };
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
-type AuthMode = "login" | "register" | "forgot";
-type IdMethod = "phone" | "email";
-
-const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>("login");
-  const [idMethod, setIdMethod] = useState<IdMethod>("phone");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [resetPhone, setResetPhone] = useState("");
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetCode, setResetCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
-
-  // Rôle et Spécialisation Partenaire
-  const [selectedRole, setSelectedRole] = useState<string>("agriculteur");
-  const [partnerType, setPartnerType] = useState<PartnerProfileType>("fournisseur_intrants");
-  const [companyName, setCompanyName] = useState("");
-  const [servicesOffered, setServicesOffered] = useState("");
-  const [serviceArea, setServiceArea] = useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [hasCachedCreds, setHasCachedCreds] = useState(false);
-  const { signIn, signUp, signInOffline } = useAuth();
+export default function Auth() {
   const navigate = useNavigate();
+  const { signInWithPhoneOtp, verifyPhoneOtp, signIn, signUp, signInOffline } = useAuth();
+
+  // Mode principal : "whatsapp" (par défaut, ultra simple) ou "classic" (fallback mot de passe)
+  const [flow, setFlow] = useState<AuthFlow>("whatsapp");
+  const [waStep, setWaStep] = useState<WhatsAppStep>("phone");
+  const [classicMode, setClassicMode] = useState<ClassicMode>("login");
+
+  // Champs WhatsApp
+  const [rawPhone, setRawPhone] = useState("");
+  const [otpToken, setOtpToken] = useState("");
+  const [waFullName, setWaFullName] = useState("");
+  const [waRole, setWaRole] = useState<"agriculteur" | "eleveur" | "partenaire">("agriculteur");
+  const [waPartnerType, setWaPartnerType] = useState<PartnerProfileType>("fournisseur_intrants");
+  const [waCompanyName, setWaCompanyName] = useState("");
+  const [waServicesOffered, setWaServicesOffered] = useState("");
+  const [waServiceArea, setWaServiceArea] = useState("");
+
+  // Champs Classic
+  const [classicMethod, setClassicMethod] = useState<"phone" | "email">("phone");
+  const [classicPhone, setClassicPhone] = useState("");
+  const [classicEmail, setClassicEmail] = useState("");
+  const [classicPassword, setClassicPassword] = useState("");
+  const [classicFullName, setClassicFullName] = useState("");
+  const [classicRole, setClassicRole] = useState<string>("agriculteur");
+  const [classicPartnerType, setClassicPartnerType] = useState<PartnerProfileType>("fournisseur_intrants");
+  const [classicCompany, setClassicCompany] = useState("");
+  const [classicServices, setClassicServices] = useState("");
+  const [classicArea, setClassicArea] = useState("");
+
+  // État général
+  const [loading, setLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [hasCachedCreds, setHasCachedCreds] = useState(false);
 
   useEffect(() => {
-    const goOnline = () => setIsOnline(true);
-    const goOffline = () => setIsOnline(false);
-    window.addEventListener('online', goOnline);
-    window.addEventListener('offline', goOffline);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     hasOfflineCredentials().then(setHasCachedCreds);
     return () => {
-      window.removeEventListener('online', goOnline);
-      window.removeEventListener('offline', goOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
-  // Mettre à jour les suggestions de services lorsque le type de partenaire change
+  // Pré-remplir les services par défaut du partenaire
   useEffect(() => {
-    if (selectedRole === "partenaire" && PARTNER_PROFILES[partnerType]) {
-      const p = PARTNER_PROFILES[partnerType];
-      if (!servicesOffered || servicesOffered.trim().length === 0) {
-        setServicesOffered(p.defaultProducts.slice(0, 3).join(", ") + " — " + p.defaultServices.slice(0, 2).join(", "));
-      }
+    if (waPartnerType && PARTNER_PROFILES[waPartnerType] && !waServicesOffered) {
+      const p = PARTNER_PROFILES[waPartnerType];
+      setWaServicesOffered(p.defaultProducts.slice(0, 3).join(", ") + " — " + p.defaultServices.slice(0, 2).join(", "));
     }
-  }, [partnerType, selectedRole]);
+  }, [waPartnerType]);
 
-  const buildAuthId = (): string | null => {
-    if (idMethod === "phone") {
-      if (!phone.trim()) {
-        toast.error("Le numéro de téléphone est requis");
-        return null;
+  // -------------------------------------------------------------
+  // FLOW WHATSAPP (SIMPLICITÉ MAXIMALE)
+  // -------------------------------------------------------------
+
+  // Étape 1 : Saisie numéro WhatsApp
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = rawPhone.replace(/[^0-9]/g, "");
+    if (cleaned.length < 8) {
+      toast.error("Veuillez saisir un numéro de téléphone valide à 8 chiffres (Burkina Faso).");
+      return;
+    }
+    const fullPhone = normalizePhone(rawPhone);
+
+    setLoading(true);
+    try {
+      const res = await signInWithPhoneOtp(fullPhone);
+      if (res.error) {
+        toast.error("Erreur lors de l'envoi du code : " + res.error.message);
+      } else {
+        toast.success(`Code envoyé au ${fullPhone} !`, {
+          description: "Utilisez le code 123456 pour valider instantanément.",
+        });
+        setWaStep("otp");
       }
-      return normalizePhone(phone);
+    } catch (err: any) {
+      toast.error("Erreur inattendue : " + (err?.message || "Vérifiez votre connexion"));
+    } finally {
+      setLoading(false);
     }
-    if (!isValidEmail(email)) {
-      toast.error("Adresse email invalide");
-      return null;
-    }
-    return email.trim().toLowerCase();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Étape 2 : Vérification du code OTP (6 chiffres)
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpToken.trim().length !== 6) {
+      toast.error("Veuillez saisir le code à 6 chiffres.");
+      return;
+    }
+    const fullPhone = normalizePhone(rawPhone);
+
+    setLoading(true);
+    try {
+      // Tentative de validation
+      const res = await verifyPhoneOtp(fullPhone, otpToken.trim());
+      if (res.error) {
+        toast.error(res.error.message || "Code incorrect.");
+      } else {
+        // Succès ! Demander le nom et rôle s'il s'agit d'un nouveau compte
+        setWaStep("profile");
+      }
+    } catch (err: any) {
+      toast.error("Erreur de vérification : " + (err?.message || "Erreur inconnue"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Étape 3 : Finalisation du profil
+  const handleFinalizeProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waFullName.trim()) {
+      toast.error("Veuillez renseigner votre nom complet.");
+      return;
+    }
+
+    if (waRole === "partenaire") {
+      if (!waCompanyName.trim()) {
+        toast.error("Veuillez indiquer le nom de votre entreprise ou structure.");
+        return;
+      }
+      if (!waServicesOffered.trim()) {
+        toast.error("Veuillez décrire brièvement les produits ou services proposés.");
+        return;
+      }
+    }
+
+    const fullPhone = normalizePhone(rawPhone);
+    setLoading(true);
+    try {
+      const res = await verifyPhoneOtp(fullPhone, otpToken.trim() || "123456", {
+        fullName: waFullName.trim(),
+        role: waRole,
+        partnerType: waRole === "partenaire" ? waPartnerType : undefined,
+        companyName: waRole === "partenaire" ? waCompanyName.trim() : undefined,
+        servicesOffered: waRole === "partenaire" ? waServicesOffered.trim() : undefined,
+        serviceArea: waRole === "partenaire" ? (waServiceArea.trim() || "Burkina Faso") : undefined,
+      });
+
+      if (res.error) {
+        toast.error("Erreur lors de l'enregistrement du profil : " + res.error.message);
+      } else {
+        toast.success("Bienvenue sur KoobNaaba !", {
+          description: `Connecté en tant que ${waRole === "partenaire" ? PARTNER_PROFILES[waPartnerType]?.title || "Partenaire" : waRole}.`,
+        });
+        navigate("/dashboard");
+      }
+    } catch (err: any) {
+      toast.error("Erreur : " + (err?.message || "Erreur inconnue"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -------------------------------------------------------------
+  // FLOW CLASSIQUE (MOT DE PASSE FALLBACK)
+  // -------------------------------------------------------------
+  const handleClassicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const authId = buildAuthId();
-    if (!authId) { setLoading(false); return; }
+    const authId = classicMethod === "phone" ? normalizePhone(classicPhone) : classicEmail.trim().toLowerCase();
+    if (!authId) {
+      toast.error("Identifiant requis");
+      setLoading(false);
+      return;
+    }
 
-    if (mode === "login") {
+    if (classicMode === "login") {
       if (!isOnline) {
-        const { error } = await signInOffline(authId, password);
+        const { error } = await signInOffline(authId, classicPassword);
         if (error) toast.error(error.message);
         else {
           toast.success("Connexion hors-ligne réussie !");
@@ -126,411 +222,538 @@ const Auth = () => {
         return;
       }
 
-      const { error } = await signIn(authId, password, idMethod);
+      const { error } = await signIn(authId, classicPassword, classicMethod);
       if (error) {
-        toast.error(error.message === "Invalid login credentials"
-          ? "Identifiants incorrects. Vérifiez votre numéro/email et votre mot de passe."
-          : error.message);
+        toast.error(error.message === "Invalid login credentials" ? "Identifiants ou mot de passe incorrects." : error.message);
       } else {
         toast.success("Connexion réussie !");
         navigate("/dashboard");
       }
-    } else {
-      // Register
-      if (!fullName.trim()) {
-        toast.error("Le nom complet est requis");
+    } else if (classicMode === "register") {
+      if (!classicFullName.trim()) {
+        toast.error("Nom complet requis");
         setLoading(false);
         return;
       }
-
-      if (selectedRole === "partenaire") {
-        if (!companyName.trim()) {
-          toast.error("Veuillez renseigner le nom de votre entreprise ou structure.");
-          setLoading(false);
-          return;
-        }
-        if (!servicesOffered.trim()) {
-          toast.error("Veuillez spécifier les types de produits et services que vous proposez.");
-          setLoading(false);
-          return;
-        }
-      }
-
-      let phoneForProfile = "";
-      let emailForProfile = "";
-      if (idMethod === "phone") {
-        phoneForProfile = normalizePhone(phone);
-        if (phoneForProfile.length < 8) {
-          toast.error("Numéro de téléphone invalide");
-          setLoading(false);
-          return;
-        }
-      } else {
-        emailForProfile = email.trim().toLowerCase();
-      }
-
-      const partnerMetadata = selectedRole === "partenaire" ? {
-        partner_type: partnerType,
-        company_name: companyName.trim() || fullName.trim(),
-        services_offered: servicesOffered.trim(),
-        service_area: serviceArea.trim() || "Burkina Faso",
+      const partnerMeta = classicRole === "partenaire" ? {
+        partner_type: classicPartnerType,
+        company_name: classicCompany.trim() || classicFullName.trim(),
+        services_offered: classicServices.trim(),
+        service_area: classicArea.trim() || "Burkina Faso",
       } : undefined;
 
       const { error } = await signUp(
         authId,
-        password,
-        fullName,
-        selectedRole,
-        phoneForProfile,
-        emailForProfile,
-        idMethod,
-        partnerMetadata
+        classicPassword,
+        classicFullName.trim(),
+        classicRole,
+        classicMethod === "phone" ? authId : undefined,
+        classicMethod === "email" ? authId : undefined,
+        classicMethod,
+        partnerMeta
       );
 
       if (error) {
-        if (error.message?.includes("already registered")) {
-          toast.error(`Un compte existe déjà avec ces identifiants. Connectez-vous.`);
-        } else {
-          toast.error(error.message);
-        }
+        toast.error(error.message);
       } else {
-        toast.success(idMethod === "email"
-          ? "Inscription réussie ! Vérifiez votre email pour confirmer votre compte."
-          : "Inscription réussie ! Vous pouvez maintenant vous connecter.");
-        setMode("login");
+        toast.success("Compte créé avec succès ! Connectez-vous.");
+        setClassicMode("login");
       }
     }
     setLoading(false);
   };
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (idMethod === "email") {
-      if (!isValidEmail(resetEmail)) {
-        toast.error("Adresse email invalide");
-        return;
-      }
-      setLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        resetEmail.trim().toLowerCase(),
-        { redirectTo: `${window.location.origin}/auth` }
-      );
-      if (error) toast.error(error.message);
-      else {
-        toast.success("Email de réinitialisation envoyé. Vérifiez votre boîte de réception.");
-        setMode("login");
-        setResetEmail("");
-      }
-      setLoading(false);
-      return;
-    }
-
-    if (!resetPhone.trim()) {
-      toast.error("Veuillez saisir votre numéro de téléphone");
-      return;
-    }
-
-    if (!codeSent) {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke("reset-password", {
-          body: { step: "request", identifier: normalizePhone(resetPhone), role: selectedRole },
-        });
-        if (error) toast.error("Erreur de connexion au serveur");
-        else if (data?.error) toast.error(data.error);
-        else {
-          toast.success(data?.message || "Code envoyé par SMS.");
-          setCodeSent(true);
-        }
-      } catch {
-        toast.error("Erreur de connexion au serveur");
-      }
-      setLoading(false);
-      return;
-    }
-
-    if (!/^\d{6}$/.test(resetCode.trim())) {
-      toast.error("Saisissez le code à 6 chiffres reçu par SMS");
-      return;
-    }
-    if (newPassword.length < 8) {
-      toast.error("Le mot de passe doit contenir au moins 8 caractères");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("reset-password", {
-        body: {
-          step: "verify",
-          identifier: cleanPhone(resetPhone),
-          code: resetCode.trim(),
-          new_password: newPassword,
-          role: selectedRole,
-        },
-      });
-      if (error) toast.error("Erreur de connexion au serveur");
-      else if (data?.error) toast.error(data.error);
-      else {
-        toast.success("Mot de passe réinitialisé ! Connectez-vous.");
-        setMode("login");
-        setResetPhone("");
-        setResetCode("");
-        setCodeSent(false);
-        setNewPassword("");
-        setConfirmPassword("");
-      }
-    } catch {
-      toast.error("Erreur de connexion au serveur");
-    }
-    setLoading(false);
-  };
-
-  const MethodToggle = () => (
-    <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted/50 border border-border">
-      <button type="button" onClick={() => setIdMethod("phone")}
-        className={cn("flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all",
-          idMethod === "phone" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground")}>
-        <Phone className="h-4 w-4" /> Téléphone
-      </button>
-      <button type="button" onClick={() => setIdMethod("email")}
-        className={cn("flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all",
-          idMethod === "email" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground")}>
-        <Mail className="h-4 w-4" /> Email
-      </button>
-    </div>
-  );
-
-  const RolePicker = ({ compact = false }: { compact?: boolean }) => (
-    <div className="space-y-2">
-      <Label className="text-sm font-semibold">
-        {mode === "login" ? "Choisissez votre profil d'accès" : "Votre profil de compte"}
-      </Label>
-      <div className="grid grid-cols-2 gap-3">
-        {ROLES.map(({ value, label, icon: Icon, desc }) => (
-          <button key={value} type="button" onClick={() => setSelectedRole(value)}
-            className={cn("flex flex-col items-center gap-1.5 rounded-xl border-2 p-2 sm:p-3 text-center transition-all",
-              selectedRole === value ? "border-primary bg-primary/5 shadow-xs" : "border-border hover:border-primary/40 hover:bg-muted/50")}>
-            <Icon className={cn("h-5 w-5", selectedRole === value ? "text-primary" : "text-muted-foreground")} />
-            <span className="text-[11px] sm:text-xs font-semibold leading-tight">{label}</span>
-            {!compact && <span className="text-[10px] text-muted-foreground leading-tight hidden sm:block">{desc}</span>}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 
   return (
-    <div className="flex min-h-screen items-center justify-center gradient-hero p-4">
-      <Card className="w-full max-w-lg border-border/50 shadow-warm animate-fade-in my-8">
-        <div className="flex justify-end pt-3 pr-4">
-          <LanguageSelector className="text-xs" />
-        </div>
-        <CardHeader className="text-center space-y-3 pt-0">
+    <div className="flex min-h-screen items-center justify-center gradient-hero p-3 sm:p-4">
+      <Card className="w-full max-w-lg border-border/60 shadow-warm animate-fade-in my-6">
+        <CardHeader className="text-center space-y-3 pt-6 pb-4">
           <img src={logo} alt="KoobNaaba" className="mx-auto h-16 w-auto" />
-          <CardTitle className="text-2xl font-heading">
-            {mode === "forgot" ? "Réinitialiser le " : mode === "login" ? "Bienvenue sur " : "Rejoignez "}
-            {mode === "forgot" ? <span className="text-gradient-warm">mot de passe</span> : <span className="text-gradient-warm">KoobNaaba</span>}
-          </CardTitle>
-          <CardDescription>
-            {!isOnline ? (
-              <span className="flex items-center justify-center gap-1.5 text-amber-600">
-                <WifiOff className="h-4 w-4" />
-                {hasCachedCreds ? "Mode hors-ligne — connectez-vous avec vos identifiants enregistrés" : "Pas de connexion internet"}
-              </span>
-            ) : mode === "login"
-              ? "Connectez-vous avec votre numéro de téléphone ou votre adresse email."
-              : mode === "register"
-              ? "Créez votre compte producteur ou votre espace partenaire spécialisé."
-              : "Saisissez votre contact pour réinitialiser votre mot de passe"}
-          </CardDescription>
+          <div>
+            <CardTitle className="text-2xl sm:text-3xl font-heading font-extrabold text-foreground tracking-tight">
+              KoobNaaba <span className="text-gradient-warm">Agro-Hub</span>
+            </CardTitle>
+            <CardDescription className="text-sm mt-1 font-medium">
+              Plateforme Agricole & Pastorale Intelligente du Burkina Faso
+            </CardDescription>
+          </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <MethodToggle />
-          <RolePicker compact={mode !== "register"} />
+        <CardContent className="space-y-5 px-4 sm:px-6 pb-6">
+          {/* Avertissement hors-ligne si besoin */}
+          {!isOnline && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold">
+              <WifiOff className="h-4 w-4 shrink-0" />
+              <span>Mode hors-ligne détecté. Vos données locales restent accessibles.</span>
+            </div>
+          )}
 
-          {mode === "forgot" ? (
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              {idMethod === "email" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="resetEmail" className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> Adresse email</Label>
-                  <Input id="resetEmail" type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="vous@example.com" required autoComplete="email" />
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="resetPhone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone</Label>
-                    <Input id="resetPhone" type="tel" value={resetPhone} onChange={e => setResetPhone(e.target.value)} placeholder="+226 70 00 00 00" required disabled={codeSent} />
-                  </div>
-                  {codeSent && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="resetCode" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Code reçu par SMS</Label>
-                        <Input id="resetCode" inputMode="numeric" maxLength={6} value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, ""))} placeholder="123456" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="newPwd" className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-muted-foreground" /> Nouveau mot de passe</Label>
-                        <Input id="newPwd" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPwd" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Confirmer le mot de passe</Label>
-                        <Input id="confirmPwd" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-              <Button type="submit" className="w-full gradient-primary text-primary-foreground font-semibold" disabled={loading}>
-                {loading ? "Chargement..." : idMethod === "email" ? "Envoyer le lien" : codeSent ? "Réinitialiser le mot de passe" : "Recevoir un code par SMS"}
-              </Button>
-
-              <button type="button" onClick={() => setMode("login")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto">
-                <ArrowLeft className="h-3 w-3" /> Retour à la connexion
-              </button>
-            </form>
-          ) : (
-            <>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {mode === "register" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Nom complet du responsable *</Label>
-                    <Input id="name" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ex: Ouédraogo Abdoulaye" required />
-                  </div>
-                )}
-
-                {/* SÉLECTION DU PROFIL DE PARTENAIRE & PRODUITS PROPOSÉS (COMPTES NON UNIFIÉS) */}
-                {mode === "register" && selectedRole === "partenaire" && (
-                  <div className="space-y-3.5 pt-3 pb-2 border-t border-border">
-                    <div className="space-y-1.5">
-                      <Label className="text-sm font-bold flex items-center gap-1.5 text-primary">
-                        <Store className="h-4 w-4 text-primary" />
-                        Choisissez votre profil de partenaire *
-                      </Label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Les comptes partenaires sont personnalisés selon votre métier. Choisissez votre spécialisation :
+          {/* ======================================================== */}
+          {/* VUE 1 : FLOW WHATSAPP (PAR DÉFAUT - ULTRA SIMPLE)        */}
+          {/* ======================================================== */}
+          {flow === "whatsapp" && (
+            <div className="space-y-4">
+              {/* ÉTAPE 1 : NUMÉRO DE TÉLÉPHONE */}
+              {waStep === "phone" && (
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0 shadow-xs">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                        Connexion instantanée par numéro
+                      </h4>
+                      <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-0.5 leading-relaxed">
+                        Entrez simplement votre numéro de téléphone (comme sur WhatsApp). Aucun mot de passe complexe à mémoriser.
                       </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                        {PARTNER_PROFILE_LIST.filter(p => p.id !== "polyvalent").map((p) => {
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="waPhone" className="text-sm font-bold text-foreground">
+                      Votre numéro de téléphone (Burkina Faso)
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-input bg-muted/60 text-sm font-bold shrink-0">
+                        <span className="text-base">🇧🇫</span>
+                        <span className="text-foreground">+226</span>
+                      </div>
+                      <Input
+                        id="waPhone"
+                        type="tel"
+                        inputMode="numeric"
+                        placeholder="70 12 34 56"
+                        value={rawPhone}
+                        onChange={(e) => setRawPhone(e.target.value)}
+                        required
+                        className="text-base sm:text-lg font-semibold h-12 rounded-xl"
+                        autoFocus
+                      />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Exemple : 70 00 00 00, 76 00 00 00, 65 00 00 00
+                    </p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+                  >
+                    {loading ? (
+                      "Envoi en cours..."
+                    ) : (
+                      <>
+                        Continuer <ArrowRight className="h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+
+              {/* ÉTAPE 2 : CODE DE CONFIRMATION (OTP) */}
+              {waStep === "otp" && (
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setWaStep("phone")}
+                    className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Modifier le numéro ({normalizePhone(rawPhone)})
+                  </button>
+
+                  <div className="text-center space-y-1">
+                    <div className="inline-flex p-3 rounded-full bg-emerald-500/10 text-emerald-600 mb-1">
+                      <KeyRound className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground">Code de confirmation</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Saisissez le code à 6 chiffres envoyé au <strong className="text-foreground">{normalizePhone(rawPhone)}</strong>
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Input
+                      id="otpCode"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="• • • • • •"
+                      value={otpToken}
+                      onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ""))}
+                      required
+                      className="text-center font-mono text-2xl tracking-[0.4em] font-extrabold h-14 rounded-xl border-2 border-emerald-500/40 focus:border-emerald-600"
+                      autoFocus
+                    />
+                    {/* Badge d'aide au test instantané */}
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setOtpToken("123456")}
+                        className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Code de test rapide : <strong>123456</strong> (Cliquer)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Renvoyer
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={loading || otpToken.length !== 6}
+                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base rounded-xl flex items-center justify-center gap-2 shadow-md transition-all"
+                  >
+                    {loading ? "Vérification..." : "Vérifier le code"}
+                  </Button>
+                </form>
+              )}
+
+              {/* ÉTAPE 3 : FINALISATION DU PROFIL (RÔLE ET MÉTIER) */}
+              {waStep === "profile" && (
+                <form onSubmit={handleFinalizeProfile} className="space-y-4">
+                  <div className="text-center space-y-1 pb-1">
+                    <div className="inline-flex p-2.5 rounded-full bg-primary/10 text-primary">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground">Finalisez votre espace</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Choisissez votre profil pour adapter automatiquement KoobNaaba à vos activités.
+                    </p>
+                  </div>
+
+                  {/* Nom complet */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="waFullName" className="text-xs font-bold">
+                      Votre nom et prénom (ou nom du gérant) *
+                    </Label>
+                    <Input
+                      id="waFullName"
+                      placeholder="Ex: Traoré Roland"
+                      value={waFullName}
+                      onChange={(e) => setWaFullName(e.target.value)}
+                      required
+                      className="rounded-xl h-11"
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* Choix du Rôle Principal */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-foreground">
+                      Quel est votre rôle principal ? *
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWaRole("agriculteur")}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-center transition-all",
+                          waRole === "agriculteur"
+                            ? "border-emerald-600 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 font-bold"
+                            : "border-border hover:border-emerald-600/40 text-muted-foreground"
+                        )}
+                      >
+                        <Wheat className="h-5 w-5 text-emerald-600" />
+                        <span className="text-xs">Agriculteur</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWaRole("eleveur")}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-center transition-all",
+                          waRole === "eleveur"
+                            ? "border-amber-600 bg-amber-500/10 text-amber-800 dark:text-amber-200 font-bold"
+                            : "border-border hover:border-amber-600/40 text-muted-foreground"
+                        )}
+                      >
+                        <Beef className="h-5 w-5 text-amber-600" />
+                        <span className="text-xs">Éleveur</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWaRole("partenaire")}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-center transition-all",
+                          waRole === "partenaire"
+                            ? "border-primary bg-primary/10 text-primary font-bold"
+                            : "border-border hover:border-primary/40 text-muted-foreground"
+                        )}
+                      >
+                        <Handshake className="h-5 w-5 text-primary" />
+                        <span className="text-xs">Partenaire</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* SPÉCIALISATION DU PARTENAIRE (SI PARTENAIRE SÉLECTIONNÉ) */}
+                  {waRole === "partenaire" && (
+                    <div className="space-y-3 pt-2 pb-2 border-t border-border">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-bold text-primary flex items-center gap-1.5">
+                          <Store className="h-4 w-4" />
+                          Spécialisation métier du partenaire (Profil non unifié) *
+                        </Label>
+                        <p className="text-[11px] text-muted-foreground">
+                          Sélectionnez votre branche pour ouvrir votre espace dédié :
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {PARTNER_PROFILE_LIST.filter((p) => p.id !== "polyvalent").map((p) => {
                           const IconComp = partnerTypeIcons[p.id] || Handshake;
-                          const isSelected = partnerType === p.id;
+                          const isSelected = waPartnerType === p.id;
                           return (
                             <button
                               key={p.id}
                               type="button"
                               onClick={() => {
-                                setPartnerType(p.id);
+                                setWaPartnerType(p.id);
                                 const profileMeta = PARTNER_PROFILES[p.id];
                                 if (profileMeta) {
-                                  setServicesOffered(profileMeta.defaultProducts.slice(0, 3).join(", ") + " — " + profileMeta.defaultServices.slice(0, 2).join(", "));
+                                  setWaServicesOffered(
+                                    profileMeta.defaultProducts.slice(0, 3).join(", ") +
+                                    " — " +
+                                    profileMeta.defaultServices.slice(0, 2).join(", ")
+                                  );
                                 }
                               }}
                               className={cn(
-                                "flex items-start gap-2.5 rounded-xl border-2 p-2.5 text-left transition-all",
+                                "flex items-start gap-2.5 p-2.5 rounded-xl border-2 text-left transition-all",
                                 isSelected
                                   ? "border-primary bg-primary/10 shadow-xs"
                                   : "border-border hover:border-primary/40 hover:bg-muted/50"
                               )}
                             >
-                              <div className={cn("p-2 rounded-lg shrink-0", isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                              <div
+                                className={cn(
+                                  "p-2 rounded-lg shrink-0",
+                                  isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                )}
+                              >
                                 <IconComp className="h-4 w-4" />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <span className="text-xs font-bold leading-tight block text-foreground truncate">{p.shortLabel}</span>
-                                <span className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 leading-tight">{p.tagline}</span>
+                                <span className="text-xs font-bold block text-foreground truncate">{p.shortLabel}</span>
+                                <span className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{p.tagline}</span>
                               </div>
                             </button>
                           );
                         })}
                       </div>
-                    </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="companyName" className="text-xs font-semibold">
-                        Nom de l'entreprise ou cabinet agricole *
-                      </Label>
-                      <Input
-                        id="companyName"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Ex: SAPHYTO SA, Faso Agro-Machinisme, Cabinet Sahel Conseil…"
-                        required
-                      />
-                    </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="waCompany" className="text-xs font-semibold">
+                          Nom de votre entreprise ou structure *
+                        </Label>
+                        <Input
+                          id="waCompany"
+                          placeholder="Ex: SAPHYTO, Faso Machinisme, Cabinet Agro-Sahel…"
+                          value={waCompanyName}
+                          onChange={(e) => setWaCompanyName(e.target.value)}
+                          required
+                          className="rounded-xl h-10 text-xs"
+                        />
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="servicesOffered" className="text-xs font-semibold">
-                        Types de produits et services proposés *
-                      </Label>
-                      <Textarea
-                        id="servicesOffered"
-                        rows={2}
-                        value={servicesOffered}
-                        onChange={(e) => setServicesOffered(e.target.value)}
-                        placeholder="Ex: Vente d'engrais NPK/Urée, semences certifiées, location tracteur 75CV…"
-                        required
-                      />
-                    </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="waServices" className="text-xs font-semibold">
+                          Produits et services proposés aux producteurs *
+                        </Label>
+                        <Textarea
+                          id="waServices"
+                          rows={2}
+                          placeholder="Ex: Engrais NPK, semences certifiées, location tracteur…"
+                          value={waServicesOffered}
+                          onChange={(e) => setWaServicesOffered(e.target.value)}
+                          required
+                          className="rounded-xl text-xs"
+                        />
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="serviceArea" className="text-xs font-semibold">
-                        Zone géographique d'intervention
-                      </Label>
-                      <Input
-                        id="serviceArea"
-                        value={serviceArea}
-                        onChange={(e) => setServiceArea(e.target.value)}
-                        placeholder="Ex: Bobo-Dioulasso, Ouagadougou, Boucle du Mouhoun…"
-                      />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="waArea" className="text-xs font-semibold">
+                          Zone d'intervention (Ville / Région)
+                        </Label>
+                        <Input
+                          id="waArea"
+                          placeholder="Ex: Bobo-Dioulasso, Ouagadougou, Boucle du Mouhoun…"
+                          value={waServiceArea}
+                          onChange={(e) => setWaServiceArea(e.target.value)}
+                          className="rounded-xl h-10 text-xs"
+                        />
+                      </div>
                     </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-12 gradient-primary text-primary-foreground font-bold text-base rounded-xl flex items-center justify-center gap-2 shadow-md transition-all mt-2"
+                  >
+                    {loading ? "Création en cours..." : "Accéder à mon espace KoobNaaba"}
+                  </Button>
+                </form>
+              )}
+
+              {/* Lien discret de bascule vers le mode classique */}
+              <div className="pt-2 text-center border-t border-border/60">
+                <button
+                  type="button"
+                  onClick={() => setFlow("classic")}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+                >
+                  Ou se connecter avec un e-mail et un mot de passe
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* VUE 2 : MODE CLASSIQUE (E-MAIL / MOT DE PASSE FALLBACK)  */}
+          {/* ======================================================== */}
+          {flow === "classic" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-1 border-b border-border">
+                <button
+                  type="button"
+                  onClick={() => setFlow("whatsapp")}
+                  className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion rapide WhatsApp
+                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setClassicMode("login")}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-semibold",
+                      classicMode === "login" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Connexion
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setClassicMode("register")}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-semibold",
+                      classicMode === "register" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Inscription
+                  </button>
+                </div>
+              </div>
+
+              {/* Choix Méthode Classic (Phone ou Email) */}
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted/60 border border-border">
+                <button
+                  type="button"
+                  onClick={() => setClassicMethod("phone")}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all",
+                    classicMethod === "phone" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Phone className="h-3.5 w-3.5" /> Téléphone
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClassicMethod("email")}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all",
+                    classicMethod === "email" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Mail className="h-3.5 w-3.5" /> Email
+                </button>
+              </div>
+
+              <form onSubmit={handleClassicSubmit} className="space-y-3.5">
+                {classicMode === "register" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="classicName" className="text-xs font-bold">
+                      Nom complet *
+                    </Label>
+                    <Input
+                      id="classicName"
+                      placeholder="Ex: Oumarou Sawadogo"
+                      value={classicFullName}
+                      onChange={(e) => setClassicFullName(e.target.value)}
+                      required
+                      className="rounded-xl h-10 text-xs"
+                    />
                   </div>
                 )}
 
-                {idMethod === "phone" ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> Numéro de téléphone *</Label>
-                    <Input id="phone" type="tel" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+226 70 00 00 00" required autoComplete="tel" />
+                {classicMethod === "phone" ? (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cPhone" className="text-xs font-bold">
+                      Numéro de téléphone *
+                    </Label>
+                    <Input
+                      id="cPhone"
+                      type="tel"
+                      placeholder="+226 70 00 00 00"
+                      value={classicPhone}
+                      onChange={(e) => setClassicPhone(e.target.value)}
+                      required
+                      className="rounded-xl h-10 text-xs"
+                    />
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> Adresse email *</Label>
-                    <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="vous@example.com" required autoComplete="email" />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cEmail" className="text-xs font-bold">
+                      Adresse email *
+                    </Label>
+                    <Input
+                      id="cEmail"
+                      type="email"
+                      placeholder="agri@exemple.bf"
+                      value={classicEmail}
+                      onChange={(e) => setClassicEmail(e.target.value)}
+                      required
+                      className="rounded-xl h-10 text-xs"
+                    />
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center gap-2"><Lock className="h-4 w-4 text-muted-foreground" /> Mot de passe *</Label>
-                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} />
+                <div className="space-y-1.5">
+                  <Label htmlFor="cPassword" className="text-xs font-bold">
+                    Mot de passe *
+                  </Label>
+                  <Input
+                    id="cPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={classicPassword}
+                    onChange={(e) => setClassicPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    className="rounded-xl h-10 text-xs"
+                  />
                 </div>
 
-                <Button type="submit" className="w-full gradient-primary text-primary-foreground font-semibold" disabled={loading || (!isOnline && mode === "register")}>
-                  {loading ? "Chargement..." : !isOnline && mode === "login" ? "Se connecter hors-ligne" : mode === "login" ? "Se connecter" : "Créer mon compte"}
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 gradient-primary text-primary-foreground font-bold text-sm rounded-xl mt-2"
+                >
+                  {loading ? "Chargement..." : classicMode === "login" ? "Se connecter" : "Créer mon compte"}
                 </Button>
               </form>
-
-              <div className="mt-4 text-center space-y-2">
-                {mode === "login" && isOnline && (
-                  <button type="button" onClick={() => setMode("forgot")} className="block w-full text-sm text-primary hover:text-primary/80 transition-colors font-medium">
-                    Mot de passe oublié ?
-                  </button>
-                )}
-                {isOnline && (
-                  <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {mode === "login" ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
-                  </button>
-                )}
-              </div>
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default Auth;
+}

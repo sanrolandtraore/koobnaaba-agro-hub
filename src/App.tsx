@@ -107,8 +107,6 @@ const App = () => (
               <Route path="/partners/:partnerId" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
               <Route element={<AuthProvider><><OfflineIndicator /><Outlet /></></AuthProvider>}>
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/pin-setup" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/auth/pin" element={<Navigate to="/auth" replace />} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<Suspense fallback={<PageLoader />}><RoleDashboardHome /></Suspense>} />
                 <Route path="farms" element={<Suspense fallback={<PageLoader />}><FarmsPage /></Suspense>} />

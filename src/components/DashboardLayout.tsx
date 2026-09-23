@@ -32,22 +32,22 @@ const DashboardLayout = () => {
       <RoleSidebar />
 
       <div className="flex flex-1 flex-col min-w-0">
-        {/* Top header Premium sans barres de nav superflues */}
-        <header className="flex items-center justify-between border-b border-border/80 px-4 md:px-8 py-3 bg-card/90 backdrop-blur-md shrink-0 shadow-xs">
+        {/* Top header Premium sans barres de navigation superflues */}
+        <header className="flex items-center justify-between border-b border-border/80 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 bg-card/90 backdrop-blur-md shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden shrink-0 text-foreground h-11 w-11 rounded-xl">
+                <Button variant="ghost" size="icon" className="lg:hidden shrink-0 text-foreground h-11 w-11 rounded-xl">
                   <Menu className="h-6 w-6" />
-                  <span className="sr-only">Menu de navigation</span>
+                  <span className="sr-only">Menu principal</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 p-0 border-r border-sidebar-border">
+              <SheetContent side="left" className="w-72 sm:w-80 p-0 border-r border-sidebar-border">
                 <SidebarNavContent onNavigate={() => setOpen(false)} />
               </SheetContent>
             </Sheet>
-            <img src={logo} alt="KoobNaaba" className="h-9 w-auto md:hidden" />
-            <span className="hidden md:inline-block font-heading font-semibold text-base text-foreground/80">
+            <img src={logo} alt="KoobNaaba" className="h-8 sm:h-9 w-auto lg:hidden" />
+            <span className="hidden lg:inline-block font-heading font-bold text-base text-foreground/85">
               KoobNaaba Agro-Hub
             </span>
           </div>
@@ -85,7 +85,7 @@ const DashboardLayout = () => {
 
         {/* Main content avec typographie confortable et aérée */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container max-w-6xl py-6 px-4 md:py-8 md:px-8">
+          <div className="container max-w-6xl py-4 px-3.5 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
             <Outlet />
           </div>
         </main>

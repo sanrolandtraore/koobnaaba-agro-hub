@@ -4,16 +4,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sparkles, Briefcase, Store, Users, Handshake, CheckCircle2, ArrowRight,
-  ShieldCheck, Zap, Package, Tractor, Wallet, FileText, ClipboardList, Clock, Plus,
-  Microscope, Beef, Heart, Baby, Utensils, BookOpen, MapPin, Calculator, Eye,
-  Landmark, FolderKanban, Copy, ExternalLink, FlaskConical, SlidersHorizontal, Check, Wrench
-} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { getStoredProviderSubscription, ProviderSubscription, SUBSCRIPTION_PLANS } from "@/lib/providerSubscription";
-import { partnerStorage, PartnerOffer, PartnerMission, QuoteRequest, ProviderClient } from "@/lib/partnerStorage";
+import {
+  Store, Plus, Phone, CheckCircle2, Clock, XCircle, Trash2,
+  ExternalLink, Copy, SlidersHorizontal, Package, Briefcase, FileText,
+  FlaskConical, Tractor, Microscope, Beef, Landmark, Handshake, MessageSquare
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getStoredProviderSubscription } from "@/lib/providerSubscription";
+import { partnerStorage, PartnerOffer, QuoteRequest, PartnerMission } from "@/lib/partnerStorage";
 import { PARTNER_PROFILES, PARTNER_PROFILE_LIST, PartnerProfileType } from "@/lib/partnerProfiles";
 
 const getProfileIcon = (iconName: string, className = "h-5 w-5") => {
@@ -35,29 +38,39 @@ const getProfileIcon = (iconName: string, className = "h-5 w-5") => {
 
 export default function PartenaireDashboard() {
   const { user, profile, partnerType, setPartnerType } = useAuth();
-  const [sub, setSub] = useState<ProviderSubscription>(getStoredProviderSubscription());
+  const [sub] = useState(() => getStoredProviderSubscription());
   const [offers, setOffers] = useState<PartnerOffer[]>([]);
-  const [missions, setMissions] = useState<PartnerMission[]>([]);
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
-  const [clients, setClients] = useState<ProviderClient[]>([]);
+  const [missions, setMissions] = useState<PartnerMission[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Vue active : "offres" ou "commandes"
+  const [activeTab, setActiveTab] = useState<"offres" | "commandes">("offres");
+
+  // Dialogs
   const [isSwitchDialogOpen, setIsSwitchDialogOpen] = useState(false);
+  const [isAddOfferOpen, setIsAddOfferOpen] = useState(false);
+
+  // Formulaire d'ajout d'offre
+  const [offerTitle, setOfferTitle] = useState("");
+  const [offerPrice, setOfferPrice] = useState("");
+  const [offerUnit, setOfferUnit] = useState("sac");
+  const [offerDesc, setOfferDesc] = useState("");
+  const [offerPhone, setOfferPhone] = useState(user?.phone || "+226 ");
 
   const activeMeta = PARTNER_PROFILES[partnerType] || PARTNER_PROFILES.fournisseur_intrants;
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [o, m, q, c] = await Promise.all([
+      const [o, q, m] = await Promise.all([
         partnerStorage.getOffers(user?.id),
-        partnerStorage.getMissions(user?.id),
         partnerStorage.getQuotes(),
-        partnerStorage.getClients(user?.id),
+        partnerStorage.getMissions(user?.id),
       ]);
       setOffers(o);
-      setMissions(m);
       setQuotes(q);
-      setClients(c);
+      setMissions(m);
     } catch (e) {
       console.error(e);
     } finally {
@@ -67,630 +80,533 @@ export default function PartenaireDashboard() {
 
   useEffect(() => {
     loadData();
-    const subHandler = () => setSub(getStoredProviderSubscription());
-    const dataHandler = () => loadData();
-    window.addEventListener("koobnaaba-subscription-updated", subHandler);
-    window.addEventListener("koobnaaba-partner-data-updated", dataHandler);
-    return () => {
-      window.removeEventListener("koobnaaba-subscription-updated", subHandler);
-      window.removeEventListener("koobnaaba-partner-data-updated", dataHandler);
-    };
+    const handleUpdate = () => loadData();
+    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
   }, [user]);
 
-  const activePlan = SUBSCRIPTION_PLANS.find((p) => p.id === sub.tier) || SUBSCRIPTION_PLANS[2];
-  const activeMissions = missions.filter((m) => m.status === "planifiee" || m.status === "en_cours");
-  const pendingQuotes = quotes.filter((q) => q.status === "en_attente");
-  const totalRevenue = missions.filter((m) => m.paid && m.price).reduce((acc, m) => acc + Number(m.price || 0), 0);
-  const pendingRevenue = missions.filter((m) => !m.paid && m.price).reduce((acc, m) => acc + Number(m.price || 0), 0);
+  // Ajouter une offre simplement
+  const handleCreateOffer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!offerTitle.trim()) {
+      toast.error("Veuillez saisir le nom de votre produit ou service.");
+      return;
+    }
 
-  const handleSelectPartnerType = (type: PartnerProfileType) => {
-    setPartnerType(type);
-    setIsSwitchDialogOpen(false);
-    toast.success(`Profil activé : ${PARTNER_PROFILES[type].title}`, {
-      description: "Votre tableau de bord et votre menu latéral ont été adaptés à votre métier."
-    });
+    try {
+      await partnerStorage.saveOffer({
+        owner_id: user?.id || "demo-partner-id",
+        partner_name: profile?.full_name || sub.companyName || "Partenaire KoobNaaba",
+        category: partnerType === "fournisseur_intrants" ? "intrants" : partnerType === "machinisme_travaux" ? "materiel" : "services",
+        title: offerTitle.trim(),
+        description: offerDesc.trim() || null,
+        price_indication: offerPrice.trim() || "Sur devis",
+        unit: offerUnit.trim() || "unité",
+        contact_phone: offerPhone.trim() || null,
+        is_active: true,
+      });
+
+      toast.success("Produit / Service publié avec succès !");
+      setIsAddOfferOpen(false);
+      setOfferTitle("");
+      setOfferPrice("");
+      setOfferDesc("");
+      loadData();
+    } catch (err: any) {
+      toast.error("Erreur lors de la publication : " + (err?.message || "Erreur inconnue"));
+    }
   };
 
+  // Supprimer une offre
+  const handleDeleteOffer = async (offerId: string) => {
+    if (!confirm("Voulez-vous vraiment retirer cette offre ?")) return;
+    try {
+      await partnerStorage.deleteOffer(offerId);
+      toast.success("Offre supprimée.");
+      loadData();
+    } catch (err: any) {
+      toast.error("Erreur lors de la suppression.");
+    }
+  };
+
+  // Traiter une commande (Accepter / Refuser)
+  const handleQuoteStatus = async (quoteId: string, status: "acceptee" | "refusee") => {
+    try {
+      await partnerStorage.updateQuoteStatus(quoteId, status);
+      toast.success(status === "acceptee" ? "Commande validée !" : "Commande déclinée.");
+      loadData();
+    } catch (err: any) {
+      toast.error("Erreur lors de la mise à jour.");
+    }
+  };
+
+  const pendingQuotesCount = quotes.filter((q) => q.status === "en_attente").length;
+  const activeMissionsCount = missions.filter((m) => m.status === "planifiee" || m.status === "en_cours").length;
+
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8 animate-fade-in pb-12">
-      {/* Welcome Banner Spécialisé */}
-      <div className="card-premium bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/25 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-card-elevated">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 text-primary text-xs font-bold uppercase tracking-wider">
-              {getProfileIcon(activeMeta.iconName, "h-4 w-4")}
+    <div className="p-3 sm:p-5 md:p-6 max-w-5xl mx-auto space-y-6 animate-fade-in pb-16">
+      {/* ── 1. EN-TÊTE SIMPLIFIÉ PARTENAIRE ── */}
+      <div className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+              {getProfileIcon(activeMeta.iconName, "h-3.5 w-3.5")}
               {activeMeta.badge}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => setIsSwitchDialogOpen(true)}
-              className="h-8 text-xs font-bold text-foreground hover:bg-muted gap-1.5 px-3 rounded-full border-dashed"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" /> Changer de profil métier
-            </Button>
+              <SlidersHorizontal className="h-3 w-3" /> Changer de spécialisation
+            </button>
           </div>
-          <h1 className="text-3xl md:text-4xl font-heading font-extrabold text-foreground tracking-tight">
-            Bonjour {profile?.full_name || sub.companyName}
+          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-foreground tracking-tight">
+            Espace {profile?.full_name || sub.companyName || "Partenaire"}
           </h1>
-          <p className="text-base font-bold text-foreground/90">
-            {activeMeta.dashboardTitle}
-          </p>
-          <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed font-medium">
-            {activeMeta.tagline}
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+            {activeMeta.dashboardTitle} — Gérez simplement votre catalogue et répondez directement aux producteurs.
           </p>
         </div>
 
-        <div className="flex flex-col items-start md:items-end gap-2.5 bg-background/90 backdrop-blur-md p-5 rounded-2xl border border-border/80 shadow-xs shrink-0">
-          <div className="flex items-center gap-2">
-            <Badge className="bg-emerald-600 text-white font-bold text-xs px-3 py-1">
-              <CheckCircle2 className="h-4 w-4 mr-1.5" /> Formule {activePlan.title}
-            </Badge>
-          </div>
-          <p className="text-xs font-medium text-muted-foreground">
-            Valide jusqu'au {new Date(sub.endDate).toLocaleDateString("fr-FR")}
-          </p>
-          <Button asChild size="sm" variant="outline" className="h-10 text-xs font-bold rounded-xl mt-1 border-border hover:border-primary/50">
-            <Link to="/dashboard/partenaire-abonnement">
-              Gérer mon abonnement <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Vitrine Partenaire Publique & Lien Unique */}
-      <div className="card-premium bg-gradient-to-r from-emerald-500/10 via-primary/5 to-teal-500/10 border border-emerald-500/30 rounded-2xl p-6 shadow-card-elevated flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
-            <Store className="h-4 w-4" /> Vitrine Partenaire Officielle & URL Dédiée
-          </div>
-          <h3 className="text-xl font-heading font-bold text-foreground">
-            Votre vitrine officielle KoobNaaba est active
-          </h3>
-          <p className="text-sm text-muted-foreground max-w-2xl font-medium">
-            Tous vos produits, intrants, matériels et prestations spécialisés avec photos/vidéos sont synchronisés en direct sur votre page vitrine, le module agriculteur et l'accueil.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto shrink-0">
+        {/* Boutons Vitrine & Partage */}
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="outline"
-            className="h-11 px-4 gap-2 text-sm font-bold rounded-xl border-border hover:border-primary/50"
+            size="sm"
             onClick={() => {
-              const url = `${window.location.origin}/partenaire/${user?.id || 'demo-partner-id'}`;
+              const url = `${window.location.origin}/partenaire/${user?.id || "demo-partner-id"}`;
               navigator.clipboard.writeText(url);
-              toast.success("Lien unique de votre vitrine copié dans le presse-papier !");
+              toast.success("Lien de votre vitrine copié ! Vous pouvez le coller sur WhatsApp.");
             }}
+            className="rounded-xl h-10 gap-1.5 text-xs font-bold"
           >
-            <Copy className="h-4 w-4" /> Copier mon lien
+            <Copy className="h-3.5 w-3.5" /> Copier lien vitrine
           </Button>
           <Button
             asChild
-            className="h-11 px-5 gradient-primary text-primary-foreground text-sm font-bold rounded-xl gap-2 shadow-premium"
+            size="sm"
+            className="rounded-xl h-10 gradient-primary text-primary-foreground gap-1.5 text-xs font-bold shadow-xs"
           >
-            <Link to={`/partenaire/${user?.id || 'demo-partner-id'}`} target="_blank">
-              <ExternalLink className="h-4 w-4" /> Voir ma vitrine publique
+            <Link to={`/partenaire/${user?.id || "demo-partner-id"}`} target="_blank">
+              <ExternalLink className="h-3.5 w-3.5" /> Voir ma vitrine
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* KPI Tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link to="/dashboard/partenaire-mes-offres">
-          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
-            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold text-muted-foreground">Offres & Articles</CardTitle>
-              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600"><Store className="h-5 w-5" /></div>
-            </CardHeader>
-            <CardContent className="p-5 pt-1">
-              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{offers.length}</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-1">{offers.filter(o => o.is_active).length} actifs sur la plateforme</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/dashboard/missions">
-          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
-            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold text-muted-foreground">Missions & Chantiers</CardTitle>
-              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600"><Briefcase className="h-5 w-5" /></div>
-            </CardHeader>
-            <CardContent className="p-5 pt-1">
-              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{activeMissions.length}</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-1">{missions.length} dossiers au total</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/dashboard/quote-requests">
-          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
-            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold text-muted-foreground">Demandes de devis</CardTitle>
-              <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600"><FileText className="h-5 w-5" /></div>
-            </CardHeader>
-            <CardContent className="p-5 pt-1">
-              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{pendingQuotes.length}</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-1">{quotes.length} demandes reçues</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/dashboard/revenus">
-          <Card className="card-premium hover:border-primary/60 transition-all h-full shadow-card-elevated">
-            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold text-muted-foreground">Recettes encaissées</CardTitle>
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600"><Wallet className="h-5 w-5" /></div>
-            </CardHeader>
-            <CardContent className="p-5 pt-1">
-              <p className="text-3xl font-heading font-extrabold tracking-tight text-foreground">{totalRevenue.toLocaleString("fr-FR")} F</p>
-              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">+{pendingRevenue.toLocaleString("fr-FR")} F en cours</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      {/* Actions rapides adaptées au profil actif */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <Zap className="h-4 w-4 text-primary" /> Raccourcis prioritaires : {activeMeta.shortLabel}
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {partnerType === "fournisseur_intrants" && (
-            <>
-              <Button asChild className="h-auto py-3 justify-start gap-2 gradient-primary text-primary-foreground font-semibold shadow-xs">
-                <Link to="/dashboard/partenaire-mes-offres">
-                  <Plus className="h-4 w-4" /> Publier un Intrant / Semence
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/quote-requests">
-                  <FileText className="h-4 w-4 text-rose-600" /> Commandes & Devis reçus
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/partenaire-fournisseurs">
-                  <Package className="h-4 w-4 text-indigo-600" /> Réseau Fournisseurs & Usines
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/expert-calculator">
-                  <Calculator className="h-4 w-4 text-emerald-600" /> Calculatrice de dosages
-                </Link>
-              </Button>
-            </>
+      {/* ── 2. LES 3 INDICATEURS CLÉS (SANS INFORMATION INUTILE) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <button
+          onClick={() => setActiveTab("offres")}
+          className={cn(
+            "p-4 rounded-2xl border text-left transition-all",
+            activeTab === "offres"
+              ? "bg-primary/5 border-primary shadow-xs ring-1 ring-primary/30"
+              : "bg-card border-border hover:border-primary/40"
           )}
-
-          {partnerType === "machinisme_travaux" && (
-            <>
-              <Button asChild className="h-auto py-3 justify-start gap-2 gradient-primary text-primary-foreground font-semibold shadow-xs">
-                <Link to="/dashboard/partenaire-mes-offres">
-                  <Plus className="h-4 w-4" /> Proposer un Engin / Chantier
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/equipment">
-                  <Tractor className="h-4 w-4 text-emerald-600" /> Parc Matériel & Maintenance
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/missions">
-                  <Briefcase className="h-4 w-4 text-indigo-600" /> Planning Chantiers Labour/Moisson
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/quote-requests">
-                  <FileText className="h-4 w-4 text-amber-600" /> Réservations de tracteurs
-                </Link>
-              </Button>
-            </>
-          )}
-
-          {partnerType === "expert_agronome" && (
-            <>
-              <Button asChild className="h-auto py-3 justify-start gap-2 gradient-primary text-primary-foreground font-semibold shadow-xs">
-                <Link to="/dashboard/expert-diagnosis">
-                  <Microscope className="h-4 w-4" /> Diagnostic IA cultures
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/expert-prescriptions">
-                  <FileText className="h-4 w-4 text-emerald-600" /> Ordonnances phytosanitaires
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/expert-cartography">
-                  <MapPin className="h-4 w-4 text-rose-600" /> Cartographie GPS Parcelles
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/scouting">
-                  <Eye className="h-4 w-4 text-amber-600" /> Surveillance Ravageurs
-                </Link>
-              </Button>
-            </>
-          )}
-
-          {partnerType === "elevage_veterinaire" && (
-            <>
-              <Button asChild className="h-auto py-3 justify-start gap-2 gradient-primary text-primary-foreground font-semibold shadow-xs">
-                <Link to="/dashboard/animal-health">
-                  <Heart className="h-4 w-4" /> Soins & Vaccinations
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/animals">
-                  <Beef className="h-4 w-4 text-amber-600" /> Suivi Cheptel & Bétail
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/animal-feeding">
-                  <Utensils className="h-4 w-4 text-emerald-600" /> Rations & Provendes
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/partenaire-mes-offres">
-                  <Plus className="h-4 w-4 text-indigo-600" /> Publier Produits Vétérinaires
-                </Link>
-              </Button>
-            </>
-          )}
-
-          {partnerType === "institution_agri" && (
-            <>
-              <Button asChild className="h-auto py-3 justify-start gap-2 gradient-primary text-primary-foreground font-semibold shadow-xs">
-                <Link to="/dashboard/partenaire-banques">
-                  <Landmark className="h-4 w-4" /> Crédits de Campagne
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/partenaire-assurance">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" /> Assurances Récolte & Bétail
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/partenaire-programmes">
-                  <FolderKanban className="h-4 w-4 text-rose-600" /> Programmes Bailleurs
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/provider-clients">
-                  <Users className="h-4 w-4 text-teal-600" /> Producteurs Adhérents ({clients.length})
-                </Link>
-              </Button>
-            </>
-          )}
-
-          {partnerType === "polyvalent" && (
-            <>
-              <Button asChild className="h-auto py-3 justify-start gap-2 gradient-primary text-primary-foreground font-semibold shadow-xs">
-                <Link to="/dashboard/partenaire-mes-offres">
-                  <Plus className="h-4 w-4" /> Publier une offre multimédia
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/expert-diagnosis">
-                  <Microscope className="h-4 w-4 text-emerald-600" /> Diagnostic IA cultures
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/animals">
-                  <Beef className="h-4 w-4 text-amber-600" /> Suivi troupeaux & bétail
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-auto py-3 justify-start gap-2 font-medium">
-                <Link to="/dashboard/missions">
-                  <Briefcase className="h-4 w-4 text-indigo-600" /> Chantiers & missions
-                </Link>
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Pôle Spécialisé Principal */}
-      <div className="space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h2 className="text-2xl font-heading font-extrabold flex items-center gap-3 text-foreground">
-            <span className="p-2 rounded-xl bg-primary/10 text-primary">
-              {getProfileIcon(activeMeta.iconName, "h-6 w-6")}
-            </span>
-            Votre Espace Métier Spécialisé : {activeMeta.title}
-          </h2>
-          <span className="text-sm font-medium text-muted-foreground">{activeMeta.dashboardSubtitle}</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Pôle 1: Fournisseur d'Intrants & Semences */}
-          <Card className={`card-premium transition-all flex flex-col justify-between shadow-card-elevated ${partnerType === "fournisseur_intrants" ? "border-primary ring-2 ring-primary/40 shadow-glow" : "hover:border-primary/50"}`}>
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3">
-                <FlaskConical className="h-6 w-6" />
-              </div>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-heading font-bold">1. Intrants & Semences</CardTitle>
-                {partnerType === "fournisseur_intrants" && <Badge className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5">Votre Métier</Badge>}
-              </div>
-              <CardDescription className="text-sm text-muted-foreground font-medium mt-1">
-                Engrais NPK, urée, semences certifiées, biofertilisants et traitements homologués.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              <div className="flex flex-col gap-2 text-sm">
-                <Link to="/dashboard/partenaire-mes-offres" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
-                  <span className="flex items-center gap-2.5"><Store className="h-4 w-4 text-emerald-600" /> Mon catalogue d'intrants</span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/quote-requests" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
-                  <span className="flex items-center gap-2.5"><FileText className="h-4 w-4 text-rose-600" /> Commandes d'engrais</span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/partenaire-fournisseurs" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
-                  <span className="flex items-center gap-2.5"><Package className="h-4 w-4 text-indigo-600" /> Fournisseurs & Grossistes</span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/expert-calculator" className="p-3 rounded-xl bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-semibold">
-                  <span className="flex items-center gap-2.5"><Calculator className="h-4 w-4 text-amber-600" /> Calculatrice de doses</span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pôle 2: Machinisme & Travaux Agricoles */}
-          <Card className={`transition-all flex flex-col justify-between ${partnerType === "machinisme_travaux" ? "border-primary ring-1 ring-primary shadow-xs" : "hover:border-primary/50"}`}>
-            <CardHeader className="pb-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-2">
-                <Tractor className="h-5 w-5" />
-              </div>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-bold">2. Machinisme & Travaux</CardTitle>
-                {partnerType === "machinisme_travaux" && <Badge className="bg-primary text-primary-foreground text-[10px]">Votre Métier</Badge>}
-              </div>
-              <CardDescription className="text-xs">
-                Tracteurs, motoculteurs, batteuses, prestations de labour et logistique champ.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              <div className="flex flex-col gap-1.5 text-xs">
-                <Link to="/dashboard/equipment" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Tractor className="h-3.5 w-3.5 text-amber-600" /> Parc Matériel & Engins</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/missions" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Briefcase className="h-3.5 w-3.5 text-indigo-600" /> Chantiers de labour & battage</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/interventions" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-emerald-600" /> Interventions sur le terrain</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/partenaire-mes-offres" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Store className="h-3.5 w-3.5 text-rose-600" /> Locations d'engins en ligne</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pôle 3: Expertise Agronomique */}
-          <Card className={`transition-all flex flex-col justify-between ${partnerType === "expert_agronome" ? "border-primary ring-1 ring-primary shadow-xs" : "hover:border-primary/50"}`}>
-            <CardHeader className="pb-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-2">
-                <Microscope className="h-5 w-5" />
-              </div>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-bold">3. Expertise Agronome</CardTitle>
-                {partnerType === "expert_agronome" && <Badge className="bg-primary text-primary-foreground text-[10px]">Votre Métier</Badge>}
-              </div>
-              <CardDescription className="text-xs">
-                Diagnostics IA, ordonnances phytosanitaires, scouting et cartographie GPS.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              <div className="flex flex-col gap-1.5 text-xs">
-                <Link to="/dashboard/expert-diagnosis" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Microscope className="h-3.5 w-3.5 text-blue-600" /> Diagnostic IA maladies foliaires</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/expert-prescriptions" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 text-primary" /> Ordonnances phytosanitaires</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/scouting" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Eye className="h-3.5 w-3.5 text-amber-600" /> Scouting & Ravageurs</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/expert-cartography" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-rose-600" /> Cartographie GPS</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pôle 4: Élevage, Santé Animale & Zootechnie */}
-          <Card className={`transition-all flex flex-col justify-between ${partnerType === "elevage_veterinaire" ? "border-primary ring-1 ring-primary shadow-xs" : "hover:border-primary/50"}`}>
-            <CardHeader className="pb-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-2">
-                <Beef className="h-5 w-5" />
-              </div>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-bold">4. Élevage & Vétérinaire</CardTitle>
-                {partnerType === "elevage_veterinaire" && <Badge className="bg-primary text-primary-foreground text-[10px]">Votre Métier</Badge>}
-              </div>
-              <CardDescription className="text-xs">
-                Cheptels, prophylaxie, vaccins, alimentation animale et insémination.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              <div className="flex flex-col gap-1.5 text-xs">
-                <Link to="/dashboard/animals" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Beef className="h-3.5 w-3.5 text-rose-600" /> Suivi du Cheptel</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/animal-health" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Heart className="h-3.5 w-3.5 text-red-600" /> Santé & Vaccinations</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/animal-feeding" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Utensils className="h-3.5 w-3.5 text-emerald-600" /> Rations & Provendes</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/animal-reproduction" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Baby className="h-3.5 w-3.5 text-indigo-600" /> Reproduction & Génétique</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Pôle Financement & Assurances Agricoles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <Card className={`transition-all ${partnerType === "institution_agri" ? "border-primary ring-1 ring-primary shadow-xs" : "hover:border-primary/50"}`}>
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
-                  <Landmark className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-base font-bold">Banque, Microfinance & Assurance Agricole</CardTitle>
-                    {partnerType === "institution_agri" && <Badge className="bg-primary text-primary-foreground text-[10px]">Votre Métier</Badge>}
-                  </div>
-                  <CardDescription className="text-xs">
-                    Crédits de campagne pour intrants/équipements, assurances récoltes et garanties.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <Link to="/dashboard/partenaire-banques" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Landmark className="h-3.5 w-3.5 text-purple-600" /> Crédits de campagne</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/partenaire-assurance" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Assurances récoltes & bétail</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/partenaire-programmes" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><FolderKanban className="h-3.5 w-3.5 text-rose-600" /> Subventions & Bailleurs</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/provider-clients" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Users className="h-3.5 w-3.5 text-teal-600" /> Producteurs clients ({clients.length})</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Hub Polyvalent & Annuaire Écosystème */}
-          <Card className="hover:border-primary/50 transition-all">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                  <Handshake className="h-5 w-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-bold">Annuaire & Partenariats Écosystème</CardTitle>
-                  <CardDescription className="text-xs">
-                    Connectez votre structure avec l'ensemble du réseau agro-pastoral de KoobNaaba.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <Link to="/dashboard/partners-directory" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Handshake className="h-3.5 w-3.5 text-blue-600" /> Annuaire des partenaires</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/crop-library" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-teal-600" /> Fiches techniques cultures</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/revenus" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Wallet className="h-3.5 w-3.5 text-emerald-600" /> Suivi de facturation & recettes</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <Link to="/dashboard/partenaire-abonnement" className="p-2 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary transition-colors flex items-center justify-between font-medium">
-                  <span className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-primary" /> Abonnement & Services Premium</span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Subscription upgrade banner */}
-      <div className="bg-card border rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-primary/10 text-primary">
-            <Sparkles className="h-6 w-6" />
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-muted-foreground">Mes Produits & Offres</span>
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <Package className="h-4 w-4" />
+            </div>
           </div>
+          <p className="text-2xl font-extrabold text-foreground mt-2">{offers.length}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {offers.filter((o) => o.is_active).length} disponibles sur le hub
+          </p>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("commandes")}
+          className={cn(
+            "p-4 rounded-2xl border text-left transition-all relative",
+            activeTab === "commandes"
+              ? "bg-emerald-500/5 border-emerald-600 shadow-xs ring-1 ring-emerald-600/30"
+              : "bg-card border-border hover:border-emerald-600/40"
+          )}
+        >
+          {pendingQuotesCount > 0 && (
+            <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold animate-pulse">
+              {pendingQuotesCount} nouvelle(s)
+            </span>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-muted-foreground">Commandes & Devis</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
+              <FileText className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-extrabold text-foreground mt-2">{quotes.length}</p>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+            {pendingQuotesCount} en attente de réponse
+          </p>
+        </button>
+
+        <Link
+          to="/dashboard/missions"
+          className="p-4 rounded-2xl border bg-card border-border hover:border-amber-500/40 text-left transition-all block"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-muted-foreground">Chantiers & Prestations</span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
+              <Briefcase className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-extrabold text-foreground mt-2">{activeMissionsCount}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Dossiers en cours de réalisation</p>
+        </Link>
+      </div>
+
+      {/* ── 3. VUE PRINCIPALE : 2 BOUTONS D'ONGLETS DIRECTS ── */}
+      <div className="flex items-center gap-2 border-b border-border pb-2">
+        <button
+          onClick={() => setActiveTab("offres")}
+          className={cn(
+            "px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+            activeTab === "offres"
+              ? "bg-foreground text-background shadow-xs"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Package className="h-4 w-4" /> Mes Produits & Services ({offers.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("commandes")}
+          className={cn(
+            "px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+            activeTab === "commandes"
+              ? "bg-foreground text-background shadow-xs"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <FileText className="h-4 w-4" /> Commandes Reçues ({quotes.length})
+        </button>
+      </div>
+
+      {/* ── CONTENU ONGLET 1 : PRODUITS ET SERVICES ── */}
+      {activeTab === "offres" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Catalogue de vos offres</h2>
+              <p className="text-xs text-muted-foreground">
+                Visible immédiatement par tous les agriculteurs et éleveurs du Burkina Faso.
+              </p>
+            </div>
+            <Button
+              onClick={() => setIsAddOfferOpen(true)}
+              className="gradient-primary text-primary-foreground font-bold text-xs h-10 px-4 rounded-xl gap-1.5 shadow-xs"
+            >
+              <Plus className="h-4 w-4" /> Ajouter un produit / service
+            </Button>
+          </div>
+
+          {offers.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl border border-dashed border-border bg-card/50 space-y-3">
+              <Package className="h-10 w-10 text-muted-foreground mx-auto" />
+              <div>
+                <h4 className="text-sm font-bold text-foreground">Aucune offre publiée</h4>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
+                  Publiez vos engrais, semences certifiées, matériel ou prestations pour recevoir des commandes.
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsAddOfferOpen(true)}
+                className="gradient-primary text-primary-foreground font-bold text-xs rounded-xl"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Publier ma première offre
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+              {offers.map((offer) => (
+                <div
+                  key={offer.id}
+                  className="bg-card border border-border/80 hover:border-primary/50 transition-all rounded-2xl p-4 flex flex-col justify-between shadow-xs space-y-3"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary border-primary/30">
+                        {offer.category}
+                      </Badge>
+                      <button
+                        onClick={() => handleDeleteOffer(offer.id)}
+                        className="text-muted-foreground hover:text-rose-600 transition-colors p-1"
+                        title="Supprimer l'offre"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <h3 className="text-sm font-bold text-foreground line-clamp-2 leading-snug">
+                      {offer.title}
+                    </h3>
+                    {offer.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {offer.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-extrabold text-foreground text-sm">
+                        {offer.price_indication}
+                      </span>
+                      {offer.unit && (
+                        <span className="text-muted-foreground text-[11px]"> / {offer.unit}</span>
+                      )}
+                    </div>
+                    <Badge className="bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 border-none text-[10px] font-bold">
+                      Actif
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── CONTENU ONGLET 2 : COMMANDES ET DEVIS REÇUS ── */}
+      {activeTab === "commandes" && (
+        <div className="space-y-4">
           <div>
-            <h3 className="font-heading font-bold text-base">Abonnement Professionnel KoobNaaba</h3>
+            <h2 className="text-lg font-bold text-foreground">Demandes de devis & commandes directes</h2>
             <p className="text-xs text-muted-foreground">
-              Formule <strong>{activePlan.title}</strong> active avec paiement Mobile Money (Orange Money, Moov Money, Wave).
+              Les producteurs vous contactent pour vos articles. Validez en 1 clic ou appelez-les directement.
             </p>
           </div>
-        </div>
-        <Button asChild className="gradient-primary text-primary-foreground font-semibold shrink-0">
-          <Link to="/dashboard/partenaire-abonnement">
-            Gérer mon abonnement
-          </Link>
-        </Button>
-      </div>
 
-      {/* Boîte de dialogue de changement de spécialisation métier */}
-      <Dialog open={isSwitchDialogOpen} onOpenChange={setIsSwitchDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {quotes.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl border border-dashed border-border bg-card/50 space-y-2">
+              <FileText className="h-10 w-10 text-muted-foreground mx-auto" />
+              <h4 className="text-sm font-bold text-foreground">Aucune commande reçue</h4>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                Dès qu'un producteur commande vos intrants ou réserve vos services, la demande s'affichera ici.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {quotes.map((quote) => {
+                const isPending = quote.status === "en_attente";
+                const isAccepted = quote.status === "acceptee";
+
+                return (
+                  <div
+                    key={quote.id}
+                    className={cn(
+                      "p-4 rounded-2xl border bg-card transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs",
+                      isPending ? "border-emerald-600/40 bg-emerald-500/5" : "border-border"
+                    )}
+                  >
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-foreground">
+                          {quote.requester_name || "Producteur Agricole"}
+                        </span>
+                        <Badge
+                          className={cn(
+                            "text-[10px] font-bold border-none",
+                            isAccepted
+                              ? "bg-emerald-600 text-white"
+                              : quote.status === "refusee"
+                              ? "bg-rose-600 text-white"
+                              : "bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                          )}
+                        >
+                          {isAccepted ? "Validée" : quote.status === "refusee" ? "Refusée" : "En attente"}
+                        </Badge>
+                      </div>
+
+                      <p className="text-sm font-semibold text-foreground">
+                        {quote.offer_title || quote.message || "Demande de fourniture"}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        {quote.quantity && (
+                          <span>Quantité : <strong className="text-foreground">{quote.quantity}</strong></span>
+                        )}
+                        {quote.contact_phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3 w-3 text-emerald-600" />
+                            <strong className="text-foreground">{quote.contact_phone}</strong>
+                          </span>
+                        )}
+                        <span>Reçue le {new Date(quote.created_at).toLocaleDateString("fr-FR")}</span>
+                      </div>
+                    </div>
+
+                    {/* Actions directes 1-Clic */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {quote.contact_phone && (
+                        <a
+                          href={`tel:${quote.contact_phone}`}
+                          className="px-3 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-bold flex items-center gap-1.5 transition-colors"
+                        >
+                          <Phone className="h-3.5 w-3.5 text-primary" /> Appeler
+                        </a>
+                      )}
+
+                      {isPending && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => handleQuoteStatus(quote.id, "acceptee")}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl h-9 px-3 gap-1 shadow-xs"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Accepter
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleQuoteStatus(quote.id, "refusee")}
+                            className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-xs font-semibold rounded-xl h-9 px-2.5"
+                          >
+                            <XCircle className="h-3.5 w-3.5" /> Refuser
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── MODAL AJOUT D'OFFRE (PRODUIT / PRESTATION) ── */}
+      <Dialog open={isAddOfferOpen} onOpenChange={setIsAddOfferOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-5">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <SlidersHorizontal className="h-5 w-5 text-primary" />
-              Sélectionnez votre profil partenaire spécialisé
-            </DialogTitle>
+            <DialogTitle className="text-lg font-bold">Publier un produit ou un service</DialogTitle>
             <DialogDescription className="text-xs">
-              Les comptes partenaires ne sont pas unifiés : chaque profil dispose d'un espace de travail, d'outils et d'un menu adaptés à son corps de métier.
+              Remplissez les informations essentielles pour diffuser votre offre auprès des producteurs.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
-            {PARTNER_PROFILE_LIST.map((p) => {
+          <form onSubmit={handleCreateOffer} className="space-y-3.5 mt-2">
+            <div className="space-y-1">
+              <Label htmlFor="oTitle" className="text-xs font-bold">Nom du produit / service *</Label>
+              <Input
+                id="oTitle"
+                placeholder="Ex: Engrais NPK 14-23-14, Labour tracteur 75CV, Semence maïs…"
+                value={offerTitle}
+                onChange={(e) => setOfferTitle(e.target.value)}
+                required
+                className="rounded-xl h-10 text-xs"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="oPrice" className="text-xs font-bold">Prix indicatif</Label>
+                <Input
+                  id="oPrice"
+                  placeholder="Ex: 22 500 FCFA"
+                  value={offerPrice}
+                  onChange={(e) => setOfferPrice(e.target.value)}
+                  className="rounded-xl h-10 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="oUnit" className="text-xs font-bold">Unité de vente</Label>
+                <Input
+                  id="oUnit"
+                  placeholder="Ex: sac de 50kg, hectare, jour"
+                  value={offerUnit}
+                  onChange={(e) => setOfferUnit(e.target.value)}
+                  className="rounded-xl h-10 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="oDesc" className="text-xs font-bold">Courte description</Label>
+              <Textarea
+                id="oDesc"
+                rows={2}
+                placeholder="Précisez la marque, la disponibilité ou les conditions de livraison…"
+                value={offerDesc}
+                onChange={(e) => setOfferDesc(e.target.value)}
+                className="rounded-xl text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="oPhone" className="text-xs font-bold">Numéro de commande WhatsApp / Appel</Label>
+              <Input
+                id="oPhone"
+                placeholder="+226 70 00 00 00"
+                value={offerPhone}
+                onChange={(e) => setOfferPhone(e.target.value)}
+                className="rounded-xl h-10 text-xs"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddOfferOpen(false)}
+                className="rounded-xl text-xs"
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                className="gradient-primary text-primary-foreground font-bold text-xs rounded-xl"
+              >
+                Publier l'offre
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── MODAL CHANGEMENT DE SPÉCIALISATION PARTENAIRE ── */}
+      <Dialog open={isSwitchDialogOpen} onOpenChange={setIsSwitchDialogOpen}>
+        <DialogContent className="max-w-xl rounded-2xl p-5">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">Changer de spécialisation métier</DialogTitle>
+            <DialogDescription className="text-xs">
+              Les comptes partenaires ne sont pas unifiés : chaque métier dispose de son interface sur-mesure.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+            {PARTNER_PROFILE_LIST.filter((p) => p.id !== "polyvalent").map((p) => {
               const isSelected = partnerType === p.id;
+              const IconComp = getProfileIcon(PARTNER_PROFILES[p.id].iconName, "h-4 w-4");
+
               return (
                 <button
                   key={p.id}
-                  type="button"
-                  onClick={() => handleSelectPartnerType(p.id)}
-                  className={`text-left p-3.5 rounded-xl border transition-all flex flex-col justify-between gap-2.5 ${
+                  onClick={() => {
+                    setPartnerType(p.id);
+                    setIsSwitchDialogOpen(false);
+                    toast.success(`Espace adapté : ${p.title}`);
+                  }}
+                  className={cn(
+                    "p-3 rounded-xl border-2 text-left transition-all flex items-start gap-2.5",
                     isSelected
-                      ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                      : "border-border hover:border-primary/40 hover:bg-muted/40"
-                  }`}
+                      ? "border-primary bg-primary/10 shadow-xs"
+                      : "border-border hover:border-primary/40"
+                  )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
-                        {getProfileIcon(p.iconName, "h-4 w-4")}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-xs text-foreground leading-snug">{p.title}</h4>
-                        <span className="text-[11px] text-muted-foreground">{p.badge}</span>
-                      </div>
-                    </div>
-                    {isSelected && (
-                      <span className="p-1 rounded-full bg-primary text-primary-foreground">
-                        <Check className="h-3 w-3" />
-                      </span>
+                  <div
+                    className={cn(
+                      "p-2 rounded-lg shrink-0",
+                      isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                     )}
+                  >
+                    {IconComp}
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
-                    {p.tagline}
-                  </p>
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold block text-foreground truncate">{p.shortLabel}</span>
+                    <span className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{p.tagline}</span>
+                  </div>
                 </button>
               );
             })}
