@@ -72,6 +72,7 @@ export const machinismeNav: NavItem[] = [
 /** 3. Profil Partenaire : Cabinet d'Agronomie & Conseil Technique */
 export const agronomeNav: NavItem[] = [
   { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/genius", labelKey: "NAFA Genius IA", icon: Sparkles, section: "Expertise Agronomique" },
   { to: "/dashboard/expert-diagnosis", labelKey: "Diagnostic IA", icon: Microscope, section: "Expertise Agronomique" },
   { to: "/dashboard/expert-prescriptions", labelKey: "Prescriptions", icon: FileText, section: "Expertise Agronomique" },
   { to: "/dashboard/scouting", labelKey: "Inspection terrain", icon: Eye, section: "Expertise Agronomique" },
@@ -122,6 +123,7 @@ export const partenaireNav: NavItem[] = [
   { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
 
   // Pôle 1: Expertise Agronome
+  { to: "/dashboard/genius", labelKey: "NAFA Genius IA", icon: Sparkles, section: "Expertise Agronome" },
   { to: "/dashboard/expert-diagnosis", labelKey: "Diagnostic IA", icon: Microscope, section: "Expertise Agronome" },
   { to: "/dashboard/expert-prescriptions", labelKey: "Prescriptions", icon: FileText, section: "Expertise Agronome" },
   { to: "/dashboard/scouting", labelKey: "Inspection terrain", icon: Eye, section: "Expertise Agronome" },

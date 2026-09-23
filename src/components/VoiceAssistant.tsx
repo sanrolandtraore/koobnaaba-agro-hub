@@ -38,6 +38,7 @@ const NAVIGATION_MAP: Record<string, string> = {
   farms: "/dashboard/farms",
   parcels: "/dashboard/parcels",
   animals: "/dashboard/livestock",
+  genius: "/dashboard/genius",
 };
 
 const VoiceAssistant = ({ onServiceRequest, onEquipmentSearch }: VoiceAssistantProps) => {
