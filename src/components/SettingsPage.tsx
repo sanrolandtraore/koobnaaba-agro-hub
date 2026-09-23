@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isMissingColumnError } from "@/hooks/useOfflineData";
+import BackNavigationButton from "@/components/BackNavigationButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -255,11 +256,14 @@ const SettingsPage = ({ roleLabel, roleSpecificTab, roleSpecificTabLabel }: Sett
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
-          <Settings className="h-6 w-6 text-primary" /> Paramètres
-        </h1>
-        <p className="text-muted-foreground mt-1">Gérez votre compte {roleLabel}</p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            <Settings className="h-6 w-6 text-primary" /> Paramètres
+          </h1>
+          <p className="text-muted-foreground mt-1">Gérez votre compte {roleLabel}</p>
+        </div>
+        <BackNavigationButton fallbackTo="/dashboard" />
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">

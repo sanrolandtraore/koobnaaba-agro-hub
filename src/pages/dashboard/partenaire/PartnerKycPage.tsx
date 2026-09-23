@@ -14,6 +14,7 @@ import {
 } from "@/lib/partnerKyc";
 import { getStoredProviderSubscription } from "@/lib/providerSubscription";
 import { PartnerVerifiedBadge } from "@/components/partner/PartnerVerifiedBadge";
+import BackNavigationButton from "@/components/BackNavigationButton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,7 +179,8 @@ const PartnerKycPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <BackNavigationButton fallbackTo="/dashboard" />
           <Button asChild variant="outline" size="sm" className="rounded-xl text-xs gap-1.5">
             <Link to="/dashboard/partenaire-vitrine">
               <Store className="h-3.5 w-3.5 text-primary" /> Voir ma vitrine

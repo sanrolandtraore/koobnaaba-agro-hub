@@ -9,6 +9,7 @@ import logo from "@/assets/logo.png";
 import VoiceAssistant from "@/components/VoiceAssistant";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { useSubscription } from "@/hooks/useSubscription";
+import BackNavigationButton from "@/components/BackNavigationButton";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
@@ -34,7 +35,7 @@ const DashboardLayout = () => {
       <div className="flex flex-1 flex-col min-w-0">
         {/* Top header Premium sans barres de navigation superflues */}
         <header className="flex items-center justify-between border-b border-border/80 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 bg-card/90 backdrop-blur-md shrink-0 shadow-xs">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden shrink-0 text-foreground h-11 w-11 rounded-xl">
@@ -46,6 +47,10 @@ const DashboardLayout = () => {
                 <SidebarNavContent onNavigate={() => setOpen(false)} />
               </SheetContent>
             </Sheet>
+
+            {/* Bouton de navigation retour universel */}
+            <BackNavigationButton />
+
             <img src={logo} alt="NAFA -AGRITECH" className="h-8 sm:h-9 w-auto lg:hidden" />
             <span className="hidden lg:inline-block font-heading font-extrabold text-base text-foreground/90">
               NAFA <span className="text-emerald-600 dark:text-emerald-400">-AGRITECH</span>

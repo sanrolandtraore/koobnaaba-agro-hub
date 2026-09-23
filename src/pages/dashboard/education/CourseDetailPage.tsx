@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Circle, Clock, GraduationCap, Lightbulb } from "lucide-react";
+import BackNavigationButton from "@/components/BackNavigationButton";
+import { CheckCircle2, Circle, Clock, GraduationCap, Lightbulb } from "lucide-react";
 
 type Course = {
   id: string; slug: string; title: string; subtitle: string | null; summary: string | null;
@@ -95,9 +96,7 @@ const CourseDetailPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link to="/dashboard/education"><ArrowLeft className="h-4 w-4 mr-2" />Catalogue</Link>
-      </Button>
+      <BackNavigationButton fallbackTo="/dashboard/education" label="Catalogue des formations" />
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
