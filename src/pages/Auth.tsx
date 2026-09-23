@@ -184,7 +184,7 @@ export default function Auth() {
       if (res.error) {
         toast.error("Erreur lors de l'enregistrement du profil : " + res.error.message);
       } else {
-        toast.success("Bienvenue sur KoobNaaba !", {
+        toast.success("Bienvenue sur NAFA -AGRITECH !", {
           description: `Connecté en tant que ${waRole === "partenaire" ? PARTNER_PROFILES[waPartnerType]?.title || "Partenaire" : waRole}.`,
         });
         navigate("/dashboard");
@@ -267,13 +267,13 @@ export default function Auth() {
     <div className="flex min-h-screen items-center justify-center gradient-hero p-3 sm:p-4">
       <Card className="w-full max-w-lg border-border/60 shadow-warm animate-fade-in my-6">
         <CardHeader className="text-center space-y-3 pt-6 pb-4">
-          <img src={logo} alt="KoobNaaba" className="mx-auto h-16 w-auto" />
+          <img src={logo} alt="NAFA -AGRITECH" className="mx-auto h-20 w-auto drop-shadow-md" />
           <div>
             <CardTitle className="text-2xl sm:text-3xl font-heading font-extrabold text-foreground tracking-tight">
-              KoobNaaba <span className="text-gradient-warm">Agro-Hub</span>
+              NAFA <span className="text-gradient-warm">-AGRITECH</span>
             </CardTitle>
-            <CardDescription className="text-sm mt-1 font-medium">
-              Plateforme Agricole & Pastorale Intelligente du Burkina Faso
+            <CardDescription className="text-sm mt-1 font-semibold text-emerald-700 dark:text-emerald-400">
+              La technologie au service de l'agriculture africaine
             </CardDescription>
           </div>
         </CardHeader>
@@ -598,7 +598,7 @@ export default function Auth() {
                     disabled={loading}
                     className="w-full h-12 gradient-primary text-primary-foreground font-bold text-base rounded-xl flex items-center justify-center gap-2 shadow-md transition-all mt-2"
                   >
-                    {loading ? "Création en cours..." : "Accéder à mon espace KoobNaaba"}
+                    {loading ? "Création en cours..." : "Accéder à mon espace NAFA -AGRITECH"}
                   </Button>
                 </form>
               )}

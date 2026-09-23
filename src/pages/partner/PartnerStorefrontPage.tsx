@@ -67,8 +67,8 @@ export default function PartnerStorefrontPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: partner?.name || "Vitrine Partenaire KoobNaaba",
-          text: `Découvrez les produits et services de ${partner?.name} sur KoobNaaba :`,
+          title: partner?.name || "Vitrine Partenaire NAFA -AGRITECH",
+          text: `Découvrez les produits et services de ${partner?.name} sur NAFA -AGRITECH :`,
           url: shareUrl,
         });
         return;

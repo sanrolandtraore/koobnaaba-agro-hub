@@ -104,7 +104,7 @@ const ExportPreviewTable = ({ rows, headers, title, filePrefix, headerColor = [1
     const exportRows = getExportRows();
     if (!exportRows.length) { toast.error("Aucune donnée à exporter"); return; }
     const doc = new jsPDF({ orientation: headers.length > 6 ? "landscape" : "portrait" });
-    doc.setFontSize(16); doc.text(`KoobNaaba — ${title}`, 14, 18);
+    doc.setFontSize(16); doc.text(`NAFA -AGRITECH — ${title}`, 14, 18);
     doc.setFontSize(9); doc.text(`Généré le ${new Date().toLocaleDateString("fr")}`, 14, 25);
     autoTable(doc, {
       startY: 30,

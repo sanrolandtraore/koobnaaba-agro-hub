@@ -46,9 +46,9 @@ const DashboardLayout = () => {
                 <SidebarNavContent onNavigate={() => setOpen(false)} />
               </SheetContent>
             </Sheet>
-            <img src={logo} alt="KoobNaaba" className="h-8 sm:h-9 w-auto lg:hidden" />
-            <span className="hidden lg:inline-block font-heading font-bold text-base text-foreground/85">
-              KoobNaaba Agro-Hub
+            <img src={logo} alt="NAFA -AGRITECH" className="h-8 sm:h-9 w-auto lg:hidden" />
+            <span className="hidden lg:inline-block font-heading font-extrabold text-base text-foreground/90">
+              NAFA <span className="text-emerald-600 dark:text-emerald-400">-AGRITECH</span>
             </span>
           </div>
 

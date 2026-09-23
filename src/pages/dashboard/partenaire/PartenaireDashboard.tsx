@@ -96,7 +96,7 @@ export default function PartenaireDashboard() {
     try {
       await partnerStorage.saveOffer({
         owner_id: user?.id || "demo-partner-id",
-        partner_name: profile?.full_name || sub.companyName || "Partenaire KoobNaaba",
+        partner_name: profile?.full_name || sub.companyName || "Partenaire NAFA -AGRITECH",
         category: partnerType === "fournisseur_intrants" ? "intrants" : partnerType === "machinisme_travaux" ? "materiel" : "services",
         title: offerTitle.trim(),
         description: offerDesc.trim() || null,

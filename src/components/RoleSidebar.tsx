@@ -234,24 +234,18 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Header Premium Agrandie */}
-      <div className="flex items-center gap-3.5 px-5 py-5 border-b border-sidebar-border/80">
-        <img src={logo} alt="KoobNaaba" className="h-11 w-auto shrink-0" />
+      <div className="flex items-center gap-3.5 px-5 py-4 border-b border-sidebar-border/80">
+        <img src={logo} alt="NAFA -AGRITECH" className="h-12 w-auto shrink-0 drop-shadow-xs" />
         <div className="flex flex-col min-w-0">
-          <span className="text-xs font-bold text-sidebar-primary uppercase tracking-wider flex items-center gap-2 truncate">
-            <RoleIcon className="h-4 w-4 shrink-0 text-sidebar-primary" />
+          <span className="text-xs font-extrabold text-sidebar-primary tracking-wide flex items-center gap-1.5 truncate">
+            <RoleIcon className="h-3.5 w-3.5 shrink-0 text-sidebar-primary" />
             <span className="truncate">
               {isPartner && partnerMeta ? partnerMeta.shortLabel : t(roleLabelKeys[primaryRole || "agriculteur"] || "roles.agriculteur")}
             </span>
           </span>
-          {isPartner && partnerMeta ? (
-            <span className="text-[11px] text-sidebar-foreground/75 truncate mt-0.5 font-medium">
-              {partnerMeta.badge}
-            </span>
-          ) : (
-            <span className="text-[11px] text-sidebar-foreground/75 truncate mt-0.5 font-medium">
-              Exploitation Agricole
-            </span>
-          )}
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate mt-0.5">
+            NAFA -AGRITECH
+          </span>
         </div>
       </div>
 

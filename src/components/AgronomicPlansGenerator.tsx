@@ -141,7 +141,7 @@ function FertilizationPlan({ sessionData }: Props) {
     doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text(`Coût estimé total: ${plan.totalCost.toLocaleString()} FCFA`, 14, y);
 
     const pH = doc.internal.pageSize.getHeight();
-    doc.setFontSize(7); doc.setTextColor(120); doc.text("KoobNaaba Agro Hub - Plan de fertilisation", 14, pH - 8);
+    doc.setFontSize(7); doc.setTextColor(120); doc.text("NAFA -AGRITECH - Plan de fertilisation", 14, pH - 8);
     doc.save(`plan_fertilisation_${crop}_${area}ha.pdf`);
     toast.success("PDF téléchargé");
   };
@@ -264,7 +264,7 @@ function IrrigationPlan({ sessionData }: Props) {
 
     doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text(`Coût estimé: ${plan.totalCost.toLocaleString()} FCFA`, 14, y);
     const pH = doc.internal.pageSize.getHeight();
-    doc.setFontSize(7); doc.setTextColor(120); doc.text("KoobNaaba Agro Hub", 14, pH - 8);
+    doc.setFontSize(7); doc.setTextColor(120); doc.text("NAFA -AGRITECH", 14, pH - 8);
     doc.save(`plan_irrigation_${crop}_${area}ha.pdf`);
     toast.success("PDF téléchargé");
   };
@@ -380,7 +380,7 @@ function TreatmentPlan({ sessionData }: Props) {
 
     doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text(`Coût total estimé: ${plan.totalCost.toLocaleString()} FCFA`, 14, y);
     const pH = doc.internal.pageSize.getHeight();
-    doc.setFontSize(7); doc.setTextColor(120); doc.text("KoobNaaba Agro Hub", 14, pH - 8);
+    doc.setFontSize(7); doc.setTextColor(120); doc.text("NAFA -AGRITECH", 14, pH - 8);
     doc.save(`plan_traitement_${crop}_${area}ha.pdf`);
     toast.success("PDF téléchargé");
   };

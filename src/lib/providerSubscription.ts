@@ -39,7 +39,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     targetBadge: "Visiteur / Test",
     monthlyPriceFCFA: 0,
     annualPriceFCFA: 0,
-    tagline: "Pour découvrir l'écosystème KoobNaaba",
+    tagline: "Pour découvrir l'écosystème NAFA -AGRITECH",
     features: [
       "Consultation du catalogue d'offres",
       "Fiches techniques cultures (accès limité)",
@@ -61,13 +61,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     features: [
       "Publication illimitée de produits (intrants, semences, petit matériel)",
       "Réception directe des demandes de devis clients",
-      "Visibilité prioritaire sur le Marketplace KoobNaaba",
+      "Visibilité prioritaire sur le Marketplace NAFA -AGRITECH",
       "Calculatrice de doses pour conseiller les clients au comptoir",
       "Factures et bons de commande PDF",
     ],
     toolsIncluded: [
       { name: "Gestion de mes offres & catalogue", description: "Gérer stock, prix et visibilité", route: "/dashboard/partenaire-mes-offres" },
-      { name: "Marketplace KoobNaaba", description: "Présence auprès des producteurs", route: "/dashboard/marketplace" },
+      { name: "Marketplace NAFA -AGRITECH", description: "Présence auprès des producteurs", route: "/dashboard/marketplace" },
       { name: "Calculatrice agronomique", description: "Aide au calcul de doses et fertilisation", route: "/dashboard/expert-calculator" },
       { name: "Fiches techniques 12 cultures", description: "Conseil client certifié", route: "/dashboard/crop-library" },
     ],
@@ -81,14 +81,14 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     annualPriceFCFA: 350000,
     tagline: "Pour les entrepreneurs de travaux agricoles, loueurs de tracteurs, drones et experts agronomes",
     features: [
-      "Toute la suite d'aide à la décision KoobNaaba débloquée",
+      "Toute la suite d'aide à la décision NAFA -AGRITECH débloquée",
       "Diagnostic IA illimité (maladies, ravageurs, carences)",
       "Générateur d'ordonnances agronomiques certifiées PDF",
       "Scouting terrain géolocalisé avec relevé GPS et export de rapports",
       "Gestion de la flotte de matériel en location & réservations avec acompte séquestre",
       "Carnet de suivi des exploitations clientes et tournées",
       "Export PDF/CSV des diagnostics et comptes-rendus d'intervention",
-      "Badge officiel 'Partenaire Agréé KoobNaaba'",
+      "Badge officiel 'Partenaire Agréé NAFA -AGRITECH'",
     ],
     toolsIncluded: [
       { name: "Diagnostic IA Végétal", description: "Analyse instantanée par vision IA", route: "/dashboard/expert-diagnosis" },
@@ -116,7 +116,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       "Support agronomique dédié 7j/7 et formations d'équipes",
     ],
     toolsIncluded: [
-      { name: "Suite complète Aide à la Décision", description: "Tous les outils KoobNaaba en illimité", route: "/dashboard/expert-toolbox" },
+      { name: "Suite complète Aide à la Décision", description: "Tous les outils NAFA -AGRITECH en illimité", route: "/dashboard/expert-toolbox" },
       { name: "Statistiques & KPIs d'impact", description: "Rapports consolidés pour partenaires/bailleurs", route: "/dashboard/expert-analytics" },
       { name: "Annuaire des partenaires régionaux", description: "Réseau national d'acteurs", route: "/dashboard/partners-directory" },
     ],

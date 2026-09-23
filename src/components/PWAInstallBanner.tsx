@@ -69,10 +69,10 @@ export default function PWAInstallBanner() {
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h4 className="font-heading font-bold text-sm text-foreground">App KoobNaaba</h4>
+              <h4 className="font-heading font-bold text-sm text-foreground">NAFA -AGRITECH</h4>
               <span className="px-1.5 py-0.5 rounded text-[10px] bg-primary/10 text-primary font-semibold">PWA</span>
             </div>
-            <p className="text-xs text-muted-foreground">Installer sur votre écran d'accueil</p>
+            <p className="text-xs text-muted-foreground line-clamp-1">La technologie au service de l'agriculture africaine</p>
           </div>
         </div>
 

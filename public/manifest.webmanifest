@@ -1,7 +1,7 @@
 {
-  "name": "KoobNaaba Agro-Hub",
-  "short_name": "KoobNaaba",
-  "description": "Plateforme intégrée d'agriculture et d'élevage pour le Sahel",
+  "name": "NAFA -AGRITECH",
+  "short_name": "NAFA-AGRITECH",
+  "description": "La technologie au service de l'agriculture africaine",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -181,7 +181,7 @@ const VoiceAssistant = ({ onServiceRequest, onEquipmentSearch }: VoiceAssistantP
   const handleOpen = useCallback(() => {
     setIsOpen(true);
     if (messages.length === 0) {
-      const welcome = "Bonjour ! Je suis votre assistant vocal KoobNaaba. Dites-moi ce dont vous avez besoin. Par exemple: «Je veux louer un tracteur» ou «J'ai besoin d'un diagnostic de sol».";
+      const welcome = "Bonjour ! Je suis votre assistant vocal NAFA -AGRITECH. Dites-moi ce dont vous avez besoin. Par exemple: «Je veux louer un tracteur» ou «J'ai besoin d'un diagnostic de sol».";
       setMessages([{ role: "assistant", text: welcome }]);
       speak(welcome);
     }

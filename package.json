@@ -1,7 +1,8 @@
 {
-  "name": "koobnaaba-agro-hub",
+  "name": "nafa-agritech",
+  "description": "NAFA -AGRITECH : La technologie au service de l'agriculture africaine",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -103,15 +103,20 @@ const Index = () => {
         </div>
         <div className="container max-w-5xl mx-auto px-4 py-20 relative z-10">
           <div className="flex flex-col items-center text-center space-y-8 animate-fade-in">
-            <img src={logo} alt="KoobNaaba" className="h-24 w-auto drop-shadow-md" />
+            <img src={logo} alt="NAFA -AGRITECH" className="h-28 sm:h-32 w-auto drop-shadow-lg" />
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-primary-foreground uppercase tracking-wider backdrop-blur-sm">
-              ✨ AgriTech Aide à la Décision & Services Intégrés
+              ✨ Plateforme Intelligente NAFA -AGRITECH
             </div>
-            <h1 className="text-4xl md:text-6xl font-heading font-bold text-primary-foreground leading-tight">
-              « La technologie au service de <span className="text-gradient-warm">l'agriculture africaine.</span> »
-            </h1>
-            <p className="text-lg md:text-xl text-primary-foreground/90 max-w-3xl leading-relaxed">
-              Le partenaire technique de référence des producteurs, maraîchers, éleveurs et coopératives au Burkina Faso. 
+            <div className="space-y-3">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl font-heading font-extrabold text-primary-foreground tracking-tight">
+                NAFA <span className="text-gradient-warm">-AGRITECH</span>
+              </h1>
+              <p className="text-xl sm:text-2xl text-emerald-200 font-semibold italic max-w-2xl mx-auto">
+                « La technologie au service de l'agriculture africaine »
+              </p>
+            </div>
+            <p className="text-base md:text-lg text-primary-foreground/90 max-w-3xl leading-relaxed">
+              Le partenaire technologique de référence des producteurs, maraîchers, éleveurs et coopératives au Burkina Faso et en Afrique. 
               Diagnostic IA des maladies, ordonnances agronomiques certifiées, calculatrice agro, scouting géolocalisé et accès direct aux intrants et matériels.
             </p>
             <div className="flex gap-4 flex-wrap justify-center pt-2">
@@ -466,10 +471,11 @@ const Index = () => {
         <div className="container max-w-5xl mx-auto px-4 py-12">
           <div className="grid gap-8 md:grid-cols-4">
             <div className="md:col-span-1 space-y-3">
-              <img src={logo} alt="KoobNaaba" className="h-10 w-auto" />
-              <p className="text-sm text-muted-foreground">
-                La plateforme de gestion agricole intelligente pour l'Afrique.
-              </p>
+              <img src={logo} alt="NAFA -AGRITECH" className="h-12 w-auto" />
+              <div className="space-y-0.5">
+                <p className="text-sm font-bold text-foreground">NAFA -AGRITECH</p>
+                <p className="text-xs text-muted-foreground">La technologie au service de l'agriculture africaine.</p>
+              </div>
             </div>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">Ressources légales</h4>
@@ -486,9 +492,9 @@ const Index = () => {
                   <MapPinned className="h-4 w-4 shrink-0" />
                   Quartier Cissin, Ouagadougou, Burkina Faso
                 </span>
-                <a href="mailto:contact@koobnaaba.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <a href="mailto:contact@nafa-agritech.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
                   <Mail className="h-4 w-4 shrink-0" />
-                  contact@koobnaaba.com
+                  contact@nafa-agritech.com
                 </a>
                 <a href="tel:+22600000000" className="flex items-center gap-2 hover:text-foreground transition-colors">
                   <Phone className="h-4 w-4 shrink-0" />
@@ -499,13 +505,13 @@ const Index = () => {
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">Suivez-nous</h4>
               <div className="flex gap-3">
-                <a href="https://facebook.com/koobnaaba" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" aria-label="Facebook">
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" aria-label="Facebook">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                 </a>
-                <a href="https://twitter.com/koobnaaba" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" aria-label="X (Twitter)">
+                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" aria-label="X (Twitter)">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                 </a>
-                <a href="https://linkedin.com/company/koobnaaba" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" aria-label="LinkedIn">
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" aria-label="LinkedIn">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                 </a>
                 <a href="https://wa.me/22600000000" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" aria-label="WhatsApp">
@@ -515,8 +521,8 @@ const Index = () => {
             </div>
           </div>
           <div className="mt-10 pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">© 2026 KoobNaaba SARL. Tous droits réservés.</p>
-            <p className="text-xs text-muted-foreground">Siège social : Ouagadougou, Burkina Faso</p>
+            <p className="text-xs text-muted-foreground">© 2026 NAFA -AGRITECH. Tous droits réservés.</p>
+            <p className="text-xs text-muted-foreground">La technologie au service de l'agriculture africaine</p>
           </div>
         </div>
       </footer>

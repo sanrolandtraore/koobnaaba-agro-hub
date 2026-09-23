@@ -19,9 +19,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png", "robots.txt"],
       manifest: {
-        name: "KoobNaaba Agro-Hub",
-        short_name: "KoobNaaba",
-        description: "Plateforme intégrée d'agriculture et d'élevage pour le Sahel",
+        name: "NAFA -AGRITECH",
+        short_name: "NAFA-AGRITECH",
+        description: "La technologie au service de l'agriculture africaine",
         theme_color: "#166534",
         background_color: "#0f172a",
         display: "standalone",
