@@ -122,8 +122,8 @@ export default function ProductServiceCatalog({
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
-    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    window.addEventListener("nafa-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
   }, [user]);
 
   // Pre-fill phone if available in profile
@@ -345,7 +345,7 @@ export default function ProductServiceCatalog({
                           </CardTitle>
                           <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
                             <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Fournisseur :{" "}
-                            <strong className="text-foreground">{q.partner_name || "Partenaire KoobNaaba"}</strong>
+                            <strong className="text-foreground">{q.partner_name || "Partenaire NAFA - AGRITECH"}</strong>
                           </p>
                         </div>
                         <Badge variant="outline" className={`font-bold px-2.5 py-1 text-xs shrink-0 ${conf.badgeClass}`}>

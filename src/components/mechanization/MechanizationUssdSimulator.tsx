@@ -123,7 +123,7 @@ export const MechUssdSimulator = () => {
               {ussdStep === 0 && (
                 <div className="text-center py-6 space-y-3">
                   <Smartphone className="h-10 w-10 mx-auto text-emerald-400 opacity-80" />
-                  <p className="text-xs font-bold text-emerald-200">KoobNaaba Offline Engine</p>
+                  <p className="text-xs font-bold text-emerald-200">NAFA - AGRITECH Offline Engine</p>
                   <p className="text-[10px] text-emerald-400/90 leading-relaxed">
                     Simulation de parcours USSD. Aucun appel réseau USSD réel n’est déclenché depuis cette interface.
                   </p>
@@ -140,7 +140,7 @@ export const MechUssdSimulator = () => {
 
               {ussdStep === 1 && (
                 <div className="space-y-1 text-xs">
-                  <p className="font-bold text-white mb-1.5">=== KOOBNAABA FASO ===</p>
+                  <p className="font-bold text-white mb-1.5">=== NAFA - AGRITECH FASO ===</p>
                   <p>1. Français</p>
                   <p>2. Mooré (Gom-biis)</p>
                   <p>3. Dioula (Kuma)</p>
@@ -241,7 +241,7 @@ export const MechUssdSimulator = () => {
                 <RotateCcw className="h-3 w-3" />
                 Raccrocher / Réinitialiser
               </Button>
-              <span className="text-[10px] text-stone-500">Passerelle USSD KoobNaaba</span>
+              <span className="text-[10px] text-stone-500">Passerelle USSD NAFA - AGRITECH</span>
             </div>
           </Card>
 
@@ -265,7 +265,7 @@ export const MechUssdSimulator = () => {
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                Le Réseau d'Agents de Terrain KoobNaaba
+                Le Réseau d'Agents de Terrain NAFA - AGRITECH
               </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Des professionnels formés, basés dans chaque commune rurale pour accompagner les agriculteurs, cartographier les parcelles et superviser les chantiers de mécanisation.
@@ -321,7 +321,7 @@ export const MechUssdSimulator = () => {
               <div className="p-4 rounded-xl bg-muted/40 border space-y-2.5">
                 <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <Sparkles className="h-4 w-4 text-amber-500" />
-                  Comment fonctionne le modèle KoobNaaba en zone rurale ?
+                  Comment fonctionne le modèle NAFA - AGRITECH en zone rurale ?
                 </p>
                 <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
                   <li>

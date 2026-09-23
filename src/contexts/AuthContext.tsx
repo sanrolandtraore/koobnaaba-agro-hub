@@ -346,12 +346,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setPartnerTypeState(e.detail.type);
       }
     };
-    window.addEventListener("koobnaaba-partner-type-updated", handlePartnerTypeEvent);
+    window.addEventListener("nafa-partner-type-updated", handlePartnerTypeEvent);
 
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('online', handleOnline);
-      window.removeEventListener("koobnaaba-partner-type-updated", handlePartnerTypeEvent);
+      window.removeEventListener("nafa-partner-type-updated", handlePartnerTypeEvent);
     };
   }, []);
 
@@ -468,7 +468,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       expiresAt: Date.now() + 10 * 60 * 1000,
     };
     try {
-      sessionStorage.setItem("koobnaaba_otp_" + normalized, JSON.stringify(payload));
+      sessionStorage.setItem("nafa_otp_" + normalized, JSON.stringify(payload));
     } catch (e) {
       console.warn("sessionStorage non disponible:", e);
     }
@@ -510,7 +510,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Vérifier le code local/démo
     let isValidToken = token === "123456";
     try {
-      const rawStored = sessionStorage.getItem("koobnaaba_otp_" + normalized);
+      const rawStored = sessionStorage.getItem("nafa_otp_" + normalized);
       if (rawStored) {
         const stored = JSON.parse(rawStored);
         if (stored && stored.code === token && stored.expiresAt > Date.now()) {
@@ -526,7 +526,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      sessionStorage.removeItem("koobnaaba_otp_" + normalized);
+      sessionStorage.removeItem("nafa_otp_" + normalized);
     } catch (_e) {
       // Ignorer l'erreur de suppression en sessionStorage
     }

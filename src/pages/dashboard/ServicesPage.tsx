@@ -150,7 +150,7 @@ export default function ServicesPage() {
     message: "",
   });
 
-  const localRequestsKey = `koobnaaba_local_service_requests_${user?.id || "demo"}`;
+  const localRequestsKey = `nafa_local_service_requests_${user?.id || "demo"}`;
 
   const fetchAll = async () => {
     try {
@@ -201,8 +201,8 @@ export default function ServicesPage() {
   useEffect(() => {
     fetchAll();
     const handleUpdate = () => fetchAll();
-    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    window.addEventListener("nafa-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -332,7 +332,7 @@ export default function ServicesPage() {
 
       toast.success(`Votre commande a été envoyée à ${quoteOffer.partner_name} !`);
       setQuoteOpen(false);
-      window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+      window.dispatchEvent(new CustomEvent("nafa-partner-data-updated"));
       fetchAll();
       setActiveFilter("mes_demandes");
     } catch (err) {
@@ -347,7 +347,7 @@ export default function ServicesPage() {
     if (!confirm("Annuler cette demande de devis ?")) return;
     await partnerStorage.updateQuoteStatus(id, "refusee", "Demande annulée par l'agriculteur.");
     toast.success("Demande annulée.");
-    window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+    window.dispatchEvent(new CustomEvent("nafa-partner-data-updated"));
     fetchAll();
   };
 
@@ -355,7 +355,7 @@ export default function ServicesPage() {
     if (!confirm("Supprimer cette demande de votre historique ?")) return;
     await partnerStorage.deleteQuote(id);
     toast.success("Demande supprimée.");
-    window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+    window.dispatchEvent(new CustomEvent("nafa-partner-data-updated"));
     fetchAll();
   };
 

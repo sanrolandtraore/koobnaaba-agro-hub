@@ -133,7 +133,7 @@ export default function PartenaireExportPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `koobnaaba_${selected}_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `nafa_${selected}_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
       toast.success("Fichier CSV exporté !");
@@ -154,7 +154,7 @@ export default function PartenaireExportPage() {
 
       const doc = new jsPDF({ orientation: "landscape" });
       doc.setFontSize(16);
-      doc.text("KoobNaaba — Bilan Partenaire Commercial", 14, 15);
+      doc.text("NAFA - AGRITECH — Bilan Partenaire Commercial", 14, 15);
       doc.setFontSize(10);
       doc.text(
         `Document : ${exportOptions.find((o) => o.value === selected)?.label} | Entreprise : ${profile?.full_name || "Partenaire"} | Date : ${new Date().toLocaleDateString("fr-FR")}`,
@@ -170,7 +170,7 @@ export default function PartenaireExportPage() {
         headStyles: { fillColor: [40, 116, 166] },
       });
 
-      doc.save(`koobnaaba_${selected}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      doc.save(`nafa_${selected}_${new Date().toISOString().slice(0, 10)}.pdf`);
       toast.success("Rapport PDF généré !");
     } catch (e: any) {
       toast.error(e.message || "Erreur lors de l'export PDF");

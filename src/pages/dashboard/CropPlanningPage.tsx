@@ -227,7 +227,7 @@ const CropPlanningPage = () => {
   const [selectedClimateZoneId, setSelectedClimateZoneId] = useState("soudano_sahelien");
 
   // Saved plans state
-  const storageKey = `koobnaaba_saved_crop_plans_${user?.id || "demo"}`;
+  const storageKey = `nafa_saved_crop_plans_${user?.id || "demo"}`;
   const [savedPlans, setSavedPlans] = useState<SavedCropPlan[]>([]);
 
   // Mode Verger / Arboriculture
@@ -609,7 +609,7 @@ const CropPlanningPage = () => {
   }) => {
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text(`KoobNaaba — Plan de production & Rentabilité`, 14, 18);
+    doc.text(`NAFA - AGRITECH — Plan de production & Rentabilité`, 14, 18);
     doc.setFontSize(10);
     doc.text(`Titre : ${p.seasonName} | Parcelle: ${p.parcelName || "Direct"} | Superficie: ${p.areaHa} ha`, 14, 26);
     doc.text(`Culture: ${p.cropName}${p.variety ? ` (${p.variety})` : ""} | Zone: ${p.climateZoneName || "Burkina Faso"} (Coeff ${p.climateCoeff || 1.0}×) | Généré le ${new Date().toLocaleDateString("fr-FR")}`, 14, 32);

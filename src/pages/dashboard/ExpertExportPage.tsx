@@ -118,7 +118,7 @@ const ExpertExportPage = () => {
             rows={previewRows}
             headers={previewHeaders}
             title={exportOptions.find((o) => o.value === selected)?.label || selected}
-            filePrefix={`koobnaaba_expert_${selected}`}
+            filePrefix={`nafa_expert_${selected}`}
             headerColor={[16, 149, 107]}
             onRowsChange={setPreviewRows}
           />
@@ -151,7 +151,7 @@ const ExpertExportPage = () => {
                   doc.setFontSize(20);
                   doc.text("BILAN D'ACTIVITÉ AGRO-CONSEIL", 14, 20);
                   doc.setFontSize(10);
-                  doc.text("KoobNaaba — Hub Numérique Agronomique", 14, 28);
+                  doc.text("NAFA - AGRITECH — Hub Numérique Agronomique", 14, 28);
                   doc.text(`Édité le : ${new Date().toLocaleDateString("fr-FR")}`, 14, 34);
 
                   let y = 45;
@@ -189,7 +189,7 @@ const ExpertExportPage = () => {
                     headStyles: { fillColor: [16, 149, 107] },
                   });
 
-                  doc.save("koobnaaba_rapport_expert_agronome.pdf");
+                  doc.save("nafa_rapport_expert_agronome.pdf");
                   toast.success("Rapport d'activité généré !");
                 } catch (err: any) {
                   toast.error(err.message);

@@ -23,7 +23,7 @@ export default function PWAInstallBanner() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       // Check if user dismissed previously in this session
-      const dismissed = sessionStorage.getItem("koobnaaba_pwa_dismissed");
+      const dismissed = sessionStorage.getItem("nafa_pwa_dismissed");
       if (!dismissed) {
         setIsVisible(true);
       }
@@ -53,7 +53,7 @@ export default function PWAInstallBanner() {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    sessionStorage.setItem("koobnaaba_pwa_dismissed", "true");
+    sessionStorage.setItem("nafa_pwa_dismissed", "true");
   };
 
   if (isInstalled || !isVisible) {
@@ -69,7 +69,7 @@ export default function PWAInstallBanner() {
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h4 className="font-heading font-bold text-sm text-foreground">NAFA -AGRITECH</h4>
+              <h4 className="font-heading font-bold text-sm text-foreground">NAFA - AGRITECH</h4>
               <span className="px-1.5 py-0.5 rounded text-[10px] bg-primary/10 text-primary font-semibold">PWA</span>
             </div>
             <p className="text-xs text-muted-foreground line-clamp-1">La technologie au service de l'agriculture africaine</p>

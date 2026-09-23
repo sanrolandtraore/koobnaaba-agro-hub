@@ -9,7 +9,7 @@ const PolitiqueConfidentialite = () => (
         <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <img src={logo} alt="KoobNaaba" className="h-8 w-auto" />
+        <img src={logo} alt="NAFA - AGRITECH" className="h-8 w-auto" />
       </div>
     </header>
     <main className="container max-w-4xl mx-auto px-4 py-12 prose prose-headings:text-foreground prose-p:text-muted-foreground max-w-none">
@@ -18,8 +18,8 @@ const PolitiqueConfidentialite = () => (
 
       <h2 className="text-xl font-semibold text-foreground mt-8">1. Responsable du traitement</h2>
       <p>
-        Le responsable du traitement des données est la société KoobNaaba SARL, 
-        Quartier Cissin, Rue 15.42, Porte 258, Ouagadougou, Burkina Faso.
+        Le responsable du traitement des données est la société NAFA - AGRITECH SARL, 
+        BOBO DIOULASSO, Burkina Faso.
       </p>
 
       <h2 className="text-xl font-semibold text-foreground mt-8">2. Données collectées</h2>
@@ -76,7 +76,7 @@ const PolitiqueConfidentialite = () => (
         <li><strong>Droit à la portabilité :</strong> exporter vos données dans un format standard</li>
       </ul>
       <p>
-        Pour exercer ces droits : <a href="mailto:dpo@koobnaaba.com" className="text-primary">dpo@koobnaaba.com</a>
+        Pour exercer ces droits : <a href="mailto:contact@nafa-agritech.com" className="text-primary">contact@nafa-agritech.com</a>
       </p>
 
       <h2 className="text-xl font-semibold text-foreground mt-8">8. Sécurité</h2>
@@ -88,7 +88,7 @@ const PolitiqueConfidentialite = () => (
 
       <h2 className="text-xl font-semibold text-foreground mt-8">9. Cookies</h2>
       <p>
-        KoobNaaba utilise uniquement des cookies techniques nécessaires au fonctionnement de 
+        NAFA - AGRITECH utilise uniquement des cookies techniques nécessaires au fonctionnement de 
         la plateforme (session, authentification). Aucun cookie publicitaire ou de traçage n'est utilisé.
       </p>
 
@@ -96,8 +96,9 @@ const PolitiqueConfidentialite = () => (
       <p>
         Pour toute question relative à la protection de vos données :<br />
         Délégué à la Protection des Données<br />
-        Email : <a href="mailto:dpo@koobnaaba.com" className="text-primary">dpo@koobnaaba.com</a><br />
-        Adresse : Quartier Cissin, Rue 15.42, Porte 258, Ouagadougou, Burkina Faso
+        Email : <a href="mailto:contact@nafa-agritech.com" className="text-primary">contact@nafa-agritech.com</a><br />
+        Adresse : BOBO DIOULASSO, Burkina Faso<br />
+        Téléphone : +226 75774852 / +226 50134920
       </p>
       <p>
         Vous pouvez également adresser une réclamation à la Commission de l'Informatique et 

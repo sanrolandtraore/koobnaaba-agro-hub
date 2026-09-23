@@ -1,5 +1,5 @@
 /**
- * Moteur de calcul agronomique pour Koobnaaba: Farm Forward
+ * Moteur de calcul agronomique pour NAFA - AGRITECH: Farm Forward
  * Adapté aux réalités agricoles et climatiques du Burkina Faso et de l'Afrique de l'Ouest.
  */
 

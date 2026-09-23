@@ -54,8 +54,8 @@ export default function PartnerEntriesPage({ category, title, subtitle, icon }: 
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
-    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    window.addEventListener("nafa-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
   }, [category]);
 
   const startCreate = () => {

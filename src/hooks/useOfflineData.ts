@@ -115,8 +115,8 @@ export function useOfflineData<T = any>({
   // Refetch fresh data after reconnect & queued sync completes
   useEffect(() => {
     const handleSynced = () => { fetchData(); };
-    window.addEventListener('koobnaaba:sync-completed', handleSynced);
-    return () => window.removeEventListener('koobnaaba:sync-completed', handleSynced);
+    window.addEventListener('nafa:sync-completed', handleSynced);
+    return () => window.removeEventListener('nafa:sync-completed', handleSynced);
   }, [fetchData]);
 
   const queueOfflineInsert = useCallback(async (row: any, message: string) => {

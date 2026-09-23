@@ -28,7 +28,7 @@ const PartenaireSettingsTab = () => {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p className="text-muted-foreground">
-            Valide jusqu'au <strong>{new Date(sub.endDate).toLocaleDateString("fr-FR")}</strong>. Votre compte donne accès à l'ensemble des outils d'aide à la décision KoobNaaba : Diagnostic IA, Ordonnances signées, Scouting terrain, Flotte de location et Offres de vente.
+            Valide jusqu'au <strong>{new Date(sub.endDate).toLocaleDateString("fr-FR")}</strong>. Votre compte donne accès à l'ensemble des outils d'aide à la décision NAFA - AGRITECH : Diagnostic IA, Ordonnances signées, Scouting terrain, Flotte de location et Offres de vente.
           </p>
           <Button asChild size="sm" className="gradient-primary text-primary-foreground font-semibold">
             <Link to="/dashboard/partenaire-abonnement">

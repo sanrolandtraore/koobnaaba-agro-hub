@@ -57,8 +57,8 @@ export default function MyOffersPage() {
   useEffect(() => {
     loadOffers();
     const handleUpdate = () => loadOffers();
-    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    window.addEventListener("nafa-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
   }, [user]);
 
   const setField = (k: keyof typeof emptyForm, v: any) =>
@@ -185,7 +185,7 @@ export default function MyOffersPage() {
             <Store className="h-3.5 w-3.5" /> Votre Vitrine Partenaire Dédiée & URL Unique
           </div>
           <h2 className="text-base font-heading font-bold text-foreground">
-            Boutique publique KoobNaaba en ligne
+            Boutique publique NAFA - AGRITECH en ligne
           </h2>
           <p className="text-xs text-muted-foreground">
             Toutes vos offres validées sont visibles sur votre lien unique, ainsi que dans le catalogue des agriculteurs et la page d'accueil.

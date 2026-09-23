@@ -745,12 +745,12 @@ const INITIAL_PARTNER_MISSIONS: PartnerMission[] = [
 
 // ─── Clés de stockage local ───
 const KEYS = {
-  ENTRIES: "koobnaaba_partner_entries_v2",
-  OFFERS: "koobnaaba_partner_offers_v2",
-  MISSIONS: "koobnaaba_partner_missions_v2",
-  INTERVENTIONS: "koobnaaba_partner_interventions_v2",
-  QUOTES: "koobnaaba_partner_quotes_v2",
-  CLIENTS: "koobnaaba_partner_clients_v2",
+  ENTRIES: "nafa_partner_entries_v2",
+  OFFERS: "nafa_partner_offers_v2",
+  MISSIONS: "nafa_partner_missions_v2",
+  INTERVENTIONS: "nafa_partner_interventions_v2",
+  QUOTES: "nafa_partner_quotes_v2",
+  CLIENTS: "nafa_partner_clients_v2",
 };
 
 function readLocal<T>(key: string, defaultVal: T): T {
@@ -766,7 +766,7 @@ function readLocal<T>(key: string, defaultVal: T): T {
 function writeLocal<T>(key: string, val: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(val));
-    window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated", { detail: { key } }));
+    window.dispatchEvent(new CustomEvent("nafa-partner-data-updated", { detail: { key } }));
   } catch (e) {
     console.error(`[partnerStorage] Error writing ${key}`, e);
   }
@@ -1040,7 +1040,7 @@ export const partnerStorage = {
     else list.unshift(saved);
     writeLocal(KEYS.QUOTES, list);
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+      window.dispatchEvent(new CustomEvent("nafa-partner-data-updated"));
     }
     return saved;
   },
@@ -1053,7 +1053,7 @@ export const partnerStorage = {
       if (response !== undefined) item.response = response;
       writeLocal(KEYS.QUOTES, list);
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+        window.dispatchEvent(new CustomEvent("nafa-partner-data-updated"));
       }
     }
   },
@@ -1062,7 +1062,7 @@ export const partnerStorage = {
     const list = await this.getQuotes();
     writeLocal(KEYS.QUOTES, list.filter((q) => q.id !== id));
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("koobnaaba-partner-data-updated"));
+      window.dispatchEvent(new CustomEvent("nafa-partner-data-updated"));
     }
   },
 

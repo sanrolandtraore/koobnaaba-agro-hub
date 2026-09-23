@@ -1,5 +1,5 @@
 /**
- * Moteur zootechnique pour Koobnaaba: Farm Forward
+ * Moteur zootechnique pour NAFA - AGRITECH: Farm Forward
  * Spécifique aux filières d'élevage sahéliennes et d'Afrique de l'Ouest :
  * 1. Embouche bovine & ovine (engraissement)
  * 2. Aviculture (poules pondeuses & poulets de chair)

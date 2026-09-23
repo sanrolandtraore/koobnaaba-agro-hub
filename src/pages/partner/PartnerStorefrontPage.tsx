@@ -149,7 +149,7 @@ export default function PartnerStorefrontPage() {
     return (
       <div className="min-h-screen bg-muted/20 flex items-center justify-center p-6">
         <div className="text-center space-y-3">
-          <img src={logo} alt="KoobNaaba" className="h-12 w-auto mx-auto animate-pulse" />
+          <img src={logo} alt="NAFA - AGRITECH" className="h-12 w-auto mx-auto animate-pulse" />
           <p className="text-sm font-medium text-muted-foreground">Chargement de la vitrine partenaire…</p>
         </div>
       </div>
@@ -178,8 +178,8 @@ export default function PartnerStorefrontPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
-            <img src={logo} alt="KoobNaaba" className="h-7 w-auto" />
-            <span className="hidden sm:inline">Accueil KoobNaaba</span>
+            <img src={logo} alt="NAFA - AGRITECH" className="h-7 w-auto" />
+            <span className="hidden sm:inline">Accueil NAFA - AGRITECH</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export default function PartnerStorefrontPage() {
                 {partner.whatsapp && (
                   <Button asChild size="sm" variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 font-semibold rounded-xl gap-2">
                     <a
-                      href={`https://wa.me/${cleanPhone(partner.whatsapp).replace("+", "")}?text=Bonjour%20${encodeURIComponent(partner.name)}%2C%20je%20vous%20contacte%20depuis%20votre%20vitrine%20KoobNaaba.`}
+                      href={`https://wa.me/${cleanPhone(partner.whatsapp).replace("+", "")}?text=Bonjour%20${encodeURIComponent(partner.name)}%2C%20je%20vous%20contacte%20depuis%20votre%20vitrine%20NAFA%20-%20AGRITECH.`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -293,7 +293,7 @@ export default function PartnerStorefrontPage() {
                 <p className="text-xs font-bold text-foreground mt-1">Mobile Money</p>
               </div>
               <div className="p-3 rounded-2xl bg-muted/50 border border-border/60 text-center">
-                <p className="text-xs font-semibold text-muted-foreground">Attestation KoobNaaba</p>
+                <p className="text-xs font-semibold text-muted-foreground">Attestation NAFA - AGRITECH</p>
                 <p className="text-xs font-bold text-primary mt-1">Agréé & Vérifié</p>
               </div>
             </div>
@@ -492,7 +492,7 @@ export default function PartnerStorefrontPage() {
               <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                 <span>
-                  <strong>Garantie Séquestre KoobNaaba :</strong> Aucun paiement anticipé n'est débloqué sans votre confirmation de réception ou de réalisation.
+                  <strong>Garantie Séquestre NAFA - AGRITECH :</strong> Aucun paiement anticipé n'est débloqué sans votre confirmation de réception ou de réalisation.
                 </span>
               </div>
 

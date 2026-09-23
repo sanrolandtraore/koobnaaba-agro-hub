@@ -38,7 +38,7 @@ interface OfflineDBSchema extends DBSchema {
   };
 }
 
-const DB_NAME = 'koobnaaba-offline';
+const DB_NAME = 'nafa-offline';
 const DB_VERSION = 3;
 
 async function getCurrentUserId(): Promise<string | null> {

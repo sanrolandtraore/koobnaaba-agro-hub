@@ -10,7 +10,7 @@ export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 /**
  * i18n configuration.
  * French is the default/fallback language; English is available.
- * The chosen language is persisted in localStorage ("koobnaaba-lang").
+ * The chosen language is persisted in localStorage ("nafa-lang").
  */
 i18n
   .use(initReactI18next)

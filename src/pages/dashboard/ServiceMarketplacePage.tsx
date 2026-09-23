@@ -171,7 +171,7 @@ const ServiceMarketplacePage = () => {
       amount: selectedService.price, client_notes: orderNotes || null, status: "en_attente", escrow_status: "bloque",
     });
     if (error) toast.error(error.message);
-    else { toast.success("Commande passée ! Le paiement est bloqué chez KoobNaaba."); setShowOrderDialog(false); setOrderNotes(""); setSelectedService(null); fetchData(); }
+    else { toast.success("Commande passée ! Le paiement est bloqué chez NAFA - AGRITECH."); setShowOrderDialog(false); setOrderNotes(""); setSelectedService(null); fetchData(); }
   };
 
   const handleSubmitProof = async (orderId: string) => {
@@ -229,7 +229,7 @@ const ServiceMarketplacePage = () => {
           <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
             <Store className="h-6 w-6 text-primary" /> Marketplace Agricole
           </h1>
-          <p className="text-muted-foreground mt-1">Services, matériels et fournisseurs — paiement sécurisé par KoobNaaba</p>
+          <p className="text-muted-foreground mt-1">Services, matériels et fournisseurs — paiement sécurisé par NAFA - AGRITECH</p>
         </div>
         {isProvider && (
           <Button onClick={() => setShowCreateService(true)} className="gradient-primary text-primary-foreground">
@@ -243,9 +243,9 @@ const ServiceMarketplacePage = () => {
         <CardContent className="flex items-start gap-3 pt-4">
           <Shield className="h-6 w-6 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold">Paiement sécurisé par KoobNaaba</p>
+            <p className="text-sm font-semibold">Paiement sécurisé par NAFA - AGRITECH</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Quand vous commandez un service, le paiement est <strong>bloqué chez KoobNaaba</strong>.
+              Quand vous commandez un service, le paiement est <strong>bloqué chez NAFA - AGRITECH</strong>.
               Le prestataire reçoit les fonds <strong>uniquement après avoir fourni la preuve</strong> que le service a été rendu et que vous l'avez validé.
             </p>
           </div>
@@ -565,7 +565,7 @@ const ServiceMarketplacePage = () => {
               </div>
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
                 <div className="flex items-center gap-2 text-sm font-semibold"><Lock className="h-4 w-4 text-primary" /> Paiement sécurisé</div>
-                <p className="text-xs text-muted-foreground mt-1">Votre paiement de <strong>{Number(selectedService.price).toLocaleString()} FCFA</strong> sera bloqué chez KoobNaaba jusqu'à validation.</p>
+                <p className="text-xs text-muted-foreground mt-1">Votre paiement de <strong>{Number(selectedService.price).toLocaleString()} FCFA</strong> sera bloqué chez NAFA - AGRITECH jusqu'à validation.</p>
               </div>
               <div className="space-y-2"><Label>Notes (optionnel)</Label><Textarea value={orderNotes} onChange={e => setOrderNotes(e.target.value)} placeholder="Précisions sur votre besoin..." rows={3} /></div>
               <Button onClick={handlePlaceOrder} className="w-full gradient-primary text-primary-foreground"><Lock className="h-4 w-4 mr-2" /> Confirmer et bloquer le paiement</Button>

@@ -439,7 +439,7 @@ export default function Auth() {
                     </div>
                     <h3 className="text-lg font-bold text-foreground">Finalisez votre espace</h3>
                     <p className="text-xs text-muted-foreground">
-                      Choisissez votre profil pour adapter automatiquement KoobNaaba à vos activités.
+                      Choisissez votre profil pour adapter automatiquement NAFA - AGRITECH à vos activités.
                     </p>
                   </div>
 

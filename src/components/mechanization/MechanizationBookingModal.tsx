@@ -125,7 +125,7 @@ export const MechBookingModal = ({
                 Commander un Chantier de Mécanisation
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Réseau d'équipements & conducteurs certifiés KoobNaaba
+                Réseau d'équipements & conducteurs certifiés NAFA - AGRITECH
               </DialogDescription>
             </div>
           </div>
@@ -255,7 +255,7 @@ export const MechBookingModal = ({
           {/* Field agent assigned */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold flex items-center justify-between">
-              <span>Agent de terrain KoobNaaba de votre secteur</span>
+              <span>Agent de terrain NAFA - AGRITECH de votre secteur</span>
               <span className="text-[11px] text-muted-foreground">Supervision & audit sur site</span>
             </Label>
             <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>

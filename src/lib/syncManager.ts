@@ -105,7 +105,7 @@ export async function syncOnReconnect(): Promise<void> {
   if (count === 0) {
     // Still notify so UIs can refetch fresh server data after reconnect
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('koobnaaba:sync-completed'));
+      window.dispatchEvent(new CustomEvent('nafa:sync-completed'));
     }
     return;
   }
@@ -127,7 +127,7 @@ if (typeof window !== 'undefined') {
     setTimeout(async () => {
       await syncOnReconnect();
       // Notify the rest of the app (hooks, dashboards) that they should refetch
-      window.dispatchEvent(new CustomEvent('koobnaaba:sync-completed'));
+      window.dispatchEvent(new CustomEvent('nafa:sync-completed'));
     }, 1500);
   });
 }

@@ -36,8 +36,8 @@ export default function QuoteRequestsPage() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
-    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    window.addEventListener("nafa-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
   }, [user]);
 
   const respond = async (q: QuoteRequest, status: QuoteRequest["status"]) => {

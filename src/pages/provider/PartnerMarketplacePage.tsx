@@ -44,8 +44,8 @@ export default function PartnerMarketplacePage() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
-    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    window.addEventListener("nafa-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
   }, []);
 
   const filtered = useMemo(() => offers.filter((o) => {

@@ -151,8 +151,8 @@ export default function ScoutingPage() {
   // Refetch when background sync completes
   useEffect(() => {
     const onSynced = () => { fetchSessions(); };
-    window.addEventListener("koobnaaba:sync-completed", onSynced);
-    return () => window.removeEventListener("koobnaaba:sync-completed", onSynced);
+    window.addEventListener("nafa:sync-completed", onSynced);
+    return () => window.removeEventListener("nafa:sync-completed", onSynced);
   }, [fetchSessions]);
 
   const captureGPS = () => {
@@ -355,7 +355,7 @@ export default function ScoutingPage() {
     // Footer
     const pageH = doc.internal.pageSize.getHeight();
     doc.setFontSize(8); doc.setTextColor(120, 120, 120);
-    doc.text("Rapport généré par KoobNaaba Agro Hub", 14, pageH - 10);
+    doc.text("Rapport généré par NAFA - AGRITECH", 14, pageH - 10);
     doc.text(`Généré le ${new Date().toLocaleDateString("fr-FR")}`, pageW - 60, pageH - 10);
 
     doc.save(`rapport_scouting_${session.parcel_name || "visite"}_${session.visit_date}.pdf`);

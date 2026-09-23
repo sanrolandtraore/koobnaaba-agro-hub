@@ -71,7 +71,7 @@ const config = getSupabaseConfig();
 // The public landing page and authentication must remain functional when deployment
 // environment variables are missing. The fallback above is a Supabase publishable key,
 // which is explicitly intended for browser clients. Never use service-role or secret keys.
-const clientKey = config.isConfigured ? config.rawKey : 'koobnaaba-public-key-not-configured';
+const clientKey = config.isConfigured ? config.rawKey : 'nafa-public-key-not-configured';
 
 // Only Supabase publishable/anon keys are allowed in this browser bundle.
 // Never add service-role, secret, database, AI-provider, or payment credentials here.

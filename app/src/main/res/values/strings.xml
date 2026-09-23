@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Koobnaaba</string>
+    <string name="app_name">NAFA - AGRITECH</string>
     <string name="app_subtitle">Gestion Agricole &amp; Élevage Intelligente</string>
     <string name="nav_dashboard">Accueil</string>
     <string name="nav_farms">Exploitations</string>

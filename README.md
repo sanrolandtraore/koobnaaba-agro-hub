@@ -1,6 +1,6 @@
-# Koobnaaba: Farm Forward
+# NAFA - AGRITECH: Farm Forward
 
-Construire une plateforme SaaS de gestion agricole full-stack prête pour utilisation et destinée au marché africain (burkinabè), nommée 'Koobnaaba''.
+Construire une plateforme SaaS de gestion agricole full-stack prête pour utilisation et destinée au marché africain (burkinabè), nommée 'NAFA - AGRITECH'.
 
 ‎• La plateforme doit être :
 
@@ -150,7 +150,7 @@ Construire une plateforme SaaS de gestion agricole full-stack prête pour utilis
 
 ‎Objectif :
 
-‎Offrir un module complet de suivi des élevages (bovins, caprins, ovins, volailles, porcs, poissons etc.) avec les mêmes exigences production-ready que le reste de Koobnaab.
+‎Offrir un module complet de suivi des élevages (bovins, caprins, ovins, volailles, porcs, poissons etc.) avec les mêmes exigences production-ready que le reste de NAFA - AGRITECH.
 
 ‎
 

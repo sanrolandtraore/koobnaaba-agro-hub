@@ -69,8 +69,8 @@ export default function MissionsPage() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
-    window.addEventListener("koobnaaba-partner-data-updated", handleUpdate);
-    return () => window.removeEventListener("koobnaaba-partner-data-updated", handleUpdate);
+    window.addEventListener("nafa-partner-data-updated", handleUpdate);
+    return () => window.removeEventListener("nafa-partner-data-updated", handleUpdate);
   }, [user]);
 
   const services = domain === "elevage" ? SERVICES_ELEV : SERVICES_AGRI;

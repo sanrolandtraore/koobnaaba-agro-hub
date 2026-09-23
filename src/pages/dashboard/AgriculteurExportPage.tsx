@@ -96,7 +96,7 @@ const AgriculteurExportPage = () => {
           rows={previewRows}
           headers={previewHeaders}
           title={exportOptions.find(o => o.value === selected)?.label || selected}
-          filePrefix={`koobnaaba_${selected}`}
+          filePrefix={`nafa_${selected}`}
           headerColor={[139, 90, 43]}
           onRowsChange={setPreviewRows}
         />
@@ -119,7 +119,7 @@ const AgriculteurExportPage = () => {
                 ]);
                 const doc = new jsPDF();
                 doc.setFontSize(20); doc.text("DOSSIER DE FINANCEMENT", 14, 20);
-                doc.setFontSize(10); doc.text("KoobNaaba — Plateforme de Gestion Agricole", 14, 28);
+                doc.setFontSize(10); doc.text("NAFA - AGRITECH — Plateforme de Gestion Agricole", 14, 28);
                 doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 14, 34);
                 let y = 45;
                 doc.setFontSize(14); doc.text("1. Cycles culturaux", 14, y);
@@ -137,7 +137,7 @@ const AgriculteurExportPage = () => {
                 doc.text(`Total coûts: ${Math.round(totalCosts).toLocaleString()} FCFA`, 14, y + 8);
                 doc.text(`Total récolté: ${Math.round(totalHarvest).toLocaleString()} kg`, 14, y + 14);
                 doc.text(`Revenu ventes: ${Math.round(totalSales).toLocaleString()} FCFA`, 14, y + 20);
-                doc.save(`koobnaaba_dossier_financement.pdf`);
+                doc.save(`nafa_dossier_financement.pdf`);
                 toast.success("Dossier généré !");
               } catch (err: any) { toast.error(err.message); }
               finally { setLoading(false); }

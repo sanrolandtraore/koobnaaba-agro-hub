@@ -1,5 +1,5 @@
 /**
- * Définition et gestion des profils de partenaires spécialisés KoobNaaba
+ * Définition et gestion des profils de partenaires spécialisés NAFA - AGRITECH
  * Chaque partenaire choisit son profil de spécialisation et ses types de produits/services.
  * Les comptes partenaires ne sont PAS unifiés en bloc générique mais adaptés à leur corps de métier.
  */
@@ -192,7 +192,7 @@ export const PARTNER_PROFILES: Record<PartnerProfileType, PartnerProfileMeta> = 
 
 export const PARTNER_PROFILE_LIST = Object.values(PARTNER_PROFILES);
 
-const STORAGE_KEY_PREFIX = "koobnaaba_partner_profile_type_";
+const STORAGE_KEY_PREFIX = "nafa_partner_profile_type_";
 
 export function getStoredPartnerProfileType(userId?: string): PartnerProfileType {
   try {
@@ -202,7 +202,7 @@ export function getStoredPartnerProfileType(userId?: string): PartnerProfileType
         return userSpecific as PartnerProfileType;
       }
     }
-    const generic = localStorage.getItem("koobnaaba_current_partner_type");
+    const generic = localStorage.getItem("nafa_current_partner_type");
     if (generic && generic in PARTNER_PROFILES) {
       return generic as PartnerProfileType;
     }
@@ -214,11 +214,11 @@ export function getStoredPartnerProfileType(userId?: string): PartnerProfileType
 
 export function saveStoredPartnerProfileType(type: PartnerProfileType, userId?: string): void {
   try {
-    localStorage.setItem("koobnaaba_current_partner_type", type);
+    localStorage.setItem("nafa_current_partner_type", type);
     if (userId) {
       localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, type);
     }
-    window.dispatchEvent(new CustomEvent("koobnaaba-partner-type-updated", { detail: { type } }));
+    window.dispatchEvent(new CustomEvent("nafa-partner-type-updated", { detail: { type } }));
   } catch (e) {
     console.error("Erreur sauvegarde type partenaire local:", e);
   }

@@ -11,17 +11,17 @@ interface OfflineCredentials {
 }
 
 // Normalize any phone-like input or legacy email-format identifier
-// (e.g. "+22670000000@koobnaaba.local") to a canonical phone string.
-// For real emails (anything other than @koobnaaba.local), keep the email
+// (e.g. "+22670000000@nafa.local") to a canonical phone string.
+// For real emails (anything other than @nafa.local), keep the email
 // lowercased as-is so users can sign in offline with email too.
 export function normalizePhoneIdentifier(input: string): string {
   if (!input) return '';
   const lower = input.trim().toLowerCase();
   // Real email — keep as-is
-  if (lower.includes('@') && !lower.endsWith('@koobnaaba.local')) {
+  if (lower.includes('@') && !lower.endsWith('@nafa.local') && !lower.endsWith('.local')) {
     return lower;
   }
-  // Strip the internal "@koobnaaba.local" suffix if present
+  // Strip the internal ".local" suffix if present
   const base = lower.split('@')[0];
   // Keep digits and a leading '+'
   return base.replace(/[^0-9+]/g, '');

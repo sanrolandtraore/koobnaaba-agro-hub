@@ -9,7 +9,7 @@ const ConditionsUtilisation = () => (
         <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <img src={logo} alt="KoobNaaba" className="h-8 w-auto" />
+        <img src={logo} alt="NAFA - AGRITECH" className="h-8 w-auto" />
       </div>
     </header>
     <main className="container max-w-4xl mx-auto px-4 py-12 prose prose-headings:text-foreground prose-p:text-muted-foreground max-w-none">
@@ -19,13 +19,13 @@ const ConditionsUtilisation = () => (
       <h2 className="text-xl font-semibold text-foreground mt-8">1. Objet</h2>
       <p>
         Les présentes Conditions Générales d'Utilisation (CGU) régissent l'utilisation de la plateforme 
-        KoobNaaba, accessible à l'adresse koobnaaba.com et via l'application mobile progressive (PWA). 
+        NAFA - AGRITECH, accessible à l'adresse nafa-agritech.com et via l'application mobile progressive (PWA). 
         En utilisant la plateforme, vous acceptez sans réserve les présentes CGU.
       </p>
 
       <h2 className="text-xl font-semibold text-foreground mt-8">2. Description du service</h2>
       <p>
-        KoobNaaba est une plateforme numérique de gestion agricole qui permet aux agriculteurs, éleveurs, 
+        NAFA - AGRITECH est une plateforme numérique de gestion agricole qui permet aux agriculteurs, éleveurs, 
         experts agronomes et partenaires de :
       </p>
       <ul className="text-muted-foreground">
@@ -46,22 +46,22 @@ const ConditionsUtilisation = () => (
 
       <h2 className="text-xl font-semibold text-foreground mt-8">4. Accès au service</h2>
       <p>
-        KoobNaaba est proposé gratuitement : toutes les fonctionnalités de la plateforme sont
+        NAFA - AGRITECH est proposé gratuitement : toutes les fonctionnalités de la plateforme sont
         accessibles sans abonnement ni frais.
       </p>
 
 
       <h2 className="text-xl font-semibold text-foreground mt-8">5. Propriété des données</h2>
       <p>
-        Les données saisies par l'utilisateur restent sa propriété exclusive. KoobNaaba s'engage à ne 
+        Les données saisies par l'utilisateur restent sa propriété exclusive. NAFA - AGRITECH s'engage à ne 
         pas vendre, céder ou partager ces données à des tiers sans consentement explicite. L'utilisateur 
         peut exporter et supprimer ses données à tout moment.
       </p>
 
       <h2 className="text-xl font-semibold text-foreground mt-8">6. Responsabilités</h2>
       <p>
-        KoobNaaba met tout en œuvre pour assurer la disponibilité et la fiabilité de la plateforme. 
-        Toutefois, KoobNaaba ne saurait être tenu responsable des :
+        NAFA - AGRITECH met tout en œuvre pour assurer la disponibilité et la fiabilité de la plateforme. 
+        Toutefois, NAFA - AGRITECH ne saurait être tenu responsable des :
       </p>
       <ul className="text-muted-foreground">
         <li>Interruptions de service dues à des cas de force majeure</li>
@@ -81,20 +81,21 @@ const ConditionsUtilisation = () => (
       <h2 className="text-xl font-semibold text-foreground mt-8">8. Résiliation</h2>
       <p>
         L'utilisateur peut résilier son compte à tout moment depuis les paramètres de l'application. 
-        KoobNaaba se réserve le droit de suspendre ou résilier un compte en cas de violation des présentes CGU.
+        NAFA - AGRITECH se réserve le droit de suspendre ou résilier un compte en cas de violation des présentes CGU.
       </p>
 
       <h2 className="text-xl font-semibold text-foreground mt-8">9. Droit applicable et juridiction</h2>
       <p>
         Les présentes CGU sont soumises au droit burkinabè. Tout litige sera de la compétence exclusive 
-        des tribunaux de Ouagadougou, Burkina Faso.
+        des tribunaux de Bobo-Dioulasso, Burkina Faso.
       </p>
 
       <h2 className="text-xl font-semibold text-foreground mt-8">10. Contact</h2>
       <p>
         Pour toute question relative aux présentes CGU :<br />
-        Email : <a href="mailto:contact@koobnaaba.com" className="text-primary">contact@koobnaaba.com</a><br />
-        Adresse : Quartier Cissin, Rue 15.42, Porte 258, Ouagadougou, Burkina Faso
+        Email : <a href="mailto:contact@nafa-agritech.com" className="text-primary">contact@nafa-agritech.com</a><br />
+        Adresse : BOBO DIOULASSO, Burkina Faso<br />
+        Téléphone : +226 75774852 / +226 50134920
       </p>
     </main>
   </div>

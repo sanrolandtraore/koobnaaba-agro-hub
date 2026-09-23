@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 
 /**
- * Enveloppe visuelle dédiée au module Élevage & Zootechnie KoobNaaba.
+ * Enveloppe visuelle dédiée au module Élevage & Zootechnie NAFA - AGRITECH.
  */
 const LivestockLayout = () => {
   return (

@@ -123,7 +123,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   },
 ];
 
-const LOCAL_STORAGE_KEY = "koobnaaba_provider_subscription";
+const LOCAL_STORAGE_KEY = "nafa_provider_subscription";
 
 export function getStoredProviderSubscription(): ProviderSubscription {
   try {
@@ -165,7 +165,7 @@ export function getStoredProviderSubscription(): ProviderSubscription {
 export function saveProviderSubscription(sub: ProviderSubscription): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sub));
-    window.dispatchEvent(new Event("koobnaaba-subscription-updated"));
+    window.dispatchEvent(new Event("nafa-subscription-updated"));
   } catch (e) {
     console.error("Failed to save provider subscription", e);
   }

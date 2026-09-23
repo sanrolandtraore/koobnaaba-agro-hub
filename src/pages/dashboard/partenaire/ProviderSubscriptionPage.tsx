@@ -40,8 +40,8 @@ export default function ProviderSubscriptionPage() {
 
   useEffect(() => {
     const handler = () => setSub(getStoredProviderSubscription());
-    window.addEventListener("koobnaaba-subscription-updated", handler);
-    return () => window.removeEventListener("koobnaaba-subscription-updated", handler);
+    window.addEventListener("nafa-subscription-updated", handler);
+    return () => window.removeEventListener("nafa-subscription-updated", handler);
   }, []);
 
   const openSubscribe = (plan: SubscriptionPlan) => {
@@ -96,7 +96,7 @@ export default function ProviderSubscriptionPage() {
       setSub(updated);
       setProcessing(false);
       setSubscribeModalOpen(false);
-      toast.success(`Abonnement ${selectedPlan.title} activé avec succès ! Tous les outils KoobNaaba sont débloqués.`);
+      toast.success(`Abonnement ${selectedPlan.title} activé avec succès ! Tous les outils NAFA - AGRITECH sont débloqués.`);
     }, 600);
   };
 
@@ -112,7 +112,7 @@ export default function ProviderSubscriptionPage() {
             Entreprises Prestataires & Partenaires
           </div>
           <h1 className="text-2xl md:text-3xl font-heading font-bold">
-            Abonnements & Outils Professionnels KoobNaaba
+            Abonnements & Outils Professionnels NAFA - AGRITECH
           </h1>
           <p className="text-muted-foreground mt-1 text-sm md:text-base max-w-2xl">
             Abonnez votre entreprise de <strong>Services agronomiques</strong>, <strong>Vente d'intrants</strong> ou <strong>Location de matériel</strong> pour débloquer l'ensemble des outils technologiques d'aide à la décision.
@@ -139,7 +139,7 @@ export default function ProviderSubscriptionPage() {
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" />
-            <h3 className="font-bold text-base">Vos outils KoobNaaba débloqués pour votre activité</h3>
+            <h3 className="font-bold text-base">Vos outils NAFA - AGRITECH débloqués pour votre activité</h3>
           </div>
           <span className="text-xs font-medium text-primary">Prêts à l'emploi sur le terrain</span>
         </div>

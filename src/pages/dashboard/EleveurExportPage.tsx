@@ -94,7 +94,7 @@ const EleveurExportPage = () => {
           rows={previewRows}
           headers={previewHeaders}
           title={exportOptions.find(o => o.value === selected)?.label || selected}
-          filePrefix={`koobnaaba_elevage_${selected}`}
+          filePrefix={`nafa_elevage_${selected}`}
           headerColor={[34, 120, 74]}
           onRowsChange={setPreviewRows}
         />
