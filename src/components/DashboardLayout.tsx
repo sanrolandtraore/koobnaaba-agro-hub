@@ -11,6 +11,7 @@ import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { useSubscription } from "@/hooks/useSubscription";
 import BackNavigationButton from "@/components/BackNavigationButton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SyncStatusBadge } from "@/components/SyncStatusBadge";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
@@ -59,27 +60,8 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Indicateur de connectivité en direct */}
-            <Badge
-              variant="outline"
-              className={`gap-1.5 py-1 px-3 text-xs font-semibold rounded-full border transition-all ${
-                isOnline
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                  : "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300"
-              }`}
-            >
-              {isOnline ? (
-                <>
-                  <Wifi className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>En ligne</span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="h-3.5 w-3.5 text-amber-600" />
-                  <span>Mode Hors-ligne actif</span>
-                </>
-              )}
-            </Badge>
+            {/* Indicateur de synchronisation Offline-First WhatsApp-style */}
+            <SyncStatusBadge />
 
             {isPremium && (
               <Badge className="hidden sm:inline-flex bg-primary/15 text-primary border-primary/20 gap-1 text-xs font-semibold py-1 px-2.5 rounded-full">

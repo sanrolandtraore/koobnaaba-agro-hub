@@ -10,72 +10,57 @@ import {
 } from "@/components/RoleSidebar";
 import { Calculator, Store, Beef } from "lucide-react";
 
-describe("Architecture & Module Consolidation: Agriculteur vs Partenaire Hub", () => {
-  it("agriculteurNav contains ONLY planning and expert services, all other features stripped", () => {
+describe("Architecture & Cloisonnement Métier : Agriculteur vs Éleveur vs Espace Partenaire", () => {
+  it("agriculteurNav contains strictly Pôle Végétal features, never livestock", () => {
     const paths = agriculteurNav.map((item) => item.to);
 
-    // Must strictly include ONLY Planning and Service Expert
-    expect(paths).toEqual(["/dashboard/crop-planning", "/dashboard/services"]);
-
-    // Must NOT include deleted features
-    expect(paths).not.toContain("/dashboard/farms");
-    expect(paths).not.toContain("/dashboard/parcels");
-    expect(paths).not.toContain("/dashboard/crop-cycles");
-    expect(paths).not.toContain("/dashboard/harvests");
-    expect(paths).not.toContain("/dashboard/equipment");
-    expect(paths).not.toContain("/dashboard/activities");
-    expect(paths).not.toContain("/dashboard/investment");
-    expect(paths).not.toContain("/dashboard/calendar");
-    expect(paths).not.toContain("/dashboard/workers");
-    expect(paths).not.toContain("/dashboard/costs");
-    expect(paths).not.toContain("/dashboard/analytics");
-
-    // Must NOT include expert consulting or commercial tools
-    expect(paths).not.toContain("/dashboard/expert-diagnosis");
-    expect(paths).not.toContain("/dashboard/expert-prescriptions");
-    expect(paths).not.toContain("/dashboard/scouting");
-    expect(paths).not.toContain("/dashboard/partenaire-mes-offres");
-  });
-
-  it("partenaireNav consolidates Expert Agronome tools, Éleveur tools and Commercial tools", () => {
-    const paths = partenaireNav.map((item) => item.to);
-
-    // Pôle 1: Expert Agronome
-    expect(paths).toContain("/dashboard/expert-diagnosis");
-    expect(paths).toContain("/dashboard/expert-prescriptions");
+    // Pôle Végétal inclus
+    expect(paths).toContain("/dashboard/crop-planning");
+    expect(paths).toContain("/dashboard/crops");
     expect(paths).toContain("/dashboard/scouting");
-    expect(paths).toContain("/dashboard/expert-calculator");
-    expect(paths).toContain("/dashboard/expert-cartography");
+    expect(paths).toContain("/dashboard/genius");
     expect(paths).toContain("/dashboard/crop-library");
 
-    // Pôle 2: Élevage & Zootechnie
+    // Zéro bétail / médecine vétérinaire dans le Pôle Végétal
+    expect(paths).not.toContain("/dashboard/animals");
+    expect(paths).not.toContain("/dashboard/animal-health");
+    expect(paths).not.toContain("/dashboard/animal-feeding");
+    expect(paths).not.toContain("/dashboard/animal-reproduction");
+    expect(paths).not.toContain("/dashboard/livestock-services");
+  });
+
+  it("eleveurNav contains strictly Pôle Élevage features, never crops or plant irrigation", () => {
+    const paths = eleveurNav.map((item) => item.to);
+
+    // Pôle Élevage inclus
     expect(paths).toContain("/dashboard/animals");
     expect(paths).toContain("/dashboard/animal-health");
     expect(paths).toContain("/dashboard/animal-feeding");
     expect(paths).toContain("/dashboard/animal-reproduction");
     expect(paths).toContain("/dashboard/livestock-services");
 
-    // Pôle 3: Commerce & Chantiers
-    expect(paths).toContain("/dashboard/partenaire-mes-offres");
-    expect(paths).toContain("/dashboard/quote-requests");
-    expect(paths).toContain("/dashboard/missions");
-    expect(paths).toContain("/dashboard/interventions");
-    expect(paths).toContain("/dashboard/equipment");
-    expect(paths).toContain("/dashboard/provider-clients");
-    expect(paths).toContain("/dashboard/revenus");
+    // Zéro culture / fiches végétales dans le Pôle Élevage
+    expect(paths).not.toContain("/dashboard/crops");
+    expect(paths).not.toContain("/dashboard/crop-planning");
+    expect(paths).not.toContain("/dashboard/crop-library");
+  });
 
-    // Pôle 4: Réseau Écosystème & Partenariats
-    expect(paths).toContain("/dashboard/partenaire-fournisseurs");
-    expect(paths).toContain("/dashboard/partenaire-assurance");
-    expect(paths).toContain("/dashboard/partenaire-banques");
-    expect(paths).toContain("/dashboard/partenaire-programmes");
-    expect(paths).toContain("/dashboard/partners-directory");
+  it("partenaireNav contains strictly the 11 isolated sections of the dedicated Partner Space", () => {
+    const paths = partenaireNav.map((item) => item.to);
 
-    // Pôle 5: Gestion & Administration
-    expect(paths).toContain("/dashboard/partenaire-kyc");
-    expect(paths).toContain("/dashboard/partenaire-abonnement");
-    expect(paths).toContain("/dashboard/export");
-    expect(paths).toContain("/dashboard/settings");
+    // Les 11 sections réglementaires strictes
+    expect(paths).toContain("/dashboard/partner-space?tab=dashboard");
+    expect(paths).toContain("/dashboard/partner-space?tab=presentation");
+    expect(paths).toContain("/dashboard/partner-space?tab=services");
+    expect(paths).toContain("/dashboard/partner-space?tab=produits");
+    expect(paths).toContain("/dashboard/partner-space?tab=realisations");
+    expect(paths).toContain("/dashboard/partner-space?tab=galerie");
+    expect(paths).toContain("/dashboard/partner-space?tab=avis");
+    expect(paths).toContain("/dashboard/partner-space?tab=contact");
+    expect(paths).toContain("/dashboard/partner-space?tab=devis");
+    expect(paths).toContain("/dashboard/partner-space?tab=commandes");
+    expect(paths).toContain("/dashboard/partner-space?tab=statistiques");
+    expect(paths.length).toBe(11);
   });
 
   it("getNavForRole routes agriculteur, eleveur and seamlessly maps partner & legacy roles to partenaireNav", () => {

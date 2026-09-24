@@ -36,6 +36,7 @@ import {
 
 import {
   GeniusLanguage,
+  GeniusDomain,
   ParsedGeniusAction,
   parseGeniusCommand,
   executeGeniusAction,
@@ -90,6 +91,7 @@ export const NafaGeniusStudio: React.FC = () => {
 
   // État Langue & Assistant Vocal
   const [selectedLanguage, setSelectedLanguage] = useState<GeniusLanguage>("fr");
+  const [activeDomain, setActiveDomain] = useState<GeniusDomain>("agronomie");
   const [inputText, setInputText] = useState<string>("");
   const [isListening, setIsListening] = useState<boolean>(false);
   const [nluResult, setNluResult] = useState<ParsedGeniusAction | null>(null);
@@ -276,8 +278,14 @@ export const NafaGeniusStudio: React.FC = () => {
   // Traitement d'une commande textuelle ou vocale
   const handleProcessCommand = async (text: string) => {
     if (!text.trim()) return;
-    const parsed = parseGeniusCommand(text);
+    const parsed = parseGeniusCommand(text, activeDomain);
     setNluResult(parsed);
+
+    // Si violation de cloisonnement métier absolu
+    if (parsed.isDomainViolation) {
+      toast.error(parsed.explanation);
+      return;
+    }
 
     // Si instruction non reconnue avec certitude : Règle stricte de vérité réelle
     if (!parsed.isRecognized) {
@@ -466,7 +474,20 @@ export const NafaGeniusStudio: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+          {/* Sélecteur de cloisonnement métier */}
+          <Select value={activeDomain} onValueChange={(val: GeniusDomain) => setActiveDomain(val)}>
+            <SelectTrigger className="w-[150px] h-9 text-xs bg-emerald-900/60 border-emerald-700 text-white font-medium">
+              <SelectValue placeholder="Pôle métier" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="agronomie">🌿 Pôle Végétal</SelectItem>
+              <SelectItem value="elevage">🐄 Pôle Élevage</SelectItem>
+              <SelectItem value="partenaire">🤝 Partenaire</SelectItem>
+              <SelectItem value="general">🌐 Général</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Select value={selectedLanguage} onValueChange={(val: GeniusLanguage) => setSelectedLanguage(val)}>
             <SelectTrigger className="w-[140px] h-9 text-xs bg-emerald-900/60 border-emerald-700 text-white">
               <SelectValue placeholder="Langue" />
@@ -588,14 +609,23 @@ export const NafaGeniusStudio: React.FC = () => {
           {nluResult && (
             <div
               className={`p-3 rounded-lg border text-xs space-y-1.5 ${
-                !nluResult.isRecognized
+                nluResult.isDomainViolation
+                  ? "bg-red-50 dark:bg-red-950/40 border-red-500/40 text-red-950 dark:text-red-100"
+                  : !nluResult.isRecognized
                   ? "bg-amber-50 dark:bg-amber-950/40 border-amber-500/40 text-amber-950 dark:text-amber-100"
                   : "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/20 text-emerald-950 dark:text-emerald-100"
               }`}
             >
               <div className="flex items-center justify-between font-semibold flex-wrap gap-2">
                 <span className="flex items-center gap-1.5">
-                  {!nluResult.isRecognized ? (
+                  {nluResult.isDomainViolation ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                      <span className="text-red-700 dark:text-red-300 font-bold">
+                        CLOISONNEMENT MÉTIER RESPECTÉ
+                      </span>
+                    </>
+                  ) : !nluResult.isRecognized ? (
                     <>
                       <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
                       <span className="text-amber-700 dark:text-amber-300 font-bold">
@@ -610,7 +640,10 @@ export const NafaGeniusStudio: React.FC = () => {
                   )}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  {nluResult.requiresExpertValidation && (
+                  <Badge variant="outline" className="text-[10px] text-foreground">
+                    Pôle : {nluResult.domain.toUpperCase()}
+                  </Badge>
+                  {nluResult.requiresExpertValidation && !nluResult.isDomainViolation && (
                     <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-500/50 bg-amber-500/10 font-medium">
                       Validation Expert Requise
                     </Badge>

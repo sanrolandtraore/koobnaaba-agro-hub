@@ -22,19 +22,24 @@ export type NavItem = {
   section?: string;
 };
 
-/** Module « Agriculteur » : Planning et Services Experts uniquement. */
+/** Module « Agriculteur » (Pôle Végétal strict : Cultures, Parcelles, Irrigation, Fiches INERA) */
 export const agriculteurNav: NavItem[] = [
-  { to: "/dashboard/crop-planning", labelKey: "Planification", icon: Calculator },
-  { to: "/dashboard/services", labelKey: "Services Experts", icon: ClipboardList },
+  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/crop-planning", labelKey: "Planification des cultures", icon: Calculator },
+  { to: "/dashboard/crops", labelKey: "Cultures & Parcelles", icon: Sprout },
+  { to: "/dashboard/scouting", labelKey: "Suivi des Parcelles", icon: Eye },
+  { to: "/dashboard/genius", labelKey: "NAFA Genius IA (Végétal)", icon: Sparkles },
+  { to: "/dashboard/crop-library", labelKey: "Fiches Techniques INERA", icon: BookOpen },
+  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings },
 ];
 
-/** Module « Éleveur » (Filière Pastorale directe) */
+/** Module « Éleveur » (Pôle Vétérinaire & Cheptel strict : Animaux, Santé, Nutrition, Soins) */
 export const eleveurNav: NavItem[] = [
   { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/dashboard/animals", labelKey: "Animaux", icon: Beef },
-  { to: "/dashboard/animal-health", labelKey: "Santé", icon: Heart },
-  { to: "/dashboard/animal-reproduction", labelKey: "Reproduction", icon: Baby },
-  { to: "/dashboard/animal-feeding", labelKey: "Alimentation", icon: Utensils },
+  { to: "/dashboard/animals", labelKey: "Cheptel & Animaux", icon: Beef },
+  { to: "/dashboard/animal-health", labelKey: "Santé & Vaccinations", icon: Heart },
+  { to: "/dashboard/animal-reproduction", labelKey: "Reproduction & Vêlage", icon: Baby },
+  { to: "/dashboard/animal-feeding", labelKey: "Alimentation & Rations", icon: Utensils },
   { to: "/dashboard/livestock-services", labelKey: "Services Vétérinaires", icon: ClipboardList },
   { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings },
   { to: "/dashboard/export", labelKey: "Export PDF/CSV", icon: Download },
@@ -116,49 +121,21 @@ export const institutionNav: NavItem[] = [
 ];
 
 /**
- * Module « Partenaire / Hub Entreprise Polyvalent » :
- * Regroupe l'ensemble des expertises pour les entreprises polyvalentes.
+ * Module « Espace Partenaire » (Isolation totale) :
+ * Dédié exclusivement aux 11 sections réglementaires du partenaire.
  */
 export const partenaireNav: NavItem[] = [
-  { to: "/dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
-
-  // Pôle 1: Expertise Agronome
-  { to: "/dashboard/genius", labelKey: "NAFA Genius IA", icon: Sparkles, section: "Expertise Agronome" },
-  { to: "/dashboard/expert-diagnosis", labelKey: "Diagnostic IA", icon: Microscope, section: "Expertise Agronome" },
-  { to: "/dashboard/expert-prescriptions", labelKey: "Prescriptions", icon: FileText, section: "Expertise Agronome" },
-  { to: "/dashboard/scouting", labelKey: "Inspection terrain", icon: Eye, section: "Expertise Agronome" },
-  { to: "/dashboard/expert-calculator", labelKey: "Calculateur agricole", icon: Calculator, section: "Expertise Agronome" },
-  { to: "/dashboard/expert-cartography", labelKey: "Cartographie GPS", icon: MapPin, section: "Expertise Agronome" },
-  { to: "/dashboard/crop-library", labelKey: "Fiches techniques", icon: BookOpen, section: "Expertise Agronome" },
-
-  // Pôle 2: Élevage & Zootechnie
-  { to: "/dashboard/animals", labelKey: "Animaux", icon: Beef, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/animal-health", labelKey: "Santé", icon: Heart, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/animal-feeding", labelKey: "Alimentation", icon: Utensils, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/animal-reproduction", labelKey: "Reproduction", icon: Baby, section: "Élevage & Zootechnie" },
-  { to: "/dashboard/livestock-services", labelKey: "Services Vétérinaires", icon: ClipboardList, section: "Élevage & Zootechnie" },
-
-  // Pôle 3: Commerce, Matériel & Chantiers
-  { to: "/dashboard/partenaire-mes-offres", labelKey: "Mes offres & Ventes", icon: Store, section: "Commerce & Chantiers" },
-  { to: "/dashboard/quote-requests", labelKey: "Demandes de devis", icon: FileText, section: "Commerce & Chantiers" },
-  { to: "/dashboard/missions", labelKey: "Missions & Travaux", icon: Briefcase, section: "Commerce & Chantiers" },
-  { to: "/dashboard/interventions", labelKey: "Interventions terrain", icon: ClipboardList, section: "Commerce & Chantiers" },
-  { to: "/dashboard/equipment", labelKey: "Parc matériel & Location", icon: Tractor, section: "Commerce & Chantiers" },
-  { to: "/dashboard/provider-clients", labelKey: "Portefeuille Clients", icon: Users, section: "Commerce & Chantiers" },
-  { to: "/dashboard/revenus", labelKey: "Chiffre d'affaires & Recettes", icon: Wallet, section: "Commerce & Chantiers" },
-
-  // Pôle 4: Réseau Écosystème & Partenariats
-  { to: "/dashboard/partenaire-fournisseurs", labelKey: "Fournisseurs", icon: Package, section: "Réseau Écosystème" },
-  { to: "/dashboard/partenaire-assurance", labelKey: "Assurance agricole", icon: ShieldCheck, section: "Réseau Écosystème" },
-  { to: "/dashboard/partenaire-banques", labelKey: "Services bancaires agricoles", icon: Landmark, section: "Réseau Écosystème" },
-  { to: "/dashboard/partenaire-programmes", labelKey: "Programmes & Projets", icon: FolderKanban, section: "Réseau Écosystème" },
-  { to: "/dashboard/partners-directory", labelKey: "Annuaire Partenaires", icon: Handshake, section: "Réseau Écosystème" },
-
-  // Pôle 5: Gestion & Configuration
-  { to: "/dashboard/partenaire-kyc", labelKey: "Vérification KYC & Certification", icon: BadgeCheck, section: "Gestion & Paramètres" },
-  { to: "/dashboard/partenaire-abonnement", labelKey: "Abonnement partenaire", icon: Sparkles, section: "Gestion & Paramètres" },
-  { to: "/dashboard/export", labelKey: "Export PDF/CSV", icon: Download, section: "Gestion & Paramètres" },
-  { to: "/dashboard/settings", labelKey: "Paramètres", icon: Settings, section: "Gestion & Paramètres" },
+  { to: "/dashboard/partner-space?tab=dashboard", labelKey: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/dashboard/partner-space?tab=presentation", labelKey: "Présentation", icon: Building2 },
+  { to: "/dashboard/partner-space?tab=services", labelKey: "Services", icon: ClipboardList },
+  { to: "/dashboard/partner-space?tab=produits", labelKey: "Produits", icon: Package },
+  { to: "/dashboard/partner-space?tab=realisations", labelKey: "Réalisations", icon: Award },
+  { to: "/dashboard/partner-space?tab=galerie", labelKey: "Galerie", icon: Eye },
+  { to: "/dashboard/partner-space?tab=avis", labelKey: "Avis", icon: Heart },
+  { to: "/dashboard/partner-space?tab=contact", labelKey: "Contact", icon: Handshake },
+  { to: "/dashboard/partner-space?tab=devis", labelKey: "Devis", icon: FileText },
+  { to: "/dashboard/partner-space?tab=commandes", labelKey: "Commandes", icon: Store },
+  { to: "/dashboard/partner-space?tab=statistiques", labelKey: "Statistiques", icon: BarChart3 },
 ];
 
 export const roleDisplayNames: Record<string, string> = {
@@ -337,12 +314,15 @@ export const SidebarNavContent = ({ onNavigate }: SidebarContentProps) => {
         {nav.main.map((item, index) => {
           const { to, icon: Icon, section } = item;
           const isFirstOfSection = Boolean(section && (index === 0 || nav.main[index - 1]?.section !== section));
+          const currentPath = `${location.pathname}${location.search}`;
           const isActive = (
             to === "/dashboard"
-              ? location.pathname === "/dashboard"
-              : to === "/dashboard/crop-planning"
-                ? (location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/crop-planning"))
-                : location.pathname.startsWith(to)
+              ? (location.pathname === "/dashboard" && !location.search)
+              : to.includes("?")
+                ? (currentPath === to || (to.includes("tab=dashboard") && location.pathname === "/dashboard/partner-space" && !location.search))
+                : to === "/dashboard/crop-planning"
+                  ? (location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/crop-planning"))
+                  : location.pathname.startsWith(to)
           );
 
           const displayLabel = getNavLabel(item, t);

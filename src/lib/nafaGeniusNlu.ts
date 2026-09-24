@@ -11,8 +11,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { addToSyncQueue } from "@/lib/offlineDb";
+import { saveOfflineRecord, generateLocalUuid } from "@/lib/dexieDb";
 
 export type GeniusLanguage = "fr" | "dyu" | "mos" | "ful";
+export type GeniusDomain = "agronomie" | "elevage" | "partenaire" | "general";
 
 export type GeniusIntent =
   | "CREATE_VISIT"
@@ -25,6 +27,8 @@ export type GeniusIntent =
   | "GENERAL_ASSISTANCE";
 
 export interface ParsedGeniusAction {
+  domain: GeniusDomain;
+  isDomainViolation?: boolean;
   intent: GeniusIntent;
   confidence: number;
   language: GeniusLanguage;
@@ -190,10 +194,88 @@ export function detectLanguage(text: string): GeniusLanguage {
 
 /**
  * Analyse le texte pour extraire l'intention et les entités techniques
+ * avec cloisonnement métier strict entre Pôle Végétal, Élevage et Partenaire.
  */
-export function parseGeniusCommand(text: string): ParsedGeniusAction {
+export function parseGeniusCommand(text: string, activeDomain: GeniusDomain = "general"): ParsedGeniusAction {
   const lower = text.toLowerCase();
   const lang = detectLanguage(text);
+
+  // ─────────────────────────────────────────────────────────────
+  // CLOISONNEMENT MÉTIER STRICT & GUARDRAILS DE DOMAINE
+  // ─────────────────────────────────────────────────────────────
+  if (activeDomain === "agronomie") {
+    const livestockExclusive = [
+      "vache", "vaches", "bovin", "bovins", "taureau", "mouton", "moutons", 
+      "ovin", "ovins", "chevre", "chèvre", "chèvres", "caprin", "caprins",
+      "porc", "porcs", "porcin", "charbon bactéridien", "péripneumonie", 
+      "fièvre aphteuse", "fievre aphteuse", "vêlage", "velage", "saillie", 
+      "insémination", "insemination", "avortement brebis", "abreuvoir bétail"
+    ];
+    const isLivestockViolation = livestockExclusive.some((term) => lower.includes(term));
+    if (isLivestockViolation) {
+      return {
+        domain: activeDomain,
+        isDomainViolation: true,
+        intent: "GENERAL_ASSISTANCE",
+        confidence: 0.99,
+        language: lang,
+        rawText: text,
+        isRecognized: false,
+        requiresExpertValidation: true,
+        unverifiedReason: "Violation de cloisonnement métier : opération cheptel/vétérinaire demandée dans le Pôle Végétal.",
+        entities: {},
+        explanation: "⛔ CLOISONNEMENT MÉTIER : Vous êtes actuellement dans le module Pôle Végétal / Agronomie. Les questions d'élevage ou de médecine vétérinaire relèvent exclusivement du Pôle Vétérinaire & Cheptel. Veuillez basculer sur le module Élevage pour ces opérations.",
+        actionRequired: false,
+      };
+    }
+  }
+
+  if (activeDomain === "elevage") {
+    const cropsExclusive = [
+      "irrigation", "goutte-à-goutte", "goutte a goutte", "aspersion", "tomate",
+      "oignon", "mais", "maïs", "piment", "mangue", "choux", "chou", "maraîchage",
+      "maraichage", "engrais npk", "repiquage", "pépinière", "fongicide", "mildiou",
+      "chenille légionnaire", "parcelle de maïs", "parcelle de tomate"
+    ];
+    const isCropViolation = cropsExclusive.some((term) => lower.includes(term));
+    if (isCropViolation) {
+      return {
+        domain: activeDomain,
+        isDomainViolation: true,
+        intent: "GENERAL_ASSISTANCE",
+        confidence: 0.99,
+        language: lang,
+        rawText: text,
+        isRecognized: false,
+        requiresExpertValidation: true,
+        unverifiedReason: "Violation de cloisonnement métier : opération grandes cultures/irrigation demandée dans le Pôle Vétérinaire & Cheptel.",
+        entities: {},
+        explanation: "⛔ CLOISONNEMENT MÉTIER : Vous êtes actuellement dans le module Pôle Vétérinaire & Cheptel. Les questions relatives aux cultures végétales, à l'irrigation agricole et aux pathologies végétales relèvent exclusivement du Pôle Végétal. Veuillez basculer sur le module Agronomie pour ces opérations.",
+        actionRequired: false,
+      };
+    }
+  }
+
+  if (activeDomain === "partenaire") {
+    const fieldExclusive = ["arpenter parcelle", "profil altimétrique", "maladie des feuilles", "chenille légionnaire"];
+    const isFieldViolation = fieldExclusive.some((term) => lower.includes(term));
+    if (isFieldViolation) {
+      return {
+        domain: activeDomain,
+        isDomainViolation: true,
+        intent: "GENERAL_ASSISTANCE",
+        confidence: 0.99,
+        language: lang,
+        rawText: text,
+        isRecognized: false,
+        requiresExpertValidation: true,
+        unverifiedReason: "Violation de cloisonnement métier : intervention terrain direct demandée dans l'Espace Partenaire.",
+        entities: {},
+        explanation: "ℹ️ ESPACE PARTENAIRE : Ce module est dédié à la gestion commerciale et opérationnelle de votre entreprise (Présentation, Services, Produits, Réalisations, Devis, Commandes, Tableau de bord). Pour les interventions directes en plein champ, basculez sur le Pôle Végétal ou Élevage.",
+        actionRequired: false,
+      };
+    }
+  }
 
   let intent: GeniusIntent = "GENERAL_ASSISTANCE";
   let confidence = 0.7;
@@ -361,6 +443,8 @@ export function parseGeniusCommand(text: string): ParsedGeniusAction {
   const explanation = formatIntentResponse(intent, lang, entities, isRecognized);
 
   return {
+    domain: activeDomain,
+    isDomainViolation: false,
     intent,
     confidence,
     language: lang,
@@ -454,6 +538,14 @@ function formatIntentResponse(
 export async function executeGeniusAction(action: ParsedGeniusAction): Promise<ActionResult> {
   const { intent, entities, language } = action;
 
+  if (action.isDomainViolation) {
+    return {
+      success: false,
+      message: action.explanation,
+      data: { isDomainViolation: true, domain: action.domain },
+    };
+  }
+
   if (!action.isRecognized) {
     return {
       success: false,
@@ -516,17 +608,27 @@ export async function executeGeniusAction(action: ParsedGeniusAction): Promise<A
         }
       }
 
+      // Mode Offline-First Dexie (IndexedDB avec UUID local et statut 'pending')
+      const userId = user?.id || "offline-technician";
+      const localUuid = generateLocalUuid();
+      const offlineRecordData = { ...visitPayload, id: localUuid };
+
+      try {
+        await saveOfflineRecord("client_visits", "insert", offlineRecordData, userId);
+      } catch (dexieErr) {
+        console.warn("Erreur Dexie saveOfflineRecord:", dexieErr);
+      }
+
       // Fallback local storage
       const localVisits = JSON.parse(localStorage.getItem("nafa_offline_visits") || "[]");
-      const localId = `visit-${Date.now()}`;
-      localVisits.push({ ...visitPayload, id: localId });
+      localVisits.push(offlineRecordData);
       localStorage.setItem("nafa_offline_visits", JSON.stringify(localVisits));
 
       return {
         success: true,
-        message: `Visite pour ${clientName} mémorisée sur le smartphone (Mode autonome hors-ligne).`,
-        createdId: localId,
-        data: visitPayload,
+        message: `Visite pour ${clientName} mémorisée sur le smartphone (Mode Offline-First WhatsApp-style).`,
+        createdId: localUuid,
+        data: offlineRecordData,
         isOffline: true,
       };
     }

@@ -58,6 +58,7 @@ const ExpertClientsPage = lazy(() => import("./pages/dashboard/expert/ExpertClie
 const ExpertAnalyticsPage = lazy(() => import("./pages/dashboard/expert/ExpertAnalyticsPage"));
 const NafaGeniusPage = lazy(() => import("./pages/dashboard/NafaGeniusPage"));
 const PartnerStorefrontPage = lazy(() => import("./pages/partner/PartnerStorefrontPage"));
+const PartnerDedicatedSpace = lazy(() => import("./pages/partner/PartnerDedicatedSpace"));
 const FournisseursPage = lazy(() => import("./pages/dashboard/partenaire/FournisseursPage"));
 const AssurancePage = lazy(() => import("./pages/dashboard/partenaire/AssurancePage"));
 const ProgrammesPage = lazy(() => import("./pages/dashboard/partenaire/ProgrammesPage"));
@@ -107,6 +108,7 @@ const App = () => (
               <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
               <Route path="/partenaire/:partnerId" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
               <Route path="/partners/:partnerId" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
+              <Route path="/marketplace" element={<Suspense fallback={<PageLoader />}><ServiceMarketplacePage /></Suspense>} />
               <Route element={<AuthProvider><><OfflineIndicator /><Outlet /></></AuthProvider>}>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
@@ -167,6 +169,7 @@ const App = () => (
                 <Route path="partenaire-vitrine" element={<Suspense fallback={<PageLoader />}><PartnerStorefrontPage /></Suspense>} />
                 <Route path="partenaire-kyc" element={<Suspense fallback={<PageLoader />}><PartnerKycPage /></Suspense>} />
                 <Route path="partenaire-verification" element={<Suspense fallback={<PageLoader />}><PartnerKycPage /></Suspense>} />
+                <Route path="partner-space" element={<Suspense fallback={<PageLoader />}><PartnerDedicatedSpace /></Suspense>} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
