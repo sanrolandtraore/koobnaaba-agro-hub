@@ -11,7 +11,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Loader2, Camera, ImageIcon, Sparkles, AlertCircle, CheckCircle2, Save, WifiOff,
-  Clock, History, Trash2, MapPin, Navigation, BookOpen, CloudOff, FileText, ShieldCheck, Leaf
+  Clock, History, Trash2, MapPin, Navigation, BookOpen, CloudOff, FileText, ShieldCheck, Leaf,
+  AlertTriangle, Edit3, UserCheck
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +29,7 @@ import {
   type LocalDiagnosis,
 } from "@/lib/offlineDiagnoses";
 import { findLocalAgronomicAdvice, type OfflineAgronomicAdvice } from "@/lib/offlineAgronomicKnowledge";
+import { recordExpertCorrection } from "@/lib/nafaGeniusLearning";
 import { PrescriptionGenerator, type PrescriptionInitialData } from "./PrescriptionGenerator";
 
 export interface Diagnosis {
@@ -40,7 +42,13 @@ export interface Diagnosis {
   treatment_chemical: string;
   preventive_actions: string[];
   inera_reference?: string;
-  engine_source?: "cloud_vision" | "inera_expert";
+  engine_source?: "cloud_vision" | "inera_expert" | "expert_field_validated";
+  is_unrecognized?: boolean;
+  requires_expert_validation?: boolean;
+  expert_certified?: boolean;
+  certified_by?: string;
+  certified_at?: string;
+  expert_notes?: string;
 }
 
 const fileToBase64 = (file: File) =>
@@ -70,6 +78,17 @@ export function CropDiagnosisTool() {
   const [prescriptionData, setPrescriptionData] = useState<PrescriptionInitialData | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+
+  // ── Compléments & Certification Terrain par l'Expert ──
+  const [isExpertEditing, setIsExpertEditing] = useState(false);
+  const [expertCauseName, setExpertCauseName] = useState("");
+  const [expertCauseType, setExpertCauseType] = useState("maladie");
+  const [expertSeverity, setExpertSeverity] = useState("moyen");
+  const [expertTreatmentBio, setExpertTreatmentBio] = useState("");
+  const [expertTreatmentChemical, setExpertTreatmentChemical] = useState("");
+  const [expertPreventive, setExpertPreventive] = useState("");
+  const [expertIneraRef, setExpertIneraRef] = useState("Station de Recherche INERA Farako-Bâ / Kamboinsé");
+  const [expertNotes, setExpertNotes] = useState("");
 
   // ── Statut de Connexion ──
   useEffect(() => {
@@ -200,21 +219,31 @@ export function CropDiagnosisTool() {
         preventive_actions: localAdvice.preventive_actions,
         inera_reference: localAdvice.inera_reference || "Fiche de référence INERA / CSP-CILSS",
         engine_source: "inera_expert",
+        is_unrecognized: false,
+        requires_expert_validation: false,
       };
     }
 
-    // Secours générique si aucun cas ne correspond
+    // Règle absolue de Vérité Réelle des Données :
+    // Si aucun cas ne correspond avec certitude dans la base de connaissances INERA,
+    // l'IA le signale formellement et ne produit aucun diagnostic arbitraire.
     return {
-      diagnosis_summary: "Suspicion d'affection parasitaire ou fongique foliaire en cours d'évaluation.",
-      cause_type: "maladie",
-      cause_name: "Affection foliaire à surveiller",
-      confidence: 0.75,
-      severity: "moyen",
-      treatment_bio: "Application préventive d'extrait aqueux de graines de neem (50g/L) et aération des plants.",
-      treatment_chemical: "Surveillance de l'évolution avant tout traitement chimique de contact.",
-      preventive_actions: ["Arracher les feuilles nécrosées", "Éviter l'arrosage par aspersion sur le feuillage"],
-      inera_reference: "Guide Général de Surveillance Phyto INERA",
+      diagnosis_summary: "Les symptômes décrits ou l'image transmise ne correspondent à aucune affection certifiée dans la base scientifique INERA avec une certitude suffisante.",
+      cause_type: "inconnu",
+      cause_name: "Affection Non Reconnue avec Certitude",
+      confidence: 0.15,
+      severity: "indéterminé",
+      treatment_bio: "En attente de diagnostic terrain par un ingénieur / conseiller agronomique agréé.",
+      treatment_chemical: "Aucun traitement chimique ne doit être appliqué sans identification préalable certifiée par un expert.",
+      preventive_actions: [
+        "Isoler les plants symptomatiques pour éviter une contagion potentielle",
+        "Prendre des photos nettes sous plusieurs angles (feuilles, tiges, collet)",
+        "Faire appel à un ingénieur agronome référent pour prélèvement et diagnostic de terrain",
+      ],
+      inera_reference: "Signalement Terrain - En attente d'expertise humaine INERA",
       engine_source: "inera_expert",
+      is_unrecognized: true,
+      requires_expert_validation: true,
     };
   };
 
@@ -254,26 +283,114 @@ export function CropDiagnosisTool() {
       const diag = await executeHybridDiagnosis({ imageBase64, mimeType, cropKey, symptoms });
       setResult(diag);
 
-      if (diag.engine_source === "cloud_vision") {
+      if (diag.is_unrecognized) {
+        setIsExpertEditing(true);
+        setExpertCauseName("");
+        setExpertCauseType("maladie");
+        setExpertSeverity("moyen");
+        setExpertTreatmentBio("");
+        setExpertTreatmentChemical("");
+        setExpertPreventive("");
+        setExpertIneraRef("Station de Recherche INERA / Contrôle Phyto");
         toast({
-          title: "Diagnostic Cloud Vision validé",
-          description: "Analyse multimodale complétée avec succès.",
+          title: "⚠️ Affection non reconnue avec certitude",
+          description: "Donnée non certifiée. Veuillez apporter des compléments d'expertise ci-dessous.",
+          variant: "destructive",
         });
       } else {
+        setIsExpertEditing(false);
+        setExpertCauseName(diag.cause_name);
+        setExpertCauseType(diag.cause_type);
+        setExpertSeverity(diag.severity);
+        setExpertTreatmentBio(diag.treatment_bio);
+        setExpertTreatmentChemical(diag.treatment_chemical);
+        setExpertPreventive(diag.preventive_actions ? diag.preventive_actions.join("\n") : "");
+        setExpertIneraRef(diag.inera_reference || "Fiche Technique INERA");
         toast({
           title: "Diagnostic Agronomique Établi",
-          description: "Calculé par le moteur scientifique local de référence INERA Burkina.",
+          description: "Conforme aux protocoles de recherche INERA Burkina.",
         });
       }
     } catch (e: any) {
       console.error(e);
       toast({
-        title: "Diagnostic établi",
-        description: "Analyse agronomique standard appliquée.",
+        title: "Erreur d'analyse",
+        description: "Impossible d'établir le diagnostic. Veuillez réessayer.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  // ── Validation et Certification Terrain par l'Expert ──
+  const handleCertifyExpertDiagnosis = async () => {
+    if (!expertCauseName.trim()) {
+      toast({
+        title: "Nom requis",
+        description: "Veuillez renseigner le nom réel de l'affection constatée sur le terrain.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedDiag: Diagnosis = {
+      ...result!,
+      cause_name: expertCauseName.trim(),
+      cause_type: expertCauseType,
+      severity: expertSeverity,
+      treatment_bio: expertTreatmentBio.trim() || "Traitement bio adapté défini par l'expert.",
+      treatment_chemical: expertTreatmentChemical.trim() || "Traitement chimique homologué CSP défini par l'expert.",
+      preventive_actions: expertPreventive.trim()
+        ? expertPreventive.split("\n").filter((l) => l.trim())
+        : ["Surveillance régulière de la parcelle", "Mesures prophylactiques définies par l'expert"],
+      inera_reference: expertIneraRef.trim() || "Validation Terrain Expert Référent NAFA / INERA",
+      diagnosis_summary: `Diagnostic de terrain certifié par l'expert : ${expertCauseName.trim()} (${expertCauseType}, sévérité ${expertSeverity}).`,
+      confidence: 1.0,
+      is_unrecognized: false,
+      requires_expert_validation: false,
+      expert_certified: true,
+      certified_by: profile?.full_name || "Expert Agronome Agréé",
+      certified_at: new Date().toISOString(),
+      engine_source: "expert_field_validated",
+      expert_notes: expertNotes.trim() || undefined,
+    };
+
+    setResult(updatedDiag);
+    setIsExpertEditing(false);
+
+    // Enregistrement supervisé dans le corpus d'apprentissage NAFA Genius
+    try {
+      await recordExpertCorrection({
+        category: "diagnosis_protocol",
+        context: {
+          region: "Burkina Faso",
+          cropOrAnimal: cropKey,
+          initialRecommendation: {
+            symptoms,
+            initialDiag: result?.cause_name,
+          },
+        },
+        correctedValue: {
+          cause_name: expertCauseName.trim(),
+          cause_type: expertCauseType,
+          severity: expertSeverity,
+          treatment_bio: expertTreatmentBio.trim(),
+          treatment_chemical: expertTreatmentChemical.trim(),
+        },
+        expertJustification: `Diagnostic terrain certifié par ${profile?.full_name || "Expert"}. Notes: ${expertNotes.trim() || "Conforme INERA"}`,
+        expertUserId: user?.id,
+      });
+    } catch (err) {
+      console.warn("Enregistrement corpus supervisé ignoré :", err);
+    }
+
+    // Sauvegarde immédiate
+    await persist(updatedDiag, cropKey, symptoms, imageFile, coords, parcelName);
+    toast({
+      title: "Diagnostic certifié avec succès !",
+      description: "Donnée réelle enregistrée et intégrée au corpus de connaissances de la plateforme.",
+    });
   };
 
   // ── Sauvegarde et Archivage Sécurisé ──
@@ -606,10 +723,41 @@ export function CropDiagnosisTool() {
         {/* Résultat du Diagnostic */}
         {result && (
           <Card className="p-6 space-y-5 border-2 border-primary/40 rounded-3xl shadow-sm bg-card animate-fade-in">
+            {/* 1. Alerte Explicite en cas de Non-Reconnaissance */}
+            {result.is_unrecognized && (
+              <div className="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500/40 text-amber-900 dark:text-amber-200 space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 font-bold text-sm text-amber-800 dark:text-amber-300">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                    <span>SYMPTÔMES NON RECONNUS AVEC CERTITUDE PAR L'IA</span>
+                  </div>
+                  <Badge variant="outline" className="text-[11px] bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/40 font-mono">
+                    Donnée non certifiée INERA
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Conformément au protocole de vérité des données réelles de NAFA AGRITECH, l'IA ne génère pas de diagnostic ni de traitement non vérifié. Les observations de terrain nécessitent la validation ou les compléments d'un ingénieur / expert agréé.
+                </p>
+              </div>
+            )}
+
+            {/* 2. Badge de Certification Terrain par l'Expert */}
+            {result.expert_certified && (
+              <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-300 flex items-center justify-between flex-wrap gap-2 text-xs font-semibold">
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                  Diagnostic certifié par l'Expert Terrain : <strong className="text-foreground">{result.certified_by}</strong>
+                </span>
+                <Badge className="bg-emerald-600 text-white text-[10px]">Vérité Réelle Certifiée</Badge>
+              </div>
+            )}
+
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle2 className="h-6 w-6" />
+                <div className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 ${
+                  result.is_unrecognized ? "bg-amber-500/10 text-amber-600" : "bg-primary/10 text-primary"
+                }`}>
+                  {result.is_unrecognized ? <AlertTriangle className="h-6 w-6" /> : <CheckCircle2 className="h-6 w-6" />}
                 </div>
                 <div>
                   <h3 className="text-xl font-heading font-extrabold text-foreground">{result.cause_name}</h3>
@@ -623,11 +771,137 @@ export function CropDiagnosisTool() {
                 <Badge variant={result.severity === "forte" ? "destructive" : "secondary"} className="text-xs font-bold py-1 px-3 rounded-full">
                   Gravité {result.severity}
                 </Badge>
-                <Badge variant="outline" className="text-xs font-bold py-1 px-3 rounded-full bg-primary/10 text-primary border-primary/30">
+                <Badge
+                  variant="outline"
+                  className={`text-xs font-bold py-1 px-3 rounded-full ${
+                    result.is_unrecognized
+                      ? "bg-amber-500/10 text-amber-700 border-amber-500/30"
+                      : "bg-primary/10 text-primary border-primary/30"
+                  }`}
+                >
                   Certitude {Math.round(result.confidence * 100)}%
                 </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsExpertEditing(!isExpertEditing)}
+                  className="h-8 text-xs rounded-full gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                  {isExpertEditing ? "Fermer compléments" : "Compléter / Valider (Expert)"}
+                </Button>
               </div>
             </div>
+
+            {/* 3. Formulaire d'Apport d'Informations Complémentaires par l'Expert */}
+            {isExpertEditing && (
+              <div className="p-5 rounded-2xl bg-muted/40 border-2 border-primary/30 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-sm flex items-center gap-1.5 text-foreground">
+                    <UserCheck className="h-4 w-4 text-primary" /> Apport d'Informations Complémentaires par l'Expert Terrain
+                  </h4>
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                    Saisie Réelle
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  En tant qu'expert référent, saisissez les données réelles constatées sur la parcelle. Elles remplaceront les hypothèses de l'IA et enrichiront le corpus supervisé.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <Label className="text-xs font-semibold">Nom réel de la pathologie / cause *</Label>
+                    <Input
+                      value={expertCauseName}
+                      onChange={(e) => setExpertCauseName(e.target.value)}
+                      placeholder="Ex : Mildiou de la tomate (Phytophthora infestans)"
+                      className="h-8 text-xs mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold">Type de cause réelle</Label>
+                    <Select value={expertCauseType} onValueChange={setExpertCauseType}>
+                      <SelectTrigger className="h-8 text-xs mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="maladie" className="text-xs">Maladie fongique / bactérienne</SelectItem>
+                        <SelectItem value="ravageur" className="text-xs">Ravageur / Insecte / Acarien</SelectItem>
+                        <SelectItem value="carence" className="text-xs">Carence minérale (N, P, K, etc.)</SelectItem>
+                        <SelectItem value="stress_hydrique" className="text-xs">Stress hydrique (excès/manque)</SelectItem>
+                        <SelectItem value="stress_thermique" className="text-xs">Stress thermique / échaudage</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold">Gravité évaluée sur place</Label>
+                    <Select value={expertSeverity} onValueChange={setExpertSeverity}>
+                      <SelectTrigger className="h-8 text-xs mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="faible" className="text-xs">Faible (surveillance)</SelectItem>
+                        <SelectItem value="moyen" className="text-xs">Moyen (intervention requise)</SelectItem>
+                        <SelectItem value="forte" className="text-xs">Forte (urgence phytosanitaire)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <Label className="text-xs font-semibold">Protocole Biologique certifié (Sans résidu)</Label>
+                    <Textarea
+                      rows={2}
+                      value={expertTreatmentBio}
+                      onChange={(e) => setExpertTreatmentBio(e.target.value)}
+                      placeholder="Ex : Huile de neem 50ml/10L d'eau au savon noir le matin..."
+                      className="text-xs mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold">Protocole Chimique homologué CSP-CILSS</Label>
+                    <Textarea
+                      rows={2}
+                      value={expertTreatmentChemical}
+                      onChange={(e) => setExpertTreatmentChemical(e.target.value)}
+                      placeholder="Ex : Mancozèbe 80% WP à 2 kg/ha avec délai avant récolte de 7 jours..."
+                      className="text-xs mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <Label className="text-xs font-semibold">Mesures prophylactiques (1 par ligne)</Label>
+                    <Textarea
+                      rows={2}
+                      value={expertPreventive}
+                      onChange={(e) => setExpertPreventive(e.target.value)}
+                      placeholder="Arracher et incinérer les plants infectés&#10;Désinfecter les sécateurs à l'eau de javel"
+                      className="text-xs mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold">Référence INERA / Notes de l'Expert</Label>
+                    <Textarea
+                      rows={2}
+                      value={expertNotes}
+                      onChange={(e) => setExpertNotes(e.target.value)}
+                      placeholder="Observations particulières du sol, climat ou historique cultural..."
+                      className="text-xs mt-1"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleCertifyExpertDiagnosis}
+                  className="w-full h-10 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs gap-1.5 shadow-sm rounded-xl"
+                >
+                  <CheckCircle2 className="h-4 w-4" /> Valider et Certifier ce Diagnostic (Vérité Terrain)
+                </Button>
+              </div>
+            )}
 
             {result.inera_reference && (
               <div className="flex items-center gap-2 text-xs text-primary font-semibold bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl">

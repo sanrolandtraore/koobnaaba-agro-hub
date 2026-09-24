@@ -29,6 +29,9 @@ export interface ParsedGeniusAction {
   confidence: number;
   language: GeniusLanguage;
   rawText: string;
+  isRecognized: boolean;
+  requiresExpertValidation?: boolean;
+  unverifiedReason?: string;
   entities: {
     clientName?: string;
     crop?: string;
@@ -245,6 +248,10 @@ export function parseGeniusCommand(text: string): ParsedGeniusAction {
     }
   }
 
+  let isRecognized = true;
+  let requiresExpertValidation = false;
+  let unverifiedReason: string | undefined = undefined;
+
   // Classification d'Intention
   if (
     lower.includes("visite") ||
@@ -268,6 +275,10 @@ export function parseGeniusCommand(text: string): ParsedGeniusAction {
   ) {
     intent = "CALCULATE_IRRIGATION";
     confidence = 0.92;
+    if (!entities.areaHa && !entities.crop) {
+      requiresExpertValidation = true;
+      unverifiedReason = "Superficie ou culture non précisée : validation nécessaire des paramètres réels par l'expert.";
+    }
   } else if (
     lower.includes("poulet") ||
     lower.includes("poulailler") ||
@@ -279,6 +290,10 @@ export function parseGeniusCommand(text: string): ParsedGeniusAction {
   ) {
     intent = "DESIGN_POULTRY";
     confidence = 0.92;
+    if (!entities.flockSize) {
+      requiresExpertValidation = true;
+      unverifiedReason = "Effectif de la bande non précisé : validation nécessaire de l'effectif réel par l'expert.";
+    }
   } else if (
     lower.includes("devis") ||
     lower.includes("chiffrage") ||
@@ -318,26 +333,68 @@ export function parseGeniusCommand(text: string): ParsedGeniusAction {
   ) {
     intent = "SUMMARIZE_VISIT";
     confidence = 0.9;
+  } else {
+    // Aucune intention technique identifiée : vérifier s'il s'agit d'une salutation polie
+    const allGreetings = [
+      ...LANGUAGE_PATTERNS.fr.greetings,
+      ...LANGUAGE_PATTERNS.dyu.greetings,
+      ...LANGUAGE_PATTERNS.mos.greetings,
+      ...LANGUAGE_PATTERNS.ful.greetings,
+    ];
+    const isGreeting = allGreetings.some((g) => lower.includes(g));
+
+    if (isGreeting) {
+      intent = "GENERAL_ASSISTANCE";
+      confidence = 0.95;
+      isRecognized = true;
+    } else {
+      // Instruction non reconnue avec certitude : RÈGLE STRICTE ZÉRO HALLUCINATION
+      intent = "GENERAL_ASSISTANCE";
+      confidence = 0.35;
+      isRecognized = false;
+      requiresExpertValidation = true;
+      unverifiedReason = "Instruction non reconnue avec certitude dans le référentiel agronomique certifié.";
+    }
   }
 
   // Génération de l'explication personnalisée dans la langue détectée
-  const explanation = formatIntentResponse(intent, lang, entities);
+  const explanation = formatIntentResponse(intent, lang, entities, isRecognized);
 
   return {
     intent,
     confidence,
     language: lang,
     rawText: text,
+    isRecognized,
+    requiresExpertValidation,
+    unverifiedReason,
     entities,
     explanation,
-    actionRequired: intent === "CREATE_VISIT" || intent === "CALCULATE_IRRIGATION" || intent === "DESIGN_POULTRY" || intent === "GENERATE_QUOTE",
+    actionRequired: isRecognized && (intent === "CREATE_VISIT" || intent === "CALCULATE_IRRIGATION" || intent === "DESIGN_POULTRY" || intent === "GENERATE_QUOTE"),
   };
 }
 
 /**
  * Réponses naturelles et expertes adaptées selon la langue
  */
-function formatIntentResponse(intent: GeniusIntent, lang: GeniusLanguage, entities: ParsedGeniusAction["entities"]): string {
+function formatIntentResponse(
+  intent: GeniusIntent,
+  lang: GeniusLanguage,
+  entities: ParsedGeniusAction["entities"],
+  isRecognized: boolean = true
+): string {
+  if (!isRecognized) {
+    if (lang === "dyu") {
+      return "⚠️ KUMA MA FAAMU KA ƝƐ : NAFA Genius IA tɛ jate foyi kɛ ni sɛbɛ kɔnɔna lakika tɛ. I koo fɔ ka ɲɛ (seneforo hakɛ, ji hakɛ, sise hakɛ) walima kɛrɛnkɛrɛnnen kɛ.";
+    }
+    if (lang === "mos") {
+      return "⚠️ GOMDÃ PA BÃNG KA SA : NAFA Genius IA pa tõe n maan ligidi bɩ koom soorgo tɩ pa ne bõn-tɩrga ye. Togls tʋʋma sõma (puugo makre, koom yaoodo, noos sõor).";
+    }
+    if (lang === "ful") {
+      return "⚠️ HAALA KAA ANNDAAKA NO FEEWNI : NAFA Genius IA waawaa waɗde limoore tawa walaa seedamteeje gese. Tinno ɓeydu kumpital laaɓngal (ngesa, ndiyam, gertode).";
+    }
+    return "⚠️ INSTRUCTION NON RECONNUE AVEC CERTITUDE : L'IA NAFA Genius ne produit aucun calcul sans données terrain certifiées (INERA / FAO-56). Veuillez préciser votre demande technique ou apporter des mesures réelles (surface en ha, culture, débit forage, effectif volailles).";
+  }
   const client = entities.clientName || (lang === "dyu" ? "senekela" : lang === "mos" ? "koob soba" : lang === "ful" ? "remoowo" : "le producteur");
   const crop = entities.crop || "la culture";
   const area = entities.areaHa ? `${entities.areaHa} ha` : "";
@@ -396,6 +453,14 @@ function formatIntentResponse(intent: GeniusIntent, lang: GeniusLanguage, entiti
  */
 export async function executeGeniusAction(action: ParsedGeniusAction): Promise<ActionResult> {
   const { intent, entities, language } = action;
+
+  if (!action.isRecognized) {
+    return {
+      success: false,
+      message: action.explanation,
+      data: { isRecognized: false, requiresExpertValidation: true },
+    };
+  }
 
   try {
     if (intent === "CREATE_VISIT") {

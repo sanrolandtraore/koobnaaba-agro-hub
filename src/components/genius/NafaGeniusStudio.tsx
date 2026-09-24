@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles, Mic, MicOff, Send, MapPin, Droplets, Home, FileText,
   Layers, CheckCircle2, AlertTriangle, Download, RefreshCw, Cpu,
-  Compass, ShieldCheck, HelpCircle, ArrowRight, Play, BookOpen
+  Compass, ShieldCheck, HelpCircle, ArrowRight, Play, BookOpen,
+  UserCheck, Edit3
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +24,9 @@ import {
   calculatePoultryHousing,
   generateFarmZoning,
   generateEngineeringQuote,
+  certifyIrrigationDesign,
+  certifyPoultryHousing,
+  certifyEngineeringQuote,
   FAO_SAHEL_CROPS,
   IrrigationDesignResult,
   PoultryHousingResult,
@@ -123,6 +127,19 @@ export const NafaGeniusStudio: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<string>("hauts_bassins");
   const [expertNote, setExpertNote] = useState<string>("");
 
+  // États pour apport d'informations complémentaires & certification terrain par l'expert
+  const [isExpertEditingIrrigation, setIsExpertEditingIrrigation] = useState<boolean>(false);
+  const [expertMeasuredFlow, setExpertMeasuredFlow] = useState<number | "">("");
+  const [expertMeasuredDynamicLevel, setExpertMeasuredDynamicLevel] = useState<number | "">("");
+  const [expertIrrigationNotes, setExpertIrrigationNotes] = useState<string>("");
+
+  const [isExpertEditingPoultry, setIsExpertEditingPoultry] = useState<boolean>(false);
+  const [expertAdjustedFlock, setExpertAdjustedFlock] = useState<number | "">("");
+  const [expertPoultryNotes, setExpertPoultryNotes] = useState<string>("");
+
+  const [isExpertEditingQuote, setIsExpertEditingQuote] = useState<boolean>(false);
+  const [expertQuoteNotes, setExpertQuoteNotes] = useState<string>("");
+
   const recognitionRef = useRef<any>(null);
 
   // Recalcul géodésique automatique dès que les points changent
@@ -200,11 +217,73 @@ export const NafaGeniusStudio: React.FC = () => {
     computeFullEngineeringProject();
   }, [computeFullEngineeringProject]);
 
+  // Certification expert terrain pour l'irrigation
+  const handleCertifyIrrigation = async () => {
+    if (!irrigationResult) return;
+    const expertName = profile?.full_name || "Dr. Oumarou Sawadogo (Ingénieur Rural)";
+    const certified = certifyIrrigationDesign(irrigationResult, expertName, expertIrrigationNotes, {
+      measuredBoreholeYieldM3h: expertMeasuredFlow !== "" ? Number(expertMeasuredFlow) : undefined,
+      dynamicWaterLevelM: expertMeasuredDynamicLevel !== "" ? Number(expertMeasuredDynamicLevel) : undefined,
+    });
+    setIrrigationResult(certified);
+    setIsExpertEditingIrrigation(false);
+
+    await recordExpertCorrection({
+      category: "irrigation_friction",
+      context: {
+        region: selectedRegion,
+        cropOrAnimal: selectedCrop,
+        areaHa: surveyResult.areaHa,
+        initialHmt: irrigationResult.totalHeadHmtM,
+      },
+      correctedValue: {
+        certifiedHmt: certified.totalHeadHmtM,
+        certifiedSolarWp: certified.solarPvWattPeak,
+        expertMeasuredFlow: expertMeasuredFlow || undefined,
+        expertMeasuredDynamicLevel: expertMeasuredDynamicLevel || undefined,
+      },
+      expertJustification: expertIrrigationNotes || "Certification terrain basée sur les mesures in-situ réelles.",
+      expertUserId: user?.id,
+    });
+
+    toast.success("Irrigation certifiée avec succès par l'Expert Terrain (Vérité Réelle INERA) !");
+  };
+
+  // Certification expert terrain pour le bâtiment avicole
+  const handleCertifyPoultry = async () => {
+    if (!poultryResult) return;
+    const expertName = profile?.full_name || "Dr. Oumarou Sawadogo (Zootechnicien)";
+    const certified = certifyPoultryHousing(poultryResult, expertName, expertPoultryNotes, {
+      actualFlockSize: expertAdjustedFlock !== "" ? Number(expertAdjustedFlock) : undefined,
+    });
+    setPoultryResult(certified);
+    setIsExpertEditingPoultry(false);
+
+    toast.success("Bâtiment avicole certifié conforme aux normes sahéliennes réelles !");
+  };
+
+  // Certification expert terrain pour le devis mercuriale
+  const handleCertifyQuote = async () => {
+    if (!engineeringQuote) return;
+    const expertName = profile?.full_name || "Dr. Oumarou Sawadogo (Expert Chiffreur)";
+    const certified = certifyEngineeringQuote(engineeringQuote, expertName, expertQuoteNotes);
+    setEngineeringQuote(certified);
+    setIsExpertEditingQuote(false);
+
+    toast.success("Devis certifié conforme à la mercuriale officielle du Burkina Faso !");
+  };
+
   // Traitement d'une commande textuelle ou vocale
   const handleProcessCommand = async (text: string) => {
     if (!text.trim()) return;
     const parsed = parseGeniusCommand(text);
     setNluResult(parsed);
+
+    // Si instruction non reconnue avec certitude : Règle stricte de vérité réelle
+    if (!parsed.isRecognized) {
+      toast.warning("Instruction non reconnue avec certitude : l'IA ne génère pas de calcul sans données terrain certifiées.");
+      return;
+    }
 
     // Si une entité est reconnue, adapter automatiquement l'état du studio
     if (parsed.entities.clientName) {
@@ -378,6 +457,9 @@ export const NafaGeniusStudio: React.FC = () => {
             <Badge variant="outline" className="text-xs text-emerald-300 border-emerald-600/50">
               100% Offline-First
             </Badge>
+            <Badge className="bg-emerald-400/20 text-emerald-200 border-emerald-400/40 text-[11px] gap-1 font-medium">
+              <ShieldCheck className="h-3 w-3 text-emerald-400" /> Données Réelles : INERA Farako-Bâ • FAO-56 • Mercuriale BF
+            </Badge>
           </div>
           <p className="text-xs sm:text-sm text-emerald-100/80 max-w-2xl">
             Copilote unifié d'ingénierie agronomique de terrain : arpentage géodésique, hydraulique FAO-56, aviculture bioclimatique et devis instantané en FCFA.
@@ -504,17 +586,48 @@ export const NafaGeniusStudio: React.FC = () => {
 
           {/* Affichage de la compréhension de l'IA */}
           {nluResult && (
-            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 text-xs space-y-1">
-              <div className="flex items-center justify-between font-semibold text-emerald-900 dark:text-emerald-200">
+            <div
+              className={`p-3 rounded-lg border text-xs space-y-1.5 ${
+                !nluResult.isRecognized
+                  ? "bg-amber-50 dark:bg-amber-950/40 border-amber-500/40 text-amber-950 dark:text-amber-100"
+                  : "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/20 text-emerald-950 dark:text-emerald-100"
+              }`}
+            >
+              <div className="flex items-center justify-between font-semibold flex-wrap gap-2">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Intention détectée : {nluResult.intent} (Confiance : {Math.round(nluResult.confidence * 100)}%)
+                  {!nluResult.isRecognized ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                      <span className="text-amber-700 dark:text-amber-300 font-bold">
+                        INSTRUCTION NON RECONNUE AVEC CERTITUDE PAR L'IA
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      Intention reconnue : {nluResult.intent} (Confiance : {Math.round(nluResult.confidence * 100)}%)
+                    </>
+                  )}
                 </span>
-                <Badge variant="outline" className="text-[10px] text-emerald-700">
-                  Langue : {nluResult.language.toUpperCase()}
-                </Badge>
+                <div className="flex items-center gap-1.5">
+                  {nluResult.requiresExpertValidation && (
+                    <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-500/50 bg-amber-500/10 font-medium">
+                      Validation Expert Requise
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="text-[10px] text-foreground">
+                    Langue : {nluResult.language.toUpperCase()}
+                  </Badge>
+                </div>
               </div>
-              <p className="text-muted-foreground">{nluResult.explanation}</p>
+              <p className={!nluResult.isRecognized ? "text-amber-900 dark:text-amber-200 font-medium" : "text-muted-foreground"}>
+                {nluResult.explanation}
+              </p>
+              {!nluResult.isRecognized && (
+                <div className="pt-1 text-[11px] text-amber-800/90 dark:text-amber-300/90 border-t border-amber-500/20">
+                  💡 <strong>Règle de Vérité Réelle :</strong> Aucune valeur hallucinée n'est produite. Vous pouvez sélectionner directement les onglets ci-dessous pour renseigner les mesures réelles ou solliciter la certification d'un ingénieur de terrain.
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -796,6 +909,23 @@ export const NafaGeniusStudio: React.FC = () => {
                   </Badge>
                 </div>
 
+                {/* Source de Vérité Réelle & Statut de Certification */}
+                <div className="flex items-center justify-between flex-wrap gap-2 p-2.5 rounded-lg bg-sky-50/60 dark:bg-sky-950/20 border border-sky-500/20 text-xs">
+                  <span className="flex items-center gap-1.5 text-sky-900 dark:text-sky-200 font-medium">
+                    <ShieldCheck className="h-4 w-4 text-sky-600 shrink-0" />
+                    <span><strong>Source certifiée :</strong> {irrigationResult.groundTruthSource}</span>
+                  </span>
+                  {irrigationResult.expertCertified ? (
+                    <Badge className="bg-emerald-600 text-white gap-1 text-[11px]">
+                      <CheckCircle2 className="h-3 w-3" /> Certifié par l'Expert : {irrigationResult.certifiedBy}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-300 text-[11px] gap-1 bg-amber-500/10">
+                      <AlertTriangle className="h-3 w-3" /> Non certifié terrain (Calcul standard FAO-56)
+                    </Badge>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 rounded-xl bg-muted/50 border border-border">
                     <span className="text-[11px] text-muted-foreground">Besoin brut journalier</span>
@@ -853,6 +983,70 @@ export const NafaGeniusStudio: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
+                </div>
+
+                {/* Section d'Apport d'Informations Complémentaires & Certification Terrain */}
+                <div className="p-3.5 rounded-xl border border-sky-500/30 bg-muted/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-foreground">
+                      <UserCheck className="h-4 w-4 text-emerald-600" />
+                      Apport d'Informations Complémentaires & Certification Terrain par l'Expert
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1 border-sky-500/40 text-sky-700 dark:text-sky-300"
+                      onClick={() => setIsExpertEditingIrrigation(!isExpertEditingIrrigation)}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                      {isExpertEditingIrrigation ? "Fermer" : "Ajuster / Certifier"}
+                    </Button>
+                  </div>
+
+                  {isExpertEditingIrrigation && (
+                    <div className="space-y-3 pt-2 border-t border-border text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs font-semibold">Débit réel mesuré au forage (m³/h)</Label>
+                          <Input
+                            type="number"
+                            placeholder={String(irrigationResult.peakHourlyFlowM3h)}
+                            value={expertMeasuredFlow}
+                            onChange={(e) => setExpertMeasuredFlow(e.target.value ? Number(e.target.value) : "")}
+                            className="h-8 text-xs mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-semibold">Niveau piézométrique dynamique mesuré (m)</Label>
+                          <Input
+                            type="number"
+                            placeholder={String(waterTableDepthM)}
+                            value={expertMeasuredDynamicLevel}
+                            onChange={(e) => setExpertMeasuredDynamicLevel(e.target.value ? Number(e.target.value) : "")}
+                            className="h-8 text-xs mt-1"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold">Notes & Justifications techniques de l'Ingénieur</Label>
+                        <Textarea
+                          placeholder="Ex: Essai de pompage de 4h validé à 12 m³/h avec rabattement stabilisé à 38m..."
+                          value={expertIrrigationNotes}
+                          onChange={(e) => setExpertIrrigationNotes(e.target.value)}
+                          className="text-xs min-h-[60px] mt-1"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={handleCertifyIrrigation}
+                          className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold gap-1.5 shadow-sm"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" /> Certifier les Données Réelles de Terrain
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             )}
@@ -922,6 +1116,23 @@ export const NafaGeniusStudio: React.FC = () => {
                   </Badge>
                 </div>
 
+                {/* Source de Vérité Réelle & Statut de Certification */}
+                <div className="flex items-center justify-between flex-wrap gap-2 p-2.5 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-500/20 text-xs">
+                  <span className="flex items-center gap-1.5 text-amber-900 dark:text-amber-200 font-medium">
+                    <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span><strong>Source certifiée :</strong> {poultryResult.groundTruthSource}</span>
+                  </span>
+                  {poultryResult.expertCertified ? (
+                    <Badge className="bg-emerald-600 text-white gap-1 text-[11px]">
+                      <CheckCircle2 className="h-3 w-3" /> Certifié par l'Expert : {poultryResult.certifiedBy}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-300 text-[11px] gap-1 bg-amber-500/10">
+                      <AlertTriangle className="h-3 w-3" /> Non certifié terrain (Normes Sahel indicatives)
+                    </Badge>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 rounded-xl bg-muted/50 border border-border">
                     <span className="text-[11px] text-muted-foreground">Dimensions (L × l)</span>
@@ -979,6 +1190,58 @@ export const NafaGeniusStudio: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
+                </div>
+
+                {/* Section d'Apport d'Informations Complémentaires & Certification Bâtiment */}
+                <div className="p-3.5 rounded-xl border border-amber-500/30 bg-muted/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-foreground">
+                      <UserCheck className="h-4 w-4 text-emerald-600" />
+                      Apport d'Informations Complémentaires & Certification Zootechnique
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1 border-amber-500/40 text-amber-700 dark:text-amber-300"
+                      onClick={() => setIsExpertEditingPoultry(!isExpertEditingPoultry)}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                      {isExpertEditingPoultry ? "Fermer" : "Ajuster / Certifier"}
+                    </Button>
+                  </div>
+
+                  {isExpertEditingPoultry && (
+                    <div className="space-y-3 pt-2 border-t border-border text-xs">
+                      <div>
+                        <Label className="text-xs font-semibold">Effectif réel ajusté de la bande</Label>
+                        <Input
+                          type="number"
+                          placeholder={String(poultryResult.flockSize)}
+                          value={expertAdjustedFlock}
+                          onChange={(e) => setExpertAdjustedFlock(e.target.value ? Number(e.target.value) : "")}
+                          className="h-8 text-xs mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold">Notes & Observations zootechniques de terrain</Label>
+                        <Textarea
+                          placeholder="Ex: Vérification de l'axe au théodolite 90° Est-Ouest, muret de 0.55m lissé au mortier étanche..."
+                          value={expertPoultryNotes}
+                          onChange={(e) => setExpertPoultryNotes(e.target.value)}
+                          className="text-xs min-h-[60px] mt-1"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={handleCertifyPoultry}
+                          className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold gap-1.5 shadow-sm"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" /> Certifier les Données Réelles du Bâtiment
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             )}
@@ -1038,6 +1301,23 @@ export const NafaGeniusStudio: React.FC = () => {
                 </Button>
               </div>
 
+              {/* Source de Vérité Réelle & Statut de Certification */}
+              <div className="flex items-center justify-between flex-wrap gap-2 p-2.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-500/20 text-xs">
+                <span className="flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200 font-medium">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span><strong>Source certifiée :</strong> {engineeringQuote.groundTruthSource}</span>
+                </span>
+                {engineeringQuote.expertCertified ? (
+                  <Badge className="bg-emerald-600 text-white gap-1 text-[11px]">
+                    <CheckCircle2 className="h-3 w-3" /> Devis Certifié In-Situ : {engineeringQuote.certifiedBy}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-300 text-[11px] gap-1 bg-amber-500/10">
+                    <AlertTriangle className="h-3 w-3" /> Devis standard (Validation mercuriale requise)
+                  </Badge>
+                )}
+              </div>
+
               {/* Tableau du BPU */}
               <div className="rounded-xl border border-border overflow-hidden">
                 <table className="w-full text-xs text-left">
@@ -1069,6 +1349,48 @@ export const NafaGeniusStudio: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Section de Certification des Prix Fournisseurs par l'Expert */}
+              <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-muted/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold flex items-center gap-1.5 text-foreground">
+                    <UserCheck className="h-4 w-4 text-emerald-600" />
+                    Certification des Prix Fournisseurs & Conformité Mercuriale par l'Expert
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs gap-1 border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                    onClick={() => setIsExpertEditingQuote(!isExpertEditingQuote)}
+                  >
+                    <Edit3 className="h-3 w-3" />
+                    {isExpertEditingQuote ? "Fermer" : "Ajuster / Certifier"}
+                  </Button>
+                </div>
+
+                {isExpertEditingQuote && (
+                  <div className="space-y-3 pt-2 border-t border-border text-xs">
+                    <div>
+                      <Label className="text-xs font-semibold">Notes d'ajustement mercuriale / Prix constatés sur les marchés locaux</Label>
+                      <Textarea
+                        placeholder="Ex: Prix vérifiés auprès des quincailleries partenaires à Bobo-Dioulasso et Ouagadougou..."
+                        value={expertQuoteNotes}
+                        onChange={(e) => setExpertQuoteNotes(e.target.value)}
+                        className="text-xs min-h-[60px] mt-1"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        onClick={handleCertifyQuote}
+                        className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold gap-1.5 shadow-sm"
+                      >
+                        <UserCheck className="h-3.5 w-3.5" /> Certifier la Conformité Mercuriale Terrain
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Récapitulatif financier et conditions */}

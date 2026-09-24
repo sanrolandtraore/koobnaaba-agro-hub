@@ -84,13 +84,18 @@ describe("IA Agronomique Opérationnelle : Moteur Scientifique INERA Burkina & C
     expect(diag?.treatment_bio).toContain("Kodjari");
   });
 
-  it("fournit une recommandation agronomique pertinente même sans description détaillée si la culture est sélectionnée", () => {
-    const diagCoton = findLocalAgronomicAdvice("coton", "");
-    expect(diagCoton).not.toBeNull();
-    expect(diagCoton?.cropGroups).toContain("coton");
+  it("ne produit pas de faux diagnostic aléatoire sans symptômes reconnus et signale le besoin de validation expert", () => {
+    // Sans symptômes distinctifs, l'IA ne doit JAMAIS halluciner une maladie au hasard
+    const diagVide = findLocalAgronomicAdvice("mais", "");
+    expect(diagVide).toBeNull();
 
-    const diagManioc = findLocalAgronomicAdvice("manioc", "");
-    expect(diagManioc).not.toBeNull();
-    expect(diagManioc?.cropGroups).toContain("manioc");
+    const diagInconnu = findLocalAgronomicAdvice("mais", "plante un peu bizarre sans symptômes clairs");
+    expect(diagInconnu).toBeNull();
+
+    // Avec des symptômes reconnus réels, l'IA INERA identifie avec précision
+    const diagReel = findLocalAgronomicAdvice("mais", "chenille dans le cornet avec sciure et feuilles trouées");
+    expect(diagReel).not.toBeNull();
+    expect(diagReel?.cropGroups).toContain("mais");
+    expect(diagReel?.key).toBe("chenille_legionnaire");
   });
 });

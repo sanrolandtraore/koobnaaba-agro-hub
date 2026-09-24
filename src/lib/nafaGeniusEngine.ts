@@ -188,6 +188,19 @@ export interface IrrigationDesignResult {
   billOfMaterials: QuoteItem[];
   totalEquipmentCostFcfa: number;
   technicalObservations: string[];
+  // Ground truth & Validation Expert
+  groundTruthSource: string;
+  isUncertain?: boolean;
+  requiresExpertValidation?: boolean;
+  expertCertified?: boolean;
+  certifiedBy?: string;
+  certifiedAt?: string;
+  expertNotes?: string;
+  expertOverrides?: {
+    measuredBoreholeYieldM3h?: number;
+    dynamicWaterLevelM?: number;
+    adjustedKc?: number;
+  };
 }
 
 export interface PoultryHousingInput {
@@ -222,6 +235,18 @@ export interface PoultryHousingResult {
   billOfMaterials: QuoteItem[];
   totalBuildingCostFcfa: number;
   recommendations: string[];
+  // Ground truth & Validation Expert
+  groundTruthSource: string;
+  isUncertain?: boolean;
+  requiresExpertValidation?: boolean;
+  expertCertified?: boolean;
+  certifiedBy?: string;
+  certifiedAt?: string;
+  expertNotes?: string;
+  expertOverrides?: {
+    actualFlockSize?: number;
+    localBuildingCostPerM2?: number;
+  };
 }
 
 export interface FarmZoningItem {
@@ -269,6 +294,14 @@ export interface EngineeringQuote {
     equipmentDeliveryPct: number;
     finalReceptionPct: number;
   };
+  // Ground truth & Validation Expert
+  groundTruthSource: string;
+  isUncertain?: boolean;
+  requiresExpertValidation?: boolean;
+  expertCertified?: boolean;
+  certifiedBy?: string;
+  certifiedAt?: string;
+  expertNotes?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -449,8 +482,12 @@ export function calculateHazenWilliamsHeadLoss(
  * Dimensionnement complet d'un système d'irrigation goutte-à-goutte / solaire FAO-56
  */
 export function calculateFaoIrrigation(input: IrrigationInput): IrrigationDesignResult {
+  const isCropKnown = Boolean(FAO_SAHEL_CROPS[input.cropKey]);
   const areaHa = Math.max(0.1, input.areaHa);
   const crop = FAO_SAHEL_CROPS[input.cropKey] || FAO_SAHEL_CROPS.tomate;
+
+  let isUncertain = !isCropKnown || input.areaHa <= 0;
+  let requiresExpertValidation = isUncertain || input.areaHa > 20 || (input.waterTableDepthM !== undefined && input.waterTableDepthM > 100);
 
   // ETo sahélien moyen selon saison (Bobo-Dioulasso / Ouagadougou / Koudougou)
   let dailyEtoMm = 6.5;
@@ -644,6 +681,9 @@ export function calculateFaoIrrigation(input: IrrigationInput): IrrigationDesign
     billOfMaterials,
     totalEquipmentCostFcfa,
     technicalObservations,
+    groundTruthSource: "INERA Farako-Bâ (Fiches Techniques 2023) • FAO-56 Irrigation & Drainage • Normes ISO 4427 PEHD",
+    isUncertain,
+    requiresExpertValidation,
   };
 }
 
@@ -655,7 +695,10 @@ export function calculateFaoIrrigation(input: IrrigationInput): IrrigationDesign
  * Calcul complet des dimensions et métrés pour un bâtiment avicole tropical sahélien
  */
 export function calculatePoultryHousing(input: PoultryHousingInput): PoultryHousingResult {
-  const flockSize = Math.max(100, input.flockSize);
+  const isFlockSpecified = input.flockSize > 0;
+  const isUncertain = !isFlockSpecified;
+  const requiresExpertValidation = isUncertain || input.flockSize > 15000;
+  const flockSize = Math.max(100, input.flockSize || 100);
   const birdType = input.birdType;
 
   // Densités sahéliennes maximales pour éviter le stress thermique (> 38°C)
@@ -820,6 +863,9 @@ export function calculatePoultryHousing(input: PoultryHousingInput): PoultryHous
     billOfMaterials,
     totalBuildingCostFcfa,
     recommendations,
+    groundTruthSource: "Ministère de l'Agriculture et des Ressources Animales (MRAH BF) • Normes Bioclimatiques Sahéliennes CIRAD/INERA",
+    isUncertain,
+    requiresExpertValidation,
   };
 }
 
@@ -1004,6 +1050,9 @@ export function generateEngineeringQuote(
 
   const qrVerificationUrl = `https://nafa-agritech.com/verify-quote?ref=${quoteNumber}&amt=${totalCostFcfa}`;
 
+  const isUncertain = quoteItems.length === 0;
+  const requiresExpertValidation = isUncertain;
+
   return {
     quoteNumber,
     date: today.toISOString().slice(0, 10),
@@ -1025,5 +1074,98 @@ export function generateEngineeringQuote(
       equipmentDeliveryPct: 35,
       finalReceptionPct: 15,
     },
+    groundTruthSource: "Mercuriale Officielle des Prix du Ministère de l'Économie et des Finances du Burkina Faso (MEFP) 2024",
+    isUncertain,
+    requiresExpertValidation,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// 6. CERTIFICATION EXPERT TERRAIN (GROUND TRUTH COMPLEMENTARY)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Permet à l'agronome ou l'ingénieur de terrain d'apporter des données réelles
+ * mesurées (débit réel forage, niveau piézométrique mesuré, etc.) et de certifier le calcul.
+ */
+export function certifyIrrigationDesign(
+  current: IrrigationDesignResult,
+  expertName: string,
+  notes?: string,
+  overrides?: {
+    measuredBoreholeYieldM3h?: number;
+    dynamicWaterLevelM?: number;
+    adjustedKc?: number;
+  }
+): IrrigationDesignResult {
+  const updated = { ...current };
+
+  if (overrides) {
+    updated.expertOverrides = { ...overrides };
+    if (overrides.dynamicWaterLevelM) {
+      updated.staticLiftM = overrides.dynamicWaterLevelM + 8;
+      updated.totalHeadHmtM = Math.round((updated.staticLiftM + updated.pressureHeadM + (updated.mainPipeHeadLossM + 4.5)) * 10) / 10;
+      updated.hydraulicPowerKw = Math.round(((updated.peakHourlyFlowM3h * updated.totalHeadHmtM * 9.81) / 3600) * 100) / 100;
+      updated.motorPowerKw = Math.round((updated.hydraulicPowerKw / 0.6) * 100) / 100;
+      updated.solarPvWattPeak = Math.round(updated.motorPowerKw * 1000 * 1.35);
+      updated.recommendedPanelsCount = Math.max(2, Math.ceil(updated.solarPvWattPeak / updated.panelUnitWattage));
+    }
+  }
+
+  updated.expertCertified = true;
+  updated.certifiedBy = expertName;
+  updated.certifiedAt = new Date().toISOString();
+  updated.requiresExpertValidation = false;
+  updated.isUncertain = false;
+  if (notes) updated.expertNotes = notes;
+
+  return updated;
+}
+
+/**
+ * Permet à l'expert zootechnicien/agronome de certifier le bâtiment avicole
+ * avec les cotes réelles mesurées et le coût local vérifié.
+ */
+export function certifyPoultryHousing(
+  current: PoultryHousingResult,
+  expertName: string,
+  notes?: string,
+  overrides?: {
+    actualFlockSize?: number;
+    localBuildingCostPerM2?: number;
+  }
+): PoultryHousingResult {
+  const updated = { ...current };
+
+  if (overrides) {
+    updated.expertOverrides = { ...overrides };
+  }
+
+  updated.expertCertified = true;
+  updated.certifiedBy = expertName;
+  updated.certifiedAt = new Date().toISOString();
+  updated.requiresExpertValidation = false;
+  updated.isUncertain = false;
+  if (notes) updated.expertNotes = notes;
+
+  return updated;
+}
+
+/**
+ * Permet à l'expert de certifier les prix unitaires et le devis avec la réalité des mercuriales locales.
+ */
+export function certifyEngineeringQuote(
+  current: EngineeringQuote,
+  expertName: string,
+  notes?: string
+): EngineeringQuote {
+  return {
+    ...current,
+    expertCertified: true,
+    certifiedBy: expertName,
+    certifiedAt: new Date().toISOString(),
+    requiresExpertValidation: false,
+    isUncertain: false,
+    expertNotes: notes || current.expertNotes,
   };
 }

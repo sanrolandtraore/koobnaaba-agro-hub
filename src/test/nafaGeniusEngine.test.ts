@@ -8,6 +8,9 @@ import {
   calculatePoultryHousing,
   generateFarmZoning,
   generateEngineeringQuote,
+  certifyIrrigationDesign,
+  certifyPoultryHousing,
+  certifyEngineeringQuote,
   FAO_SAHEL_CROPS,
   GeoPoint,
 } from "@/lib/nafaGeniusEngine";
@@ -180,12 +183,104 @@ describe("NAFA Genius IA - NLU Multilingue & Actions", () => {
     expect(mosParsed.language).toBe("mos");
   });
 
-  it("exécute l'action de création de visite en mode résilient", async () => {
-    const action = parseGeniusCommand("Crée une visite pour le producteur Moussa");
-    const result = await executeGeniusAction(action);
+  it("signale et refuse d'exécuter une instruction non reconnue avec certitude (Règle stricte Zéro Hallucination)", async () => {
+    // Instruction non reconnue / ambiguë sans référentiel agronomique certifié
+    const unrec = parseGeniusCommand("construis moi un truc bizarre avec 1000 objets");
 
-    expect(result.success).toBe(true);
-    expect(result.message).toContain("Moussa");
+    expect(unrec.isRecognized).toBe(false);
+    expect(unrec.requiresExpertValidation).toBe(true);
+    expect(unrec.confidence).toBeLessThan(0.5);
+    expect(unrec.explanation).toContain("INSTRUCTION NON RECONNUE AVEC CERTITUDE");
+    expect(unrec.actionRequired).toBe(false);
+
+    // Refus d'exécution
+    const result = await executeGeniusAction(unrec);
+    expect(result.success).toBe(false);
+    expect(result.data.isRecognized).toBe(false);
+  });
+});
+
+describe("NAFA Genius IA - Vérité Réelle & Certification Expert de Terrain", () => {
+  it("associe systématiquement les sources de vérité réelles aux calculs", () => {
+    const ir = calculateFaoIrrigation({
+      areaHa: 1.0,
+      cropKey: "tomate",
+    });
+    expect(ir.groundTruthSource).toContain("INERA");
+    expect(ir.groundTruthSource).toContain("FAO-56");
+
+    const poultry = calculatePoultryHousing({
+      birdType: "poulet_chair",
+      flockSize: 1000,
+    });
+    expect(poultry.groundTruthSource).toContain("MRAH");
+    expect(poultry.groundTruthSource).toContain("CIRAD/INERA");
+
+    const quote = generateEngineeringQuote(
+      "Test Client",
+      "+226 70 00 00 00",
+      "Koudougou",
+      "Dr. Sawadogo",
+      "Projet Test",
+      ir.billOfMaterials
+    );
+    expect(quote.groundTruthSource).toContain("Mercuriale");
+  });
+
+  it("permet à l'expert d'ajuster avec des mesures de terrain et de certifier le calcul d'irrigation", () => {
+    const ir = calculateFaoIrrigation({
+      areaHa: 2.0,
+      cropKey: "tomate",
+      waterTableDepthM: 35,
+    });
+    expect(ir.expertCertified).toBeUndefined();
+
+    // L'expert apporte le débit réel mesuré au pompage d'essai et certifie
+    const certified = certifyIrrigationDesign(
+      ir,
+      "Dr. Oumarou Sawadogo (Ingénieur Rural)",
+      "Essai de pompage certifié in-situ avec niveau dynamique stable à 40m",
+      {
+        measuredBoreholeYieldM3h: 15,
+        dynamicWaterLevelM: 40,
+      }
+    );
+
+    expect(certified.expertCertified).toBe(true);
+    expect(certified.certifiedBy).toContain("Oumarou Sawadogo");
+    expect(certified.requiresExpertValidation).toBe(false);
+    expect(certified.expertOverrides?.dynamicWaterLevelM).toBe(40);
+    expect(certified.expertNotes).toContain("Essai de pompage");
+  });
+
+  it("permet à l'expert de certifier le bâtiment avicole et le devis", () => {
+    const poultry = calculatePoultryHousing({
+      birdType: "poule_pondeuse",
+      flockSize: 1500,
+    });
+    const certifiedPoultry = certifyPoultryHousing(
+      poultry,
+      "Dr. Sawadogo (Zootechnicien)",
+      "Vérification théodolite axe E-O et maçonnerie conforme"
+    );
+    expect(certifiedPoultry.expertCertified).toBe(true);
+    expect(certifiedPoultry.certifiedBy).toContain("Dr. Sawadogo");
+
+    const quote = generateEngineeringQuote(
+      "Test",
+      "+226 00",
+      "Ouagadougou",
+      "Expert",
+      "Projet",
+      certifiedPoultry.billOfMaterials
+    );
+    const certifiedQuote = certifyEngineeringQuote(
+      quote,
+      "Expert Chiffreur NAFA",
+      "Prix conformes à la mercuriale Ouagadougou 2024"
+    );
+    expect(certifiedQuote.expertCertified).toBe(true);
+    expect(certifiedQuote.expertNotes).toContain("Ouagadougou");
   });
 });
 

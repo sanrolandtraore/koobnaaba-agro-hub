@@ -6,14 +6,18 @@ export interface OfflineAgronomicAdvice {
   cropGroups: string[];
   keywords: string[];
   diagnosis_summary: string;
-  cause_type: "maladie" | "ravageur" | "carence" | "stress_hydrique" | "stress_thermique";
+  cause_type: "maladie" | "ravageur" | "carence" | "stress_hydrique" | "stress_thermique" | "inconnu";
   cause_name: string;
   confidence: number;
-  severity: "faible" | "moyen" | "forte";
+  severity: "faible" | "moyen" | "forte" | "indéterminé";
   inera_reference?: string;
   treatment_bio: string;
   treatment_chemical: string;
   preventive_actions: string[];
+  is_unrecognized?: boolean;
+  requires_expert_validation?: boolean;
+  expert_certified?: boolean;
+  certified_by?: string;
 }
 
 export const OFFLINE_AGRONOMIC_KNOWLEDGE: OfflineAgronomicAdvice[] = [
@@ -643,17 +647,16 @@ export function findLocalAgronomicAdvice(cropKey: string, symptomsText: string, 
     }
   }
 
-  if (bestMatch && bestMatch.score > 0) {
-    return bestMatch.advice;
+  if (bestMatch && bestMatch.score >= 4) {
+    return {
+      ...bestMatch.advice,
+      is_unrecognized: false,
+      requires_expert_validation: false,
+    };
   }
 
-  // Si aucun symptôme ne correspond mais qu'une culture est sélectionnée,
-  // renvoyer la recommandation prioritaire de référence INERA pour cette culture
-  if (cropKey) {
-    const cropFallback = OFFLINE_AGRONOMIC_KNOWLEDGE.find((a) => a.cropGroups.includes(cropKey));
-    if (cropFallback) return cropFallback;
-  }
-
-  // Fallback par défaut de surveillance agronomique vivrière
-  return OFFLINE_AGRONOMIC_KNOWLEDGE[0];
+  // Règle de Vérité Réelle : Si aucun symptôme n'a concordé avec certitude dans la base scientifique INERA,
+  // ne JAMAIS retourner un diagnostic erroné par défaut.
+  // Renvoyer null pour signaler explicitement la non-reconnaissance et permettre la saisie de l'expert.
+  return null;
 }
